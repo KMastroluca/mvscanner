@@ -1,0 +1,18 @@
+[package]
+name = "scan_mvcf"
+version = "0.1.0"
+authors = ["PThorpe92 <preston@unlockedlabs.org>"]
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+serde_json = { version = "1.0.108", features = ["std"] }
+serde = { version = "1.0.190", features = ["derive"] }
+rusqlite = "0.29.0"
+dirs = "5.0.1"
+hidapi = "2.4.1"
+once_cell = "1.18.0"
+chrono = "0.4.31"
+actix-web = { version = "4.4.0", features = ["http2"] }
+r2d2_sqlite = "0.22.0"
+r2d2 = "0.8.10"
