@@ -1,5 +1,5 @@
 {
-  "name": "mvscanner",
+  "name": "scannerui",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,6 +9,13 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "mustache": "^4.2.0",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.5",
     "vite": "^4.4.5"
+  },
+  "dependencies": {
+    "alpinejs": "^3.13.2"
   }
 }
