@@ -1,0 +1,158 @@
+[
+  {
+    "id": 2,
+    "name": "ACTIVITIES"
+  },
+  {
+    "id": 1,
+    "name": "ALPHA_UNIT"
+  },
+  {
+    "id": 3,
+    "name": "CHAPEL"
+  },
+  {
+    "id": 4,
+    "name": "ASU"
+  },
+  {
+    "id": 5,
+    "name": "BOOKING"
+  },
+  {
+    "id": 6,
+    "name": "BRAVO_UNIT"
+  },
+  {
+    "id": 7,
+    "name": "CHARLIE_UNIT"
+  },
+  {
+    "id": 8,
+    "name": "CHARLIE_UNIT_CLASSROOM"
+  },
+  {
+    "id": 9,
+    "name": "CHAPLAINS_OFFICE"
+  },
+  {
+    "id": 10,
+    "name": "COLLEGE_CLASSROOM"
+  },
+  {
+    "id": 11,
+    "name": "COMPUTER_LAB"
+  },
+  {
+    "id": 12,
+    "name": "CULINARY"
+  },
+  {
+    "id": 13,
+    "name": "D_BOARDS"
+  },
+  {
+    "id": 14,
+    "name": "DELTA_UNIT"
+  },
+  {
+    "id": 15,
+    "name": "DELTA_UNIT_CLASSROOM"
+  },
+  {
+    "id": 16,
+    "name": "EDUCATION_CONFERENCE_ROOM"
+  },
+  {
+    "id": 17,
+    "name": "ECHO_UNIT"
+  },
+  {
+    "id": 18,
+    "name": "FLOOR_JANITOR"
+  },
+  {
+    "id": 19,
+    "name": "GYM"
+  },
+  {
+    "id": 20,
+    "name": "MCDONALD"
+  },
+  {
+    "id": 21,
+    "name": "HOSPITAL"
+  },
+  {
+    "id": 22,
+    "name": "KITCHEN"
+  },
+  {
+    "id": 23,
+    "name": "LAUNDRY"
+  },
+  {
+    "id": 24,
+    "name": "LIBRARY"
+  },
+  {
+    "id": 25,
+    "name": "MEDICAL"
+  },
+  {
+    "id": 26,
+    "name": "MUSIC_ROOM"
+  },
+  {
+    "id": 27,
+    "name": "NCCER"
+  },
+  {
+    "id": 28,
+    "name": "OFF_GROUNDS"
+  },
+  {
+    "id": 30,
+    "name": "OUTSIDE_RECREATION"
+  },
+  {
+    "id": 31,
+    "name": "VISIT_ROOM"
+  },
+  {
+    "id": 32,
+    "name": "SMALL_ENGINES"
+  },
+  {
+    "id": 33,
+    "name": "WOOD_SHOP"
+  },
+  {
+    "id": 34,
+    "name": "WORK_CREW"
+  },
+  {
+    "id": 35,
+    "name": "CASEWORKER_HEAL"
+  },
+  {
+    "id": 36,
+    "name": "STAFF_JACKSON"
+  },
+  {
+    "id": 37,
+    "name": "UM_HARMON"
+  },
+  {
+    "id": 39,
+    "name": "STAFF_FRENCH"
+  },
+  {
+    "id": 41,
+    "name": "ANNEX"
+  },
+  {
+    "id": 42,
+    "name": "CASEWORKER_DEVER_JACOB"
+  }
+]
