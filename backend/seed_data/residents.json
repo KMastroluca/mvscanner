@@ -1,206 +1,98 @@
 [
   {
     "name": "John Doe",
-    "doc": 123345,
-    "rfid_tag": 123455623562354,
-    "housing": {
-      "unit": 3,
-      "pod_room": "A-1B"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "123345",
+    "rfid_tag": "123455623562354",
+    "room": "B-2t"
   },
   {
     "name": "Jane Smith",
-    "doc": 678910,
-    "rfid_tag": 987654321098765,
-    "housing": {
-      "unit": 4,
-      "pod_room": "B-2A"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "678910",
+    "rfid_tag": "987654321098765",
+    "room": "A-3t"
   },
   {
     "name": "Bob Johnson",
-    "doc": 543210,
-    "rfid_tag": 555555111555555,
-    "housing": {
-      "unit": 6,
-      "pod_room": "G-3C"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "543210",
+    "rfid_tag": "555555111555555",
+    "room": "D-4t"
   },
   {
     "name": "Michael Johnson",
-    "doc": 987123,
-    "rfid_tag": 555555666555555,
-    "housing": {
-      "unit": 3,
-      "pod_room": "D-2B"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "987123",
+    "rfid_tag": "555555666555555",
+    "room": "D-9b"
   },
   {
     "name": "Sarah Davis",
-    "doc": 543210,
-    "rfid_tag": 222222333222222,
-    "housing": {
-      "unit": 6,
-      "pod_room": "G-1D"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "543210",
+    "rfid_tag": "222222333222222",
+    "room": "D-1b"
   },
   {
     "name": "Kevin Smith",
-    "doc": 123456,
-    "rfid_tag": 777777888777777,
-    "housing": {
-      "unit": 2,
-      "pod_room": "B-4A"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "123456",
+    "rfid_tag": "777777888777777",
+    "room": "B-8t"
   },
   {
     "name": "Linda White",
-    "doc": 789012,
-    "rfid_tag": 888888222888888,
-    "housing": {
-      "unit": 5,
-      "pod_room": "F-3C"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "789012",
+    "rfid_tag": "888888222888888",
+    "room": "B-3b"
   },
   {
     "name": "James Lee",
-    "doc": 345678,
-    "rfid_tag": 666666000666666,
-    "housing": {
-      "unit": 4,
-      "pod_room": "C-2D"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "345678",
+    "rfid_tag": "666666000666666",
+    "room": "A-1b"
   },
   {
     "name": "Emily Anderson",
-    "doc": 234567,
-    "rfid_tag": 444444777444444,
-    "housing": {
-      "unit": 1,
-      "pod_room": "A-5B"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "234567",
+    "rfid_tag": "444444777444444",
+    "room": "E-1b"
   },
   {
     "name": "Robert Wilson",
-    "doc": 654321,
-    "rfid_tag": 999999999999999,
-    "housing": {
-      "unit": 3,
-      "pod_room": "D-1A"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "654321",
+    "rfid_tag": "999999999999999",
+    "room": "D-1b"
   },
   {
     "name": "Olivia Martinez",
-    "doc": 321789,
-    "rfid_tag": 333333333333333,
-    "housing": {
-      "unit": 6,
-      "pod_room": "G-4E"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "321789",
+    "rfid_tag": "333333333333333",
+    "room": "C-1b"
   },
   {
     "name": "Daniel Thomas",
-    "doc": 876543,
-    "rfid_tag": 111111111111111,
-    "housing": {
-      "unit": 2,
-      "pod_room": "B-3C"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "876543",
+    "rfid_tag": "111111111111111",
+    "room": "C-5t"
   },
   {
     "name": "Sophia Taylor",
-    "doc": 456789,
-    "rfid_tag": 7982377777777777,
-    "housing": {
-      "unit": 5,
-      "pod_room": "F-1B"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "456789",
+    "rfid_tag": "7982377777777777",
+    "room": "C-5b"
   },
   {
     "name": "William Brown",
-    "doc": 765292,
-    "rfid_tag": 666688866666666,
-    "housing": {
-      "unit": 4,
-      "pod_room": "C-5D"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "765292",
+    "rfid_tag": "666688866666666",
+    "room": "C-5t"
   },
   {
     "name": "Ava Jackson",
-    "doc": 234569,
-    "rfid_tag": 555555231555555,
-    "housing": {
-      "unit": 1,
-      "pod_room": "A-4E"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "234569",
+    "rfid_tag": "555555231555555",
+    "room": "A-4t"
   },
   {
     "name": "Matthew Moore",
-    "doc": 789012,
-    "rfid_tag": 333333339993333,
-    "housing": {
-      "unit": 3,
-      "pod_room": "D-3A"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
-  },
-  {
-    "name": "Chloe Harris",
-    "doc": 876533,
-    "rfid_tag": 444444411144444,
-    "housing": {
-      "unit": 6,
-      "pod_room": "G-2B"
-    },
-    "location": null,
-    "timestamps": [],
-    "current_timestamp": null
+    "doc": "789012",
+    "rfid_tag": "333333339993333",
+    "room": "D-3b"
   }
 ]
