@@ -1,4 +1,3 @@
-use super::timestamps::Timestamp;
 use crate::database::db::DB;
 use serde::{Deserialize, Serialize};
 
@@ -44,6 +43,7 @@ impl Resident {
     pub fn destroy(rfid: &str, db: &DB) -> Result<(), rusqlite::Error> {
         db.delete_resident(rfid)
     }
+
     pub fn update(resident: &Resident, db: &DB) -> Result<(), rusqlite::Error> {
         db.update_resident(resident)
     }

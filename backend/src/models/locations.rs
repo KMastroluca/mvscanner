@@ -1,15 +1,11 @@
-use chrono::prelude::*;
-use core::fmt::{Display, Formatter, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::env::current_dir;
+use std::fmt::Formatter;
 use std::path::PathBuf;
+use std::{env::current_dir, fmt::Display};
 
-#[derive(Serialize, Clone, Deserialize, Debug, Eq, PartialEq)]
-pub struct Housing {
-    unit: usize,
-    pod_room: String,
-}
+use crate::{controllers::locations_controller::Id, database::db::DB};
+
+use super::timestamps::{Range, TimeStamp};
 
 #[derive(Serialize, Clone, Deserialize, Debug, Default, Eq, PartialEq)]
 pub struct Location {
@@ -18,14 +14,8 @@ pub struct Location {
 }
 
 impl Display for Location {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "{}: {}", self.id, self.name)
-    }
-}
-
-impl From<Location> for (usize, String) {
-    fn from(loc: Location) -> Self {
-        (loc.id, loc.name)
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Location: {}", self.name)
     }
 }
 
@@ -33,11 +23,19 @@ impl Location {
     pub fn new(id: usize, name: String) -> Self {
         Self { id, name }
     }
+
     pub fn get_env() -> Self {
         Self {
+            /// This reads the ENV VAR that will determine what location the particular instance
+            /// of the scannner/server is running in
             id: std::env::var("LOCATION_ID")
-                .unwrap_or(String::from("14"))
-                .parse::<usize>()
+                .is_ok()
+                .then(|| {
+                    std::env::var("LOCATION_ID")
+                        .unwrap()
+                        .parse::<usize>()
+                        .unwrap()
+                })
                 .unwrap_or(14),
             name: std::env::var("LOCATION_NAME").unwrap_or(String::from("DELTA UNIT")),
         }
@@ -47,77 +45,36 @@ impl Location {
         let path: PathBuf = if std::env::var("SCAN_LOCATIONS").is_ok() {
             std::env::var("SCAN_LOCATIONS").unwrap().into()
         } else {
-            current_dir().unwrap().join("locations.json")
+            current_dir().unwrap().join("seed_data/locations.json")
         };
         let file: String = std::fs::read_to_string(path).unwrap();
         let loc: Vec<Location> = serde_json::from_str::<Vec<Location>>(&file).unwrap();
         loc
     }
 
-    pub fn all() -> HashMap<usize, String> {
-        let mut map = HashMap::new();
-        for location in Location::read_from_file().iter() {
-            map.insert(location.id, location.name.clone());
-        }
-        map
+    /// POST: /api/locations/{location}
+    pub fn store(db: &DB, loc: &Location) -> Result<(), rusqlite::Error> {
+        db.store_location(loc)
     }
 
-    pub fn get_location_by_id(id: usize) -> Option<Location> {
-        if let Some(loc) = Location::all().get(&id) {
-            return Some(Location::new(id, String::from(loc)));
+    /// GET: /api/locations
+    pub fn index(db: &DB) -> Vec<Location> {
+        db.index_locations().unwrap_or_default()
+    }
+
+    /// GET: /api/locations/{id}
+    pub fn show(db: &DB, id: Id) -> Option<Location> {
+        let id = id.location_id;
+        if let Ok(loc) = db.show_location(id) {
+            return Some(loc);
         }
         None
     }
-}
 
-impl Default for Housing {
-    fn default() -> Self {
-        Self {
-            pod_room: "".to_string(),
-            unit: 0,
-        }
+    pub fn show_location_timestamps_range(db: &DB, id: usize, range: &Range) -> Vec<TimeStamp> {
+        db.show_timestamps_location_range(id, &range.start, &range.end)
+            .unwrap_or_default()
     }
-}
-
-impl Display for Housing {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "{} {}", self.unit, self.pod_room)
-    }
-}
-
-impl Housing {
-    pub fn new(pod_room: &str, unit: usize) -> Self {
-        Self {
-            pod_room: String::from(pod_room),
-            unit,
-        }
-    }
-
-    pub fn get_unit(&self) -> usize {
-        self.unit
-    }
-
-    pub fn get_room(&self) -> &str {
-        self.pod_room.as_str()
-    }
-}
-
-pub fn validate_room(room: &str) -> bool {
-    // A-1B
-    let mut splt = room.split('-');
-    splt.next()
-        .is_some_and(|x| is_unit_digit(x.to_uppercase().chars().next().unwrap()))
-        && splt.next().is_some_and(|x| {
-            x.to_ascii_uppercase()
-                .chars()
-                .next()
-                .unwrap()
-                .is_ascii_digit()
-        })
-}
-
-fn is_unit_digit(unit: char) -> bool {
-    matches!(unit, 'A'..='D')
 }
 
 /*
