@@ -2,6 +2,7 @@
   "name": "scanui",
   "private": true,
   "version": "0.0.0",
+  "license": "Proprietary",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.200",
+    "lodash": "^4.17.21",
     "solid-js": "^1.7.8"
   },
   "devDependencies": {
