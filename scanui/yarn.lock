@@ -412,6 +412,16 @@
   resolved "https://registry.yarnpkg.com/@esbuild/win32-x64/-/win32-x64-0.18.20.tgz#786c5f41f043b07afb1af37683d7c33668858f6d"
   integrity sha512-kTdfRcSiDfQca/y9QIkng02avJ+NCaQvrMejlsB3RRv5sE9rRoeBPISaZpKxHELzRxZyLvNts1P27W3wV+8geQ==
 
+"@fontsource/lato@^5.0.17":
+  version "5.0.17"
+  resolved "https://registry.yarnpkg.com/@fontsource/lato/-/lato-5.0.17.tgz#7c75c443da1e3ae203ed1977b6455bb15c62c106"
+  integrity sha512-K9znoLAeUsm4tqp6zYv/oXBxhVDUeYPjRz6Yc7rKyBOKKOS9eXxkEcxD8pT9klnvCky4/pYXKJ9lab01LXYSEA==
+
+"@fontsource/raleway@^5.0.15":
+  version "5.0.15"
+  resolved "https://registry.yarnpkg.com/@fontsource/raleway/-/raleway-5.0.15.tgz#1bffd6a87ea96e6e1bb3c808b27d93b94bb9f044"
+  integrity sha512-L1QfDwgBESrR55qYCQasxb2tONFhyiTsf07E5EZLH5vWL968GKXZu6fE+yk2uiOATVBzgY5QJTJ+HEmu/pJbuA==
+
 "@jridgewell/gen-mapping@^0.3.0", "@jridgewell/gen-mapping@^0.3.2":
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/@jridgewell/gen-mapping/-/gen-mapping-0.3.3.tgz#7e02e6eb5df901aaedb08514203b096614024098"
@@ -1130,6 +1140,11 @@ seroval@^0.12.0:
   version "0.12.3"
   resolved "https://registry.yarnpkg.com/seroval/-/seroval-0.12.3.tgz#6dac3dacd603f28a5e6d3c4c6cb685af7bf2e885"
   integrity sha512-5WDeMpv7rmEylsypRj1iwRVHE/QLsMLiZ+9savlNNQEVdgGia1iRMb7qyaAagY0wu/7+QTe6d2wldk/lgaLb6g==
+
+solid-icons@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/solid-icons/-/solid-icons-1.1.0.tgz#6e914bce4f9a34a654230b68c68a7d04359ff2b6"
+  integrity sha512-IesTfr/F1ElVwH2E1110s2RPXH4pujKfSs+koT8rwuTAdleO5s26lNSpqJV7D1+QHooJj18mcOiz2PIKs0ic+A==
 
 solid-js@^1.7.8:
   version "1.8.5"
