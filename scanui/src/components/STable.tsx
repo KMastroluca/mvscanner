@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) {11/8/23, 1:08 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
+ * Copyright (c) {11/8/23, 2:23 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
  * {STable.tsx}
  * {STable.tsx}
  *
@@ -47,6 +47,7 @@ export interface STableAction {
 
 export interface STableColumn {
     label:string;
+    key?:string;
     sortable:boolean;
     icon?:JSXElement;
     sortType?:SortDataType;
@@ -97,24 +98,29 @@ export const STable: Component<STableProps> = (props:STableProps) => {
             let columns:STableColumn[] = [
                 {
                     label:"RFID",
-                    sortable:false
+                    key:"rfid",
+                    sortable:false,
                 },
                 {
                     label:"Name",
+                    key:"name",
                     sortable:true,
                     sortType: {type:"String"},
                 },
                 {
                   label:"DOC#",
+                    key:"doc",
                   sortable: false,
                 },
                 {
                     label:"POD",
+                    key:"pod",
                     sortable:true,
                     sortType: {type:"String"}
                 },
                 {
                     label:"Room",
+                    key:"room",
                     sortable: false,
                 }
             ];
@@ -299,8 +305,57 @@ export const STable: Component<STableProps> = (props:STableProps) => {
 
     };
 
+    const reSortData = (data:{type:SortType, columnIndex:number}) => {
+        let columnToSort = tableColumns()![data.columnIndex];
+        if (columnToSort.key) {
+            let key = columnToSort.key!;
+            // Key Is Set To Compare To Data Objects
+            switch(data.type) {
+                case StringSort.Alphabetical: {
+                    let tableCopy = [...tableData()!];
+                    tableCopy.sort((a, b) => {
+                        if (a.item.hasOwnProperty(key) && b.item.hasOwnProperty(key)) {
+                            if (typeof a.item[key] === 'string' && typeof b.item[key] === 'string') {
+                                return (a.item[key] as string).localeCompare((b.item[key] as string));
+                            } else {
+                                return 0;
+                            }
+                        } else {
+                            return 0;
+                        }
+                    })
+                    console.log("[+] Completed Alphabetical Sort");
+                    break;
+                }
+                case StringSort.AlphaReverse: {
+                    let tableCopy = [...tableData()!];
+                    tableCopy.sort((a, b) => {
+                       if (a.item.hasOwnProperty(key) && b.item.hasOwnProperty(key)) {
+                           if (typeof a.item[key] === 'string' && typeof b.item[key] === 'string') {
+                               return -(a.item[key] as string).localeCompare((b.item[key] as string));
+                           } else {
+                               return 0;
+                           }
+                       } else {
+                           return 0;
+                       }
+                    });
+                    console.log("[+] Completed Reverse Alphabetical Sort.");
+                    break;
+                }
+                default:
+                    console.error("[-] Sorting Algorithim Not Implemented!");
+            }
+        }
+    };
+
     createEffect(() => {
         console.log("currentSort is set to ", currentSort());
+
+        if (currentSort() !== null) {
+            reSortData(currentSort()!);
+        }
+
     })
 
 

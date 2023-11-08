@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) {11/5/23, 4:03 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
+ * Copyright (c) {11/8/23, 2:10 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
  * {Models.ts}
  * {Models.ts}
  *
@@ -28,6 +28,7 @@
  */
 
 export interface SResident {
+    [key:string]:string |number;
     rfid:string;
     name:string;
     doc:string;
@@ -38,6 +39,7 @@ export interface SResident {
 
 
 export interface SLocation {
+    [key:string]:string|number;
     id:number;
     name:string;
 }
@@ -45,6 +47,7 @@ export interface SLocation {
 
 
 export interface STimestamp {
+    [key:string]:string|number;
     rfid:string;
     destinationId:number;
     timestamp:string;
