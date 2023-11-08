@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) {11/6/23, 4:08 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
+ * Copyright (c) {11/7/23, 8:01 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
  * {STable.tsx}
  * {STable.tsx}
  *
@@ -29,9 +29,9 @@
 
 
 import {SLocation, SResident, STimestamp} from "../types/Models.ts";
-import {createEffect, createMemo, createSignal, For, JSXElement, on, onMount} from "solid-js";
-import {filter} from "lodash";
+import {Component, createEffect, createMemo, createSignal, For, JSXElement, onMount} from "solid-js";
 
+import '../styles/STable.css';
 
 export interface STableProps {
     type: "Resident" | "Location" | "Timestamp";
@@ -40,7 +40,7 @@ export interface STableProps {
 }
 
 export interface STableAction {
-    actionElement:JSXElement;
+    actionLabel:string;
     actionFunction:() => void;
 }
 
@@ -55,7 +55,8 @@ export interface STableRowItem {
     item:SResident|SLocation|STimestamp;
 }
 
-export const STable = (props:STableProps) => {
+
+export const STable: Component<STableProps> = (props:STableProps) => {
 
     const [tableData, setTableData] = createSignal<STableRowItem[]|null>(null);
     const [tableColumns, setTableColumns] = createSignal<STableColumn[]|null>(null);
@@ -194,94 +195,165 @@ export const STable = (props:STableProps) => {
 
 
     return(
-      <table class={"stable"}>
-          {/* **** TABLE HEADER *****************************************************************/}
-          <thead class={"stable-header"}>
-            <tr class={"stable-header-row"}>
-                {/* **** HEADER CHECKBOX *****************************************************************/}
-                <th class={"stable-header-cell stable-select-cell"}>
-                    <input type={"checkbox"} checked={tableAllSelect().allSelected}
-                        onChange={() => handleAllSelectChange()}/>
-                </th>
-                {/* **** TABLE HEADER ITEMS *****************************************************************/}
-                {tableColumns()?.map((item) => (
-                    <th class={"stable-header-cell"}>{item.label}</th>
-                ))}
-                {/* **** ACTIONS HEADER CELL *****************************************************************/}
-                {props.actions !== undefined ? (
-                    <th class={"stable-header-cell stable-header-actions-cell"}>
-                        <span>Actions</span>
+        <>
+          <table class={"stable"}>
+              {/* **** TABLE HEADER *****************************************************************/}
+              <thead>
+                <tr>
+                    {/* **** HEADER CHECKBOX *****************************************************************/}
+                    <th>
+                        <div class={"cell-inner"}>
+                            <label class={"stable-checkbox"}>
+                                <input class={"stable-checkbox-input"}
+                                       type={"checkbox"}
+                                       checked={tableAllSelect().allSelected}
+                                    onChange={() => handleAllSelectChange()}/>
+                                    <span class={"stable-checkbox-checkmark"}></span>
+                            </label>
+                        </div>
                     </th>
-                ) : false}
-            </tr>
-          </thead>
-          {/* **** TABLE BODY *****************************************************************/}
-          <tbody class={"stable-body"}>
+                    {/* **** TABLE HEADER ITEMS *****************************************************************/}
+                    {tableColumns()?.map((item) => (
+                        <th><div class={"cell-inner"}>{item.label}</div></th>
+                    ))}
+                    {/* **** ACTIONS HEADER CELL *****************************************************************/}
+                    {props.actions !== undefined ? (
+                        <th>
+                            <div class={"cell-inner"}>
+                                <span>Actions</span>
+                            </div>
+                        </th>
+                    ) : false}
+                </tr>
+              </thead>
+              {/* **** TABLE BODY *****************************************************************/}
+              <tbody>
 
-          {/* **** RESIDENT TABLE LAYOUT *****************************************************************/}
-            {props.type === "Resident" ? (
-                <For each={tableData()} fallback={<p>No Items</p>}>
-                    {(item) => {
-                        const residentItem = item.item as SResident;
-                        return (
-                            <tr class={"stable-body-row"}>
-                                <td class={"stable-body-cell stable-select-cell"}>
-                                    <input type={"checkbox"} checked={item.selected}
-                                           onClick={(e) => handleSelectRow(e, item)} />
-                                </td>
-                                <td class={"stable-body-cell"}>{residentItem.rfid}</td>
-                                <td class={"stable-body-cell"}>{residentItem.name}</td>
-                                <td class={"stable-body-cell"}>{residentItem.doc}</td>
-                                <td class={"stable-body-cell"}>{residentItem.pod}</td>
-                                <td class={"stable-body-cell"}>{residentItem.room}</td>
-                            </tr>
-                        );
-                    }}
-                </For>
-            ):false}
+              {/* **** RESIDENT TABLE LAYOUT *****************************************************************/}
+                {props.type === "Resident" ? (
+                    <For each={tableData()} fallback={<p>No Items</p>}>
+                        {(item) => {
+                            const residentItem = item.item as SResident;
+                            return (
+                                <tr>
+                                    <td>
+                                        <div class={"cell-inner"}>
+                                            <label class={"stable-checkbox"}>
+                                                    <input class={"stable-checkbox-input"}
+                                                           type={"checkbox"}
+                                                           checked={item.selected}
+                                                           onChange={(e) => handleSelectRow(e, item)}/>
+                                                    <span class={"stable-checkbox-checkmark"}></span>
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td><div class={"cell-inner"}>{residentItem.rfid}</div></td>
+                                    <td><div class={"cell-inner"}>{residentItem.name}</div></td>
+                                    <td><div class={"cell-inner"}>{residentItem.doc}</div></td>
+                                    <td><div class={"cell-inner"}>{residentItem.pod}</div></td>
+                                    <td><div class={"cell-inner"}>{residentItem.room}</div></td>
+                                    <td>
+                                        <div class={"cell-inner"}>
+                                            <For each={props.actions} >
+                                                {(action) => (
+                                                    <button onClick={action.actionFunction}>
+                                                        {action.actionLabel}
+                                                    </button>
+                                                )}
+                                            </For>
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        }}
+                    </For>
+                ):false}
 
-          {/* **** LOCATION TABLE LAYOUT *****************************************************************/}
-            {props.type === "Location" ? (
-                <For each={tableData()} fallback={<p>No Items</p>}>
-                    {(item) => {
-                        const locationItem = item.item as SLocation;
-                        return (
-                            <tr class={"stable-body-row"}>
-                                <td class={"stable-body-cell stable-select-cell"}>
-                                    <input type={"checkbox"} checked={item.selected}
-                                           onClick={(e) => handleSelectRow(e, item)} />
-                                </td>
-                                <td class={"stable-body-cell"}>{locationItem.id}</td>
-                                <td class={"stable-body-cell"}>{locationItem.name}</td>
-                            </tr>
-                        );
-                    }}
-                </For>
-            ):false}
+              {/* **** LOCATION TABLE LAYOUT *****************************************************************/}
+                {props.type === "Location" ? (
+                    <For each={tableData()} fallback={<p>No Items</p>}>
+                        {(item) => {
+                            const locationItem = item.item as SLocation;
+                            return (
+                                <tr>
+                                    <td>
+                                        <div class={"cell-inner"}>
+                                            <label class={"stable-checkbox"}>
+                                                <input class={"stable-checkbox-input"}
+                                                       type={"checkbox"}
+                                                       checked={item.selected}
+                                                       onChange={(e) => handleSelectRow(e, item)}/>
+                                                <span class={"stable-checkbox-checkmark"}></span>
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td><div class={"cell-inner"}>{locationItem.id}</div></td>
+                                    <td><div class={"cell-inner"}>{locationItem.name}</div></td>
+                                    <td>
+                                        <div class={"cell-inner"}>
+                                            <For each={props.actions}>
+                                                {(action) => (
+                                                    <button onClick={action.actionFunction}>
+                                                        {action.actionLabel}
+                                                    </button>
+                                                )}
+                                            </For>
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        }}
+                    </For>
+                ):false}
 
 
-          {/* **** TIMESTAMP TABLE LAYOUT *****************************************************************/}
-            {props.type === "Timestamp" ? (
-                <For each={tableData()} fallback={<p>No Items</p>}>
-                    {(item) => {
-                        const timestampItem = item.item as STimestamp;
-                        return (
-                            <tr class={"stable-body-row"}>
-                                <td class={"stable-body-cell stable-select-cell"}>
-                                    <input type={"checkbox"} checked={item.selected}
-                                           onClick={(e) => handleSelectRow(e, item)}/>
-                                </td>
-                                <td class={"stable-body-cell"}>{timestampItem.rfid}</td>
-                                <td class={"stable-body-cell"}>{timestampItem.destinationId}</td>
-                                <td class={"stable-body-cell"}>{timestampItem.timestamp}</td>
-                            </tr>
-                        );
-                    }}
-                </For>
-            ):false}
+              {/* **** TIMESTAMP TABLE LAYOUT *****************************************************************/}
+                {props.type === "Timestamp" ? (
+                    <For each={tableData()} fallback={<p>No Items</p>}>
+                        {(item) => {
+                            const timestampItem = item.item as STimestamp;
+                            return (
+                                <tr>
+                                    <td>
+                                        <div class={"cell-inner"}>
+                                            <label class={"stable-checkbox"}>
+                                                <input class={"stable-checkbox-input"}
+                                                       type={"checkbox"}
+                                                       checked={item.selected}
+                                                       onChange={(e) => handleSelectRow(e, item)}/>
+                                                <span class={"stable-checkbox-checkmark"}></span>
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td><div class={"cell-inner"}>{timestampItem.rfid}</div></td>
+                                    <td><div class={"cell-inner"}>{timestampItem.destinationId}</div></td>
+                                    <td><div class={"cell-inner"}>{timestampItem.timestamp}</div></td>
+                                    <td>
+                                        <div class={"cell-inner"}>
+                                            <For each={props.actions} >
+                                                {(action) => (
+                                                    <button onClick={action.actionFunction}>
+                                                        {action.actionLabel}
+                                                    </button>
+                                                )}
+                                            </For>
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        }}
+                    </For>
+                ):false}
 
-          </tbody>
-      </table>
+              </tbody>
+          </table>
+
+            <div class={"flex flex-row"}>
+                {tableSelectedItems().length > 0 ? (
+                    <span>{tableSelectedItems().length.toString()} Selected Rows</span>
+                ):false}
+            </div>
+        </>
     );
 
 }
