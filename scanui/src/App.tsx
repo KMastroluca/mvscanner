@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) {11/8/23, 1:09 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
+ * Copyright (c) {11/8/23, 3:09 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
  * {App.tsx}
  * {App.tsx}
  *
@@ -36,21 +36,21 @@ function App() {
   let e:SResident[] = [
     {
       rfid:"12345678901234567",
-      name: "Firstname Lastname",
+      name: "Kansas, Wrapper",
       doc:"123928",
       pod:"A",
       room:"12 T"
     },
     {
       rfid:"12345678901234567",
-      name: "Firstname Lastname",
+      name: "Apple, Digger",
       doc:"123928",
       pod:"A",
       room:"12 T"
     },
     {
       rfid:"12345678901234567",
-      name: "Firstname Lastname",
+      name: "Bates, Harold",
       doc:"123928",
       pod:"A",
       room:"12 T"

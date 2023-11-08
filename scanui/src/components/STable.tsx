@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) {11/8/23, 2:23 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
+ * Copyright (c) {11/8/23, 3:10 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
  * {STable.tsx}
  * {STable.tsx}
  *
@@ -324,6 +324,7 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                             return 0;
                         }
                     })
+                    setTableData(tableCopy);
                     console.log("[+] Completed Alphabetical Sort");
                     break;
                 }
@@ -340,6 +341,7 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                            return 0;
                        }
                     });
+                    setTableData(tableCopy);
                     console.log("[+] Completed Reverse Alphabetical Sort.");
                     break;
                 }
@@ -356,6 +358,10 @@ export const STable: Component<STableProps> = (props:STableProps) => {
             reSortData(currentSort()!);
         }
 
+    })
+
+    createEffect(() => {
+        console.log("Table Data Changed:", tableData());
     })
 
 
