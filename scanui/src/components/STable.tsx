@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) {11/7/23, 8:01 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
+ * Copyright (c) {11/7/23, 10:03 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
  * {STable.tsx}
  * {STable.tsx}
  *
@@ -195,7 +195,7 @@ export const STable: Component<STableProps> = (props:STableProps) => {
 
 
     return(
-        <>
+        <div class={"stable-wrapper"}>
           <table class={"stable"}>
               {/* **** TABLE HEADER *****************************************************************/}
               <thead>
@@ -353,7 +353,7 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                     <span>{tableSelectedItems().length.toString()} Selected Rows</span>
                 ):false}
             </div>
-        </>
+        </div>
     );
 
 }
