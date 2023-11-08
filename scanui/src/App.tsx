@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) {11/7/23, 3:40 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
+ * Copyright (c) {11/8/23, 1:09 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
  * {App.tsx}
  * {App.tsx}
  *
@@ -29,19 +29,9 @@
 
 import './App.css'
 import {STable, STableAction} from "./components/STable.tsx";
-import {SLocation, SResident} from "./types/Models.ts";
+import { SResident} from "./types/Models.ts";
 function App() {
 
-  let d:SLocation[] = [
-    {
-      id:0,
-      name:"Location 1"
-    },
-    {
-      id:1,
-      name:"Location 2"
-    }
-  ];
 
   let e:SResident[] = [
     {

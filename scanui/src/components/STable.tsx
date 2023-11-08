@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) {11/7/23, 10:03 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
+ * Copyright (c) {11/8/23, 1:08 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
  * {STable.tsx}
  * {STable.tsx}
  *
@@ -32,6 +32,7 @@ import {SLocation, SResident, STimestamp} from "../types/Models.ts";
 import {Component, createEffect, createMemo, createSignal, For, JSXElement, onMount} from "solid-js";
 
 import '../styles/STable.css';
+import {TbArrowsSort} from "solid-icons/tb";
 
 export interface STableProps {
     type: "Resident" | "Location" | "Timestamp";
@@ -48,6 +49,7 @@ export interface STableColumn {
     label:string;
     sortable:boolean;
     icon?:JSXElement;
+    sortType?:SortDataType;
 }
 
 export interface STableRowItem {
@@ -55,6 +57,31 @@ export interface STableRowItem {
     item:SResident|SLocation|STimestamp;
 }
 
+export type SortType = StringSort|NumericalSort|DateSort;
+export type SortDataString = {
+  type:"String";
+};
+export type SortDataNumerical = {
+    type:"Numerical";
+};
+export type SortDataDate = {
+  type:"Date";
+};
+export type SortDataType = SortDataString|SortDataNumerical|SortDataDate;
+export enum StringSort {
+    Alphabetical,
+    AlphaReverse
+}
+
+export enum NumericalSort {
+    Ascending,
+    Decending
+}
+
+export enum DateSort {
+    LatestFirst,
+    OldestFirst,
+}
 
 export const STable: Component<STableProps> = (props:STableProps) => {
 
@@ -62,6 +89,7 @@ export const STable: Component<STableProps> = (props:STableProps) => {
     const [tableColumns, setTableColumns] = createSignal<STableColumn[]|null>(null);
     const [tableAllSelect, setTableAllSelect] = createSignal({allSelected:false});
     const [tableSelectedItems, setTableSelectedItems] = createSignal<STableRowItem[]>([]);
+    const [currentSort, setCurrentSort] = createSignal<{type:SortType, columnIndex:number}|null>(null);
 
     onMount(() => {
         // Load Table Columns
@@ -73,7 +101,8 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                 },
                 {
                     label:"Name",
-                    sortable:false,
+                    sortable:true,
+                    sortType: {type:"String"},
                 },
                 {
                   label:"DOC#",
@@ -81,7 +110,8 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                 },
                 {
                     label:"POD",
-                    sortable:false,
+                    sortable:true,
+                    sortType: {type:"String"}
                 },
                 {
                     label:"Room",
@@ -93,11 +123,13 @@ export const STable: Component<STableProps> = (props:STableProps) => {
             let columns:STableColumn[] = [
                 {
                     label:"ID",
-                    sortable:false,
+                    sortable:true,
+                    sortType: {type:"Numerical"}
                 },
                 {
                     label:"Name",
-                    sortable:false,
+                    sortable:true,
+                    sortType:{type:"String"}
                 }
             ];
             setTableColumns(columns);
@@ -113,7 +145,8 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                 },
                 {
                     label:"Timestamp",
-                    sortable:false
+                    sortable:true,
+                    sortType: {type:"Date"}
                 }
             ];
             setTableColumns(columns);
@@ -193,6 +226,83 @@ export const STable: Component<STableProps> = (props:STableProps) => {
     })
 
 
+    // Sorting ********************************************
+
+
+    // Toggles The Current Sorting Algorithim No Matter What Data Type
+    const toggleCurrentSort = () => {
+        if (currentSort() !== null) {
+            if (tableColumns()![currentSort()!.columnIndex].sortType!.type === "String") {
+                if (currentSort()!.type === StringSort.Alphabetical) {
+                    setCurrentSort({columnIndex: currentSort()!.columnIndex, type: StringSort.AlphaReverse});
+                } else if (currentSort()!.type === StringSort.AlphaReverse) {
+                    setCurrentSort({columnIndex: currentSort()!.columnIndex, type: StringSort.Alphabetical});
+                }
+            } else if (tableColumns()![currentSort()!.columnIndex].sortType!.type === "Numerical") {
+                if (currentSort()!.type === NumericalSort.Ascending) {
+                    setCurrentSort({columnIndex:currentSort()!.columnIndex, type:NumericalSort.Decending});
+                } else if (currentSort()!.type === NumericalSort.Decending) {
+                    setCurrentSort({columnIndex:currentSort()!.columnIndex, type:NumericalSort.Ascending});
+                }
+            } else if (tableColumns()![currentSort()!.columnIndex].sortType!.type === "Date") {
+                if (currentSort()!.type == DateSort.LatestFirst) {
+                    setCurrentSort({columnIndex:currentSort()!.columnIndex, type:DateSort.OldestFirst});
+                } else if (currentSort()!.type == DateSort.OldestFirst) {
+                    setCurrentSort({columnIndex:currentSort()!.columnIndex, type:DateSort.LatestFirst});
+                }
+            }
+        } else {
+            console.error("[-] This should never happen, we tried to toggle sort, but there was no sort applied!");
+        }
+    }
+
+    const setCurrentSortColumn = (columnIndex:number) => {
+
+        console.log("Run setCurrentSortColumn");
+        // If we already have a sort set, with this columnIndex and we're running this function again,
+        // lets assume we want to toggle to the other sort option
+        if (currentSort() !== null) {
+            // Yes, we were already sorting before.
+            console.log("We were already sorting before!")
+            if (currentSort()!.columnIndex === columnIndex) {
+                // Yes we want to toggle.
+                toggleCurrentSort();
+                return;
+            }
+            // Otherwise, we want to switch columnIndexes and we just run the function like normal.
+        }
+
+        if (tableColumns() === undefined) {
+            console.error("[-] Tried to call setCurrentSortColumn but tableColumns() is undefined! - ", tableColumns());
+            return;
+        }
+
+        if (columnIndex > tableColumns()!.length) {
+            console.error("[-] Tried to set a sort column, for a column that doesnt exist, columnIndex was > tableColumns().length");
+            return;
+        }
+
+        let sortColumn = tableColumns()![columnIndex];
+        if (sortColumn.sortType) {
+            console.log("Found sortType on sortColumn:", sortColumn, sortColumn.sortType);
+            if (sortColumn.sortType.type === "String") {
+                console.log("Sort Type Was String");
+                setCurrentSort({type:StringSort.Alphabetical, columnIndex:columnIndex})
+            } else if (sortColumn.sortType.type === "Numerical") {
+                console.log("Sort Type Was Numerical");
+                setCurrentSort({type:NumericalSort.Ascending, columnIndex:columnIndex})
+            } else if (sortColumn.sortType.type === "Date") {
+                console.log("Sort Type Was Date");
+                setCurrentSort({type:DateSort.LatestFirst, columnIndex:columnIndex})
+            }
+        }
+
+    };
+
+    createEffect(() => {
+        console.log("currentSort is set to ", currentSort());
+    })
+
 
     return(
         <div class={"stable-wrapper"}>
@@ -213,8 +323,19 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                         </div>
                     </th>
                     {/* **** TABLE HEADER ITEMS *****************************************************************/}
-                    {tableColumns()?.map((item) => (
-                        <th><div class={"cell-inner"}>{item.label}</div></th>
+                    {tableColumns()?.map((item, index) => (
+                        <th>
+                            <div class={"cell-inner"}>
+                                {item.label}
+                                {item.sortable ? (
+                                    <div class={"flex w-full justify-end"}>
+                                        <button onClick={() => setCurrentSortColumn(index)}>
+                                            <TbArrowsSort size={16} />
+                                        </button>
+                                    </div>
+                                ): false}
+                            </div>
+                        </th>
                     ))}
                     {/* **** ACTIONS HEADER CELL *****************************************************************/}
                     {props.actions !== undefined ? (
