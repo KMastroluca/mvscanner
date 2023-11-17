@@ -1,31 +1,35 @@
-use crate::database::db::DB;
 use actix_web::{
     middleware,
-    web::{self, JsonConfig},
-    App, HttpResponse, HttpServer,
+    web::{Data, JsonConfig},
+    App, HttpServer,
 };
-use env_logger::{init_from_env, Env};
+use r2d2_sqlite::SqliteConnectionManager;
 use scan_mvcf::{
     controllers::{locations_controller, residents_controller, timestamps_controller},
-    database,
+    database::db::{query, Query},
 };
 use std::io;
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
-    init_from_env(Env::new().default_filter_or("info"));
-    let pool = DB::default();
+    std::env::set_var("RUST_LOG", "debug");
+    env_logger::init();
+    let dbpath = dirs::data_local_dir().unwrap().join("mvcf_scan.db");
+    let manager = SqliteConnectionManager::file(dbpath);
+    let pool = r2d2::Pool::builder()
+        .build(manager)
+        .expect("Not pointing to proper file");
     if let Some(args) = std::env::args().nth(1) {
         match args.as_str() {
             "--seed" => {
-                if pool.seed_test_data().is_ok() {
+                if query(&pool, Query::SeedTestData).await.is_ok() {
                     log::info!("database seeded with test data");
                 } else {
                     log::info!("database seed failed");
                 }
             }
             "--migrate" => {
-                if pool.migrations().is_ok() {
+                if query(&pool, Query::Migrations).await.is_ok() {
                     log::info!("database migrations complete");
                 } else {
                     log::info!("database migrations failed");
@@ -40,7 +44,7 @@ async fn main() -> io::Result<()> {
     let json_config = JsonConfig::default().limit(4096);
     HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::new(pool.clone()))
+            .app_data(Data::new(pool.clone()))
             .app_data(json_config.clone())
             .service(locations_controller::index)
             .service(locations_controller::show)
@@ -58,7 +62,7 @@ async fn main() -> io::Result<()> {
             .wrap(middleware::Logger::default())
     })
     .bind(("127.0.0.1", 8080))?
-    .workers(2)
+    .workers(4)
     .run()
     .await
 }

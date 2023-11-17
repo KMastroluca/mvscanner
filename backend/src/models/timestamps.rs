@@ -1,4 +1,3 @@
-use crate::database::db::DB;
 use serde::{de::Error, Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Clone, Deserialize, Eq, PartialEq)]
@@ -26,29 +25,5 @@ impl TimeStamp {
         } else {
             Err(serde_json::Error::custom("Unable to read file"))
         }
-    }
-
-    /// GET: /api/timestamps
-    pub fn index(db: &DB) -> Vec<Self> {
-        db.index_timestamps().unwrap_or_default()
-    }
-    /// POST: /api/timestamps{body}
-    pub fn store(db: &DB, timestamp: &TimeStamp) -> Result<(), rusqlite::Error> {
-        db.store_timestamp(timestamp)
-    }
-
-    /// GET: /api/timestamps/{rfid}
-    pub fn show_range_resident(db: &DB, rfid: &String, range: &Range) -> Vec<Self> {
-        db.show_resident_timestamps_range(rfid, range)
-            .unwrap_or_default()
-    }
-
-    pub fn index_range(db: &DB, range: &Range) -> Vec<Self> {
-        db.index_timestamps_range(range).unwrap_or_default()
-    }
-
-    pub fn show_location_range(db: &DB, id: usize, range: &Range) -> Vec<Self> {
-        db.show_timestamps_location_range(id, &range.start, &range.end)
-            .unwrap_or_default()
     }
 }

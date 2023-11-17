@@ -1,8 +1,9 @@
 use std::fmt::{Display, Formatter};
 
-use crate::database::db::DB;
+use crate::database::db::{query, Pool, Query, QueryResult};
 use crate::models::locations::Location;
 use crate::models::timestamps::Range;
+use actix_web::http::header;
 use actix_web::ResponseError;
 use actix_web::{get, post, web, HttpResponse};
 use serde::Deserialize;
@@ -29,51 +30,48 @@ impl std::fmt::Display for LocationsError {
 
 #[rustfmt::skip]
 #[get("/api/locations")]
-pub async fn index(db: web::Data<DB>) -> Result<HttpResponse, LocationsError> {
+pub async fn index(db: web::Data<Pool>) -> Result<HttpResponse, LocationsError> {
     log::info!("GET: locations controller");
-    let locations = Location::index(&db.into_inner());
-    if locations.is_empty() {
-        Err(LocationsError("No locations found".to_string()))
+    if let Ok(res) = query(&db, Query::IndexLocations).await {
+        match res {
+        QueryResult::Locations(locations) => Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(locations)),
+        _ => Err(LocationsError("Unable to retrieve locations".to_string())),
+        }
     } else {
-        Ok(HttpResponse::Ok().json(locations))
+        Err(LocationsError("Unable to retrieve locations".to_string()))
     }
 }
 
 #[rustfmt::skip]
 #[post("/api/locations")]
-pub async fn store(db: web::Data<&DB>, loc: web::Json<Location>) -> Result<HttpResponse, LocationsError> {
+pub async fn store(db: web::Data<Pool>, loc: web::Json<Location>) -> Result<HttpResponse, LocationsError> {
     log::info!("POST: locations controller");
-    let loc = loc.into_inner();
-    if let Ok(loc) = Location::store(&db.into_inner(), &loc) {
-        Ok(HttpResponse::Ok().json(loc))
+    if let Ok(QueryResult::Success) = query(&db, Query::StoreLocation(&loc.into_inner())).await {
+        Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json("Location added successfully"))
     } else {
-        Err(LocationsError("Unable to store location".to_string()))
+        Err(LocationsError("Unable to add location".to_string()))
     }
 }
 
 #[get("/api/locations/{location_id}")]
-pub async fn show(db: web::Data<&DB>, id: web::Path<Id>) -> Result<HttpResponse, LocationsError> {
-    let id = id.into_inner();
+pub async fn show(db: web::Data<Pool>, id: web::Path<Id>) -> Result<HttpResponse, LocationsError> {
     log::info!("GET: locations controller with id: {}", id.location_id);
-    let loc = Location::show(&db.into_inner(), id);
-    if let Some(loc) = loc {
-        Ok(HttpResponse::Ok().json(loc))
+    if let Ok(QueryResult::Location(loc)) = query(&db, Query::ShowLocation(id.location_id)).await {
+        Ok(HttpResponse::Ok()
+            .insert_header(header::ContentType::json())
+            .json(loc))
     } else {
-        Err(LocationsError(format!(
-            "No location found with id: {}",
-            id.location_id
-        )))
+        Err(LocationsError("Unable to retrieve location".to_string()))
     }
 }
 
 #[rustfmt::skip]
 #[get("/api/locations/{location_id}/timestamps")]
-pub async fn show_location_range(db: web::Data<&DB>, id: web::Path<Id>, range: web::Json<Range>) -> Result<HttpResponse, LocationsError> {
-    let id = id.into_inner();
-    let locations =  Location::show_location_timestamps_range(&db.into_inner(), id.location_id, &range.into_inner());
-    if locations.is_empty() {
-        Err(LocationsError("No timestamps found for that location/range".to_string())) 
-        } else {
-        Ok(HttpResponse::Ok().json(locations))
+pub async fn show_location_range(db: web::Data<Pool>, id: web::Path<Id>, range: web::Json<Range>) -> Result<HttpResponse, LocationsError> {
+    log::info!("GET: Locations controller timestamps with range for ID");
+    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestamps(id.into_inner().location_id, &range.into_inner())).await {
+        Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(ts))
+    } else {
+        Err(LocationsError("Unable to retrieve timestamps".to_string()))
     }
 }

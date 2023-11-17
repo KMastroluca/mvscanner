@@ -2,97 +2,97 @@
   {
     "name": "John Doe",
     "doc": "123345",
-    "rfid_tag": "123455623562354",
+    "rfid": "123455623562354",
     "room": "B-2t"
   },
   {
     "name": "Jane Smith",
     "doc": "678910",
-    "rfid_tag": "987654321098765",
+    "rfid": "987654321098765",
     "room": "A-3t"
   },
   {
     "name": "Bob Johnson",
     "doc": "543210",
-    "rfid_tag": "555555111555555",
+    "rfid": "555555111555555",
     "room": "D-4t"
   },
   {
     "name": "Michael Johnson",
     "doc": "987123",
-    "rfid_tag": "555555666555555",
+    "rfid": "555555666555555",
     "room": "D-9b"
   },
   {
     "name": "Sarah Davis",
     "doc": "543210",
-    "rfid_tag": "222222333222222",
+    "rfid": "222222333222222",
     "room": "D-1b"
   },
   {
     "name": "Kevin Smith",
     "doc": "123456",
-    "rfid_tag": "777777888777777",
+    "rfid": "777777888777777",
     "room": "B-8t"
   },
   {
     "name": "Linda White",
     "doc": "789012",
-    "rfid_tag": "888888222888888",
+    "rfid": "888888222888888",
     "room": "B-3b"
   },
   {
     "name": "James Lee",
     "doc": "345678",
-    "rfid_tag": "666666000666666",
+    "rfid": "666666000666666",
     "room": "A-1b"
   },
   {
     "name": "Emily Anderson",
     "doc": "234567",
-    "rfid_tag": "444444777444444",
+    "rfid": "444444777444444",
     "room": "E-1b"
   },
   {
     "name": "Robert Wilson",
     "doc": "654321",
-    "rfid_tag": "999999999999999",
+    "rfid": "999999999999999",
     "room": "D-1b"
   },
   {
     "name": "Olivia Martinez",
     "doc": "321789",
-    "rfid_tag": "333333333333333",
+    "rfid": "333333333333333",
     "room": "C-1b"
   },
   {
     "name": "Daniel Thomas",
     "doc": "876543",
-    "rfid_tag": "111111111111111",
+    "rfid": "111111111111111",
     "room": "C-5t"
   },
   {
     "name": "Sophia Taylor",
     "doc": "456789",
-    "rfid_tag": "7982377777777777",
+    "rfid": "7982377777777777",
     "room": "C-5b"
   },
   {
     "name": "William Brown",
     "doc": "765292",
-    "rfid_tag": "666688866666666",
+    "rfid": "666688866666666",
     "room": "C-5t"
   },
   {
     "name": "Ava Jackson",
     "doc": "234569",
-    "rfid_tag": "555555231555555",
+    "rfid": "555555231555555",
     "room": "A-4t"
   },
   {
     "name": "Matthew Moore",
     "doc": "789012",
-    "rfid_tag": "333333339993333",
+    "rfid": "333333339993333",
     "room": "D-3b"
   }
 ]
