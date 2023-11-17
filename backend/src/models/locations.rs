@@ -3,10 +3,6 @@ use std::fmt::Formatter;
 use std::path::PathBuf;
 use std::{env::current_dir, fmt::Display};
 
-use crate::{controllers::locations_controller::Id, database::db::DB};
-
-use super::timestamps::{Range, TimeStamp};
-
 #[derive(Serialize, Clone, Deserialize, Debug, Default, Eq, PartialEq)]
 pub struct Location {
     pub id: usize,
@@ -50,30 +46,6 @@ impl Location {
         let file: String = std::fs::read_to_string(path).unwrap();
         let loc: Vec<Location> = serde_json::from_str::<Vec<Location>>(&file).unwrap();
         loc
-    }
-
-    /// POST: /api/locations/{location}
-    pub fn store(db: &DB, loc: &Location) -> Result<(), rusqlite::Error> {
-        db.store_location(loc)
-    }
-
-    /// GET: /api/locations
-    pub fn index(db: &DB) -> Vec<Location> {
-        db.index_locations().unwrap_or_default()
-    }
-
-    /// GET: /api/locations/{id}
-    pub fn show(db: &DB, id: Id) -> Option<Location> {
-        let id = id.location_id;
-        if let Ok(loc) = db.show_location(id) {
-            return Some(loc);
-        }
-        None
-    }
-
-    pub fn show_location_timestamps_range(db: &DB, id: usize, range: &Range) -> Vec<TimeStamp> {
-        db.show_timestamps_location_range(id, &range.start, &range.end)
-            .unwrap_or_default()
     }
 }
 
