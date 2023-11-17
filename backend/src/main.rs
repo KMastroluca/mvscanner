@@ -62,7 +62,7 @@ async fn main() -> io::Result<()> {
             .wrap(middleware::Logger::default())
     })
     .bind(("127.0.0.1", 8080))?
-    .workers(4)
+    .workers(2)
     .run()
     .await
 }

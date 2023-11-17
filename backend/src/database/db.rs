@@ -1,13 +1,12 @@
 use crate::models::residents::Resident;
 use crate::models::timestamps::TimeStamp;
 use crate::models::{locations::Location, timestamps::Range};
-use actix_web::{error, web, Error};
+use actix_web::{error, web};
 use rusqlite::{params, Result};
-
 pub type Pool = r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>;
 
 pub type Connection = r2d2::PooledConnection<r2d2_sqlite::SqliteConnectionManager>;
-
+#[derive(Debug, Clone, PartialEq)]
 pub enum Query<'a> {
     IndexResidents,
     ShowResident(String),
@@ -55,8 +54,10 @@ pub async fn query(pool: &Pool, query: Query<'_>,) -> Result<QueryResult, Box<dy
         Query::IndexResidents => Ok(QueryResult::Residents(index_residents(conn)?)),
         Query::StoreResident(resident) => {
             if store_resident(resident, conn).is_ok() {
+                log::info!("Stored resident: {:?}", resident);
                 Ok(QueryResult::Success)
             } else {
+                log::info!("ERRORRRRRR: ");
                 Err(Box::new(rusqlite::Error::InvalidQuery))
             }
         }
@@ -258,19 +259,25 @@ fn show_resident(id: &str, conn: Connection) -> Result<Resident, Box<dyn std::er
 
 /// POST: (Store) /api/residents/{resident}
 #[rustfmt::skip]
- fn store_resident(resident: &Resident, conn: Connection,) -> Result<(), Box<dyn std::error::Error>> {
+fn store_resident(resident: &Resident, conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
     log::info!("Storing resident: {:?}", resident);
-    let _ = conn.execute(
-        "INSERT INTO residents (rfid, name, doc, unit, room)
-                VALUES (?1, ?2, ?3, ?4)",
-        params![
-            &resident.rfid,
-            &resident.name,
-            &resident.doc,
-            &resident.room,
-        ],
-    );
-    Ok(())
+
+    let query = "INSERT OR IGNORE INTO residents (rfid, name, doc, room) VALUES (?1, ?2, ?3, ?4)";
+    
+    let mut stmt = conn.prepare(query)?;
+
+    match stmt.execute(params![
+        &resident.rfid,
+        &resident.name,
+        &resident.doc,
+        &resident.room,
+    ]) {
+        Ok(_) => Ok(()),
+        Err(err) => {
+            log::error!("Error executing SQL query: {}", err);
+            Err(err.into())
+        }
+    }
 }
 
 /// PUT: (Update) /api/residents/{id}
@@ -379,8 +386,8 @@ fn index_locations(conn: Connection) -> Result<Vec<Location>, Box<dyn std::error
 
 fn store_location(loc: &Location, conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
     log::info!("Storing location: {:?}", loc);
-    let mut stmt = conn.prepare("INSERT OR IGNORE (id, name) INTO locations VALUES (?1, ?2)")?;
-    if stmt.insert(params![loc.id, loc.name]).is_ok() {
+    let mut stmt = conn.prepare("INSERT OR IGNORE INTO locations (id, name) VALUES (?1, ?2)")?;
+    if stmt.execute(params![&loc.id, &loc.name]).is_ok() {
         Ok(())
     } else {
         Err(Box::new(rusqlite::Error::InvalidQuery))

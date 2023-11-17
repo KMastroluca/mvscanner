@@ -104,8 +104,8 @@ pub async fn show(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>) -> Resu
 pub async fn store(db: web::Data<Pool>, resident: web::Json<Resident>) -> Result<HttpResponse, ResidentsError> {
     if let Ok(res) = query(&db, Query::StoreResident(&resident.into_inner())).await {
         match res {
-            QueryResult::Resident(resident) => {
-                Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(resident))
+            QueryResult::Success => {
+                Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json("Success"))
             }
             _ => Err(ResidentsError::get(ErrorType::Database))
         }
