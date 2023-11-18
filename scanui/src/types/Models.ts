@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) {11/5/23, 4:03 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
+ * Copyright (c) {11/8/23, 2:10 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
  * {Models.ts}
  * {Models.ts}
  *
@@ -27,7 +27,24 @@
  * ********************************************************************************
  */
 
+/**  
+ * This is the model for data returned about
+ * a resident and their location. As seen by the server.
+ * */
+export interface STimestampResident {
+    [key:string]:string|number;
+    rfid:string;
+    name:string;
+    doc:string;
+    housingPod:string | "A" | "B" | "C";
+    room:string;
+    timestampLeft:string;
+    destinationLabel:string; // The idea is this comes from the Timestamp destinationId, and is resolved to a location name
+}
+
+
 export interface SResident {
+    [key:string]:string |number;
     rfid:string;
     name:string;
     doc:string;
@@ -38,6 +55,7 @@ export interface SResident {
 
 
 export interface SLocation {
+    [key:string]:string|number;
     id:number;
     name:string;
 }
@@ -45,6 +63,7 @@ export interface SLocation {
 
 
 export interface STimestamp {
+    [key:string]:string|number;
     rfid:string;
     destinationId:number;
     timestamp:string;
