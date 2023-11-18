@@ -1,28 +1,28 @@
 /*
  *
- * Copyright (c) {11/7/23, 8:38 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
+ * Copyright (c) {11/8/23, 11:02 AM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
  * {STable.css}
  * {STable.css}
  *
- * This software is protected by copyright laws and international copyright treaties, as
+ * This software is protected by copyright laws and international copyright treaties, as 
  * well as other intellectual property laws and treaties. The software is licensed, not sold.
- *
+ *  
  * However, you are not permitted to use the software as is, or distribute it without
- * obtaining a license from the authors. Unauthorized use of the software may result in
- * severe civil and criminal penalties, and will be prosecuted to the maximum extent
+ * obtaining a license from the authors. Unauthorized use of the software may result in 
+ * severe civil and criminal penalties, and will be prosecuted to the maximum extent 
  * possible under law.
  *
- * THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
  * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- *  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- *  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- *  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN 
+ *  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+ *  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
  *  SOFTWARE.
- *
- * In no case shall the authors or copyright holders be liable for any claim, damages or
- * other liability arising from, out of or in connection with the softwareor the use or
+ *  
+ * In no case shall the authors or copyright holders be liable for any claim, damages or 
+ * other liability arising from, out of or in connection with the softwareor the use or 
  * other dealings in the software.
  * ********************************************************************************
  */
@@ -38,10 +38,22 @@
     }
 
     /* Styled / Formatted Table Cells */
+
     table {
-        @apply overflow-hidden rounded-xl;
-        border-collapse: collapse;
+        border-collapse: separate;
+        border-spacing: 0;
+        overflow: hidden;
+        border-radius: 10px;
+        border-style: hidden;
+
     }
+
+    .stable-wrapper {
+        @apply border-2 w-fit h-fit;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
 
     thead tr {
         @apply  bg-gray-50;
@@ -74,7 +86,6 @@
     /* Custom Checkbox */
     .stable-checkbox {
         @apply block relative cursor-pointer select-none rounded-lg h-[24px] w-[24px] border-2 bg-white;
-
         box-shadow: inset 1px 1px #E1E1E1;
     }
 
