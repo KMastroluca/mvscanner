@@ -145,9 +145,9 @@ pub async fn update(db: web::Data<Pool>, resident: web::Json<Resident>) -> Resul
 }
 
 #[rustfmt::skip]
-#[get("/api/residents/{rfid}/timestamps{range}")]
-pub async fn show_resident_timestamps(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>, range: web::Json<Range>) -> Result<HttpResponse, ResidentsError> {
-    if let Ok(ts) = query(&db, Query::ShowResidentTimestamps(rfid.rfid.clone(), &range.into_inner())).await {
+#[get("/api/residents/{rfid}/timestamps")]
+pub async fn show_resident_timestamps(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>) -> Result<HttpResponse, ResidentsError> {
+    if let Ok(ts) = query(&db, Query::ShowResidentTimestamps(rfid.rfid.clone())).await {
         match ts {
             QueryResult::TimeStamps(ts) => {
                 Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(ts))

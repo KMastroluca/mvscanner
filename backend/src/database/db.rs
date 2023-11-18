@@ -13,11 +13,11 @@ pub enum Query<'a> {
     StoreResident(&'a Resident),
     UpdateResident(&'a Resident),
     DestroyResident(String),
-    ShowResidentTimestamps(String, &'a Range),
+    ShowResidentTimestamps(String),
     IndexLocations,
     ShowLocation(usize),
     StoreLocation(&'a Location),
-    ShowLocationTimestamps(usize, &'a Range),
+    ShowLocationTimestamps(usize),
     IndexTimestamps,
     ShowTimestamps(&'a Range),
     StoreTimestamp(&'a TimeStamp),
@@ -75,8 +75,8 @@ pub async fn query(pool: &Pool, query: Query<'_>,) -> Result<QueryResult, Box<dy
                 Err(Box::new(rusqlite::Error::InvalidQuery))
             }
         }
-        Query::ShowResidentTimestamps(rfid, range) => {
-            if let Ok(timestamps) = show_resident_timestamps(rfid, range, conn) {
+        Query::ShowResidentTimestamps(rfid) => {
+            if let Ok(timestamps) = show_resident_timestamps(rfid, conn) {
                 Ok(QueryResult::TimeStamps(timestamps))
             } else {
                 Err(Box::new(rusqlite::Error::QueryReturnedNoRows))
@@ -100,8 +100,8 @@ pub async fn query(pool: &Pool, query: Query<'_>,) -> Result<QueryResult, Box<dy
             store_location(location, conn)?;
             Ok(QueryResult::Success)
         }
-        Query::ShowLocationTimestamps(id, range) => Ok(QueryResult::TimeStamps(
-            show_timestamps_location_range(id, &range.start, &range.end, conn)?,
+        Query::ShowLocationTimestamps(id) => Ok(QueryResult::TimeStamps(
+            show_timestamps_location_range(id, conn)?,
         )),
         Query::IndexTimestamps => Ok(QueryResult::TimeStamps(index_timestamps(conn)?)),
         Query::ShowTimestamps(range) => Ok(QueryResult::TimeStamps(index_timestamps_range(
@@ -293,6 +293,7 @@ fn store_resident(resident: &Resident, conn: Connection) -> Result<(), Box<dyn s
         ])?;
         Ok(())
     }
+
 #[rustfmt::skip]
     /// DELETE: (Destroy) /api/residents/{id}
  fn delete_resident(id: &str, conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
@@ -303,17 +304,17 @@ fn store_resident(resident: &Resident, conn: Connection) -> Result<(), Box<dyn s
 
 /// GET: (Update) /api/residents/{id}/timestamps/       DEFAULT: TODAY
     #[rustfmt::skip]
- fn show_resident_timestamps(rfid: String, range: &Range, conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
+ fn show_resident_timestamps(rfid: String, conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
         let mut stmt = conn
-            .prepare("SELECT * FROM timestamps WHERE rfid = ?1 AND DATE(ts) BETWEEN ?2 AND ?3")?;
-        let last_iter = stmt.query_map(params![&rfid.clone(), &range.start, &range.end], |row| {
+            .prepare("SELECT * FROM timestamps WHERE rfid = ?1 AND DATE(ts) = DATE('now')")?;
+        let last_iter = stmt.query_map(params![&rfid.clone()], |row| {
             Ok(TimeStamp::new(row.get(1)?, row.get(2)?, row.get(3)?))
         })?;
         Ok(last_iter.map(|ts| ts.unwrap()).collect::<Vec<TimeStamp>>())
     }
 
 // +++++========================+++++==========================================++++++
-/// ------------------ TIMESTAMPS ------------------------///
+/// ----------------------------- TIMESTAMPS ---------------------------------///
 
 /// GET: (Index) /api/timestamps/
 fn index_timestamps(conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
@@ -352,11 +353,11 @@ fn index_timestamps(conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::err
 
 /// GET: (Show) /api/locations/{id}/timestamps/{range}
 #[rustfmt::skip]
- fn show_timestamps_location_range(id: usize, start: &str, end: &str, conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
+ fn show_timestamps_location_range(id: usize, conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
         let mut stmt = conn.prepare(
-                "SELECT * FROM timestamps WHERE dest = ?1 AND DATE(ts) BETWEEN ?2 AND ?3",
+                "SELECT * FROM timestamps WHERE dest = ?1 AND DATE(ts) = DATE('now')",
             )?;
-        let timestamps_iter = stmt.query_map(params![&id, &start, &end], |row| {
+        let timestamps_iter = stmt.query_map(params![&id], |row| {
             Ok(TimeStamp::new(row.get(1)?, row.get(2)?, row.get(3)?))
         })?;
         Ok(timestamps_iter
