@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) {11/8/23, 3:10 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
+ * Copyright (c) {11/8/23, 3:22 PM} Lorenzo A. Banks and Preston Thorpe. All rights reserved.
  * {STable.tsx}
  * {STable.tsx}
  *
@@ -28,15 +28,15 @@
  */
 
 
-import {SLocation, SResident, STimestamp} from "../types/Models.ts";
+import {SLocation, SResident, STimestamp, STimestampResident} from "../types/Models.ts";
 import {Component, createEffect, createMemo, createSignal, For, JSXElement, onMount} from "solid-js";
 
 import '../styles/STable.css';
 import {TbArrowsSort} from "solid-icons/tb";
 
 export interface STableProps {
-    type: "Resident" | "Location" | "Timestamp";
-    data: SResident[]|STimestamp[]|SLocation[];
+    type: "Resident" | "Location" | "Timestamp" | "TimestampResident";
+    data: SResident[]|STimestamp[]|SLocation[]|STimestampResident[];
     actions?: STableAction[];
 }
 
@@ -55,7 +55,7 @@ export interface STableColumn {
 
 export interface STableRowItem {
     selected:boolean;
-    item:SResident|SLocation|STimestamp;
+    item:SResident|SLocation|STimestamp|STimestampResident;
 }
 
 export type SortType = StringSort|NumericalSort|DateSort;
@@ -90,7 +90,11 @@ export const STable: Component<STableProps> = (props:STableProps) => {
     const [tableColumns, setTableColumns] = createSignal<STableColumn[]|null>(null);
     const [tableAllSelect, setTableAllSelect] = createSignal({allSelected:false});
     const [tableSelectedItems, setTableSelectedItems] = createSignal<STableRowItem[]>([]);
+
+    // Sorting State
+
     const [currentSort, setCurrentSort] = createSignal<{type:SortType, columnIndex:number}|null>(null);
+    const [previousSort, setPreviousSort] = createSignal<{type:SortType, columnIndex:number}|null>(null);
 
     onMount(() => {
         // Load Table Columns
@@ -153,6 +157,38 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                     label:"Timestamp",
                     sortable:true,
                     sortType: {type:"Date"}
+                }
+            ];
+            setTableColumns(columns);
+        } else if (props.type === "TimestampResident") {
+            let columns:STableColumn[] = [
+                {
+                    label:"Resident Name",
+                    sortable:true,
+                    sortType: {type:"String"},
+                    key:"name"
+                },
+                {
+                    label:"DOC #",
+                    sortable:false,
+                },
+                {
+                    label:"Housing Unit",
+                    sortable:true,
+                    sortType: {type:"String"},
+                    key:"housingPod"
+                },
+                {
+                    label:"Departed At:",
+                    sortable:true,
+                    sortType: {type:"Date"},
+                    key:"timestampLeft"
+                },
+                {
+                    label:"Destination",
+                    sortable:true,
+                    sortType: {type:"String"},
+                    key:"destinationLabel"
                 }
             ];
             setTableColumns(columns);
@@ -263,7 +299,6 @@ export const STable: Component<STableProps> = (props:STableProps) => {
     }
 
     const setCurrentSortColumn = (columnIndex:number) => {
-
         console.log("Run setCurrentSortColumn");
         // If we already have a sort set, with this columnIndex and we're running this function again,
         // lets assume we want to toggle to the other sort option
@@ -272,6 +307,7 @@ export const STable: Component<STableProps> = (props:STableProps) => {
             console.log("We were already sorting before!")
             if (currentSort()!.columnIndex === columnIndex) {
                 // Yes we want to toggle.
+                console.log("Toggling current sort");
                 toggleCurrentSort();
                 return;
             }
@@ -293,25 +329,29 @@ export const STable: Component<STableProps> = (props:STableProps) => {
             console.log("Found sortType on sortColumn:", sortColumn, sortColumn.sortType);
             if (sortColumn.sortType.type === "String") {
                 console.log("Sort Type Was String");
-                setCurrentSort({type:StringSort.Alphabetical, columnIndex:columnIndex})
+                setCurrentSort({type:StringSort.Alphabetical, columnIndex:columnIndex});
             } else if (sortColumn.sortType.type === "Numerical") {
                 console.log("Sort Type Was Numerical");
-                setCurrentSort({type:NumericalSort.Ascending, columnIndex:columnIndex})
+                setCurrentSort({type:NumericalSort.Ascending, columnIndex:columnIndex});
             } else if (sortColumn.sortType.type === "Date") {
                 console.log("Sort Type Was Date");
-                setCurrentSort({type:DateSort.LatestFirst, columnIndex:columnIndex})
+                setCurrentSort({type:DateSort.LatestFirst, columnIndex:columnIndex});
             }
         }
 
     };
 
     const reSortData = (data:{type:SortType, columnIndex:number}) => {
+        console.log("[+] Re-Sort Data Was Executed!");
         let columnToSort = tableColumns()![data.columnIndex];
+        console.log(columnToSort);
         if (columnToSort.key) {
             let key = columnToSort.key!;
+            console.log("[+] Key To Sort By:", key);
             // Key Is Set To Compare To Data Objects
             switch(data.type) {
                 case StringSort.Alphabetical: {
+                    console.log("[+] Alphabetical Sorting");
                     let tableCopy = [...tableData()!];
                     tableCopy.sort((a, b) => {
                         if (a.item.hasOwnProperty(key) && b.item.hasOwnProperty(key)) {
@@ -323,12 +363,18 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                         } else {
                             return 0;
                         }
-                    })
+                    });
+                    console.log("[+] This is the copy of the new data to sort.", tableCopy);
+
+                    // Setting This Data Here Works, But Causes A Rerender Loop.
+                    // Set The Previous Sort, So We Know Not To Re-Render
+                    
                     setTableData(tableCopy);
                     console.log("[+] Completed Alphabetical Sort");
                     break;
                 }
                 case StringSort.AlphaReverse: {
+                    console.log("[+] Reverse Alphabetical Sorting");
                     let tableCopy = [...tableData()!];
                     tableCopy.sort((a, b) => {
                        if (a.item.hasOwnProperty(key) && b.item.hasOwnProperty(key)) {
@@ -341,6 +387,7 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                            return 0;
                        }
                     });
+                    console.log("[+] Result Of Reverse Alphabetical Sort: ",tableCopy)
                     setTableData(tableCopy);
                     console.log("[+] Completed Reverse Alphabetical Sort.");
                     break;
@@ -351,14 +398,15 @@ export const STable: Component<STableProps> = (props:STableProps) => {
         }
     };
 
+
     createEffect(() => {
-        console.log("currentSort is set to ", currentSort());
-
-        if (currentSort() !== null) {
+        if (currentSort() !== previousSort()) {
+            console.log("[+] Effect: Sort Has Changed, Setting Previous Sort, Setting New Current Sort");
             reSortData(currentSort()!);
+            // Set Previous Sort To Current Sort
+            setPreviousSort(currentSort());
         }
-
-    })
+    }, [currentSort()?.type, currentSort()?.columnIndex])
 
     createEffect(() => {
         console.log("Table Data Changed:", tableData());
@@ -399,7 +447,7 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                         </th>
                     ))}
                     {/* **** ACTIONS HEADER CELL *****************************************************************/}
-                    {props.actions !== undefined ? (
+                    {props.actions !== undefined || props.actions ? (
                         <th>
                             <div class={"cell-inner"}>
                                 <span>Actions</span>
@@ -488,8 +536,51 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                     </For>
                 ):false}
 
+                {/* **** TIMESTAMP-RESIDENT TABLE LAYOUT *****************************************************************/}
+                {props.type === "TimestampResident" ? (
+                    <For each={tableData()} fallback={<p>No Items</p>}>
+                        {(item) => {
+                            const timestampItem = item.item as STimestampResident;
+                            return (
+                                <tr>
+                                    <td>
+                                        <div class={"cell-inner"}>
+                                            <label class={"stable-checkbox"}>
+                                                <input class={"stable-checkbox-input"}
+                                                type={"checkbox"}
+                                                checked={item.selected}
+                                                onChange={(e) => handleSelectRow(e, item)} />
+                                                <span class={"stable-checkbox-checkmark"}></span>
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td><div class={"cell-inner"}>{timestampItem.name}</div></td>
+                                    <td><div class={"cell-inner"}>{timestampItem.doc}</div></td>
+                                    <td><div class={"cell-inner"}>{timestampItem.housingPod}</div></td>
+                                    <td><div class={"cell-inner"}>{timestampItem.timestampLeft}</div></td>
+                                    <td><div class={"cell-inner"}>{timestampItem.destinationLabel}</div></td>
+                                    {props.actions ? ( 
+                                    <td>
+                                        <div class={"cell-inner"}>
+                                            <For each={props.actions} >
+                                                {(action) => (
+                                                    <button onClick={action.actionFunction}>
+                                                        {action.actionLabel}
+                                                    </button>
+                                                )}
+                                            </For>
+                                        </div>
+                                    </td>
+                                    ) : false}
+                                </tr>
+                            );
+                        }}
+                    </For>
 
-              {/* **** TIMESTAMP TABLE LAYOUT *****************************************************************/}
+                ) : false}
+
+
+                {/* **** TIMESTAMP TABLE LAYOUT *****************************************************************/}
                 {props.type === "Timestamp" ? (
                     <For each={tableData()} fallback={<p>No Items</p>}>
                         {(item) => {

@@ -29,52 +29,46 @@
 
 import './App.css'
 import {STable, STableAction} from "./components/STable.tsx";
-import { SResident} from "./types/Models.ts";
+import { SResident, STimestampResident} from "./types/Models.ts";
 function App() {
 
 
-  let e:SResident[] = [
+  let e:STimestampResident[] = [
     {
-      rfid:"12345678901234567",
-      name: "Kansas, Wrapper",
-      doc:"123928",
-      pod:"A",
-      room:"12 T"
+      rfid: "83726384958372839",
+      name: "Banks, Lorenzo",
+      doc: "122750",
+      timestamp: "2021-08-23T15:09:00Z",
+      housingPod: "A",
+      room: "11-T",
+      timestampLeft:"2021-08-23T15:09:00Z",
+      destinationLabel: "Music Room"
     },
     {
-      rfid:"12345678901234567",
-      name: "Apple, Digger",
-      doc:"123928",
-      pod:"A",
-      room:"12 T"
+      rfid: "83726384953678293",
+      name: "Martin, Sherry",
+      doc: "120030",
+      timestamp: "2021-08-23T15:09:00Z",
+      housingPod: "A",
+      room: "19-T",
+      timestampLeft:"2021-08-23T15:09:00Z",
+      destinationLabel: "Gym"
     },
     {
-      rfid:"12345678901234567",
-      name: "Bates, Harold",
-      doc:"123928",
-      pod:"A",
-      room:"12 T"
+      rfid: "83726384958372839",
+      name: "Decker, John",
+      doc: "449320",
+      timestamp: "2021-08-23T15:09:00Z",
+      housingPod: "A",
+      room: "32-B",
+      timestampLeft:"2021-08-23T15:09:00Z",
+      destinationLabel: "Education"
     }
-  ];
-
-  let a:STableAction[] = [
-    {
-      actionLabel:"Action1",
-      actionFunction:() => {
-        console.log("Action1");
-      }
-    },
-    {
-      actionLabel:"Action2",
-      actionFunction:() => {
-        console.log("Action2");
-      }
-    }
-  ];
+  ]
 
   return (
       <>
-        <STable type={"Resident"} data={e} actions={a} />
+        <STable type={"TimestampResident"} data={e} />
       </>
   )
 }
