@@ -27,50 +27,36 @@
  * ********************************************************************************
  */
 
+import { createEffect, createResource, createSignal } from 'solid-js';
+import {makeAbortable, makeCache, createAggregated} from '@solid-primitives/resource';
 import './App.css'
-import {STable, STableAction} from "./components/STable.tsx";
-import { SResident, STimestampResident} from "./types/Models.ts";
+import { getResidentsOut, getResidentsIn } from './api/ResidentInOut';
+import { STable } from './components/STable';
+
 function App() {
 
-
-  let e:STimestampResident[] = [
-    {
-      rfid: "83726384958372839",
-      name: "Banks, Lorenzo",
-      doc: "122750",
-      timestamp: "2021-08-23T15:09:00Z",
-      housingPod: "A",
-      room: "11-T",
-      timestampLeft:"2021-08-23T15:09:00Z",
-      destinationLabel: "Music Room"
-    },
-    {
-      rfid: "83726384953678293",
-      name: "Martin, Sherry",
-      doc: "120030",
-      timestamp: "2021-08-23T15:09:00Z",
-      housingPod: "A",
-      room: "19-T",
-      timestampLeft:"2021-08-23T15:09:00Z",
-      destinationLabel: "Gym"
-    },
-    {
-      rfid: "83726384958372839",
-      name: "Decker, John",
-      doc: "449320",
-      timestamp: "2021-08-23T15:09:00Z",
-      housingPod: "A",
-      room: "32-B",
-      timestampLeft:"2021-08-23T15:09:00Z",
-      destinationLabel: "Education"
-    }
-  ]
+  const [outResidentsData] = createResource(getResidentsOut, { initialValue: [] });
+  const [inResidentsData] = createResource(getResidentsIn, {initialValue: []});
 
   return (
-      <>
-        <STable type={"TimestampResident"} data={e} />
-      </>
-  )
+    <div class={"flex flex-row justify-end gap-x-2 px-2 py-3"}>
+    <div class={"flex w-[49em]"}>
+      {outResidentsData.loading ? (<div>Loading...</div>): (
+        <STable type='TimestampResident' data={outResidentsData()} />
+      )}
+    </div>
+
+    <div class={"flex w-[24em]"}>
+      {inResidentsData.loading ? (<div>Loading...</div>): (
+        <STable type='Resident' data={inResidentsData()} />
+      )}
+    </div>
+
+    
+    </div>
+  );
+;
+
 }
 
 export default App

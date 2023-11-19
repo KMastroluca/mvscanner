@@ -36,7 +36,6 @@ export interface STimestampResident {
     rfid:string;
     name:string;
     doc:string;
-    housingPod:string | "A" | "B" | "C";
     room:string;
     timestampLeft:string;
     destinationLabel:string; // The idea is this comes from the Timestamp destinationId, and is resolved to a location name
@@ -48,7 +47,6 @@ export interface SResident {
     rfid:string;
     name:string;
     doc:string;
-    pod:string | "A" | "B" | "C";
     room:string;
 }
 
