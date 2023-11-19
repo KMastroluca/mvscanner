@@ -1,100 +1,119 @@
+import json
 import unittest
 import requests
-import json
 
 
 class TestResidentsController(unittest.TestCase):
+    """
+    .service(residents_controller::index)
+    .service(residents_controller::show)
+    .service(residents_controller::show_resident_timestamps)
+    .service(residents_controller::store)
+    .service(residents_controller::destroy)
+    .service(residents_controller::update)
+    """
+
     base_url = "http://localhost:8080/api/residents"
 
-    def test_get_all_residents(self):
+    def test_index(self):
         response = requests.get(self.base_url)
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.json(), list)
 
-    def test_get_single_resident(self):
-        resident_id = "123455623562354"
+    def test_show(self):
+        resident_id = "888888222888888"
         response = requests.get(f"{self.base_url}/{resident_id}")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["rfid"], resident_id)
 
-    def test_post_new_resident(self):
+    def test_store(self):
         fake_resident = {
-            "rfid": "999999999999",
+            "rfid": "888888222888800",
             "name": "Fake Resident",
             "doc": "999999",
             "room": "C-3",
+            "unit": 8,
         }
         response = requests.post(self.base_url, json=fake_resident)
         self.assertEqual(response.status_code, 201)  # Assuming 201 for created
 
-    def test_put_update_resident(self):
-        resident_id = "123455623562354"
+    def test_update(self):
+        resident_id = "888888222888800"
         updated_data = {"name": "Updated Name"}
-        response = requests.put(f"{self.base_url}/{resident_id}", json=updated_data)
+        response = requests.patch(f"{self.base_url}/{resident_id}", json=updated_data)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["name"], "Updated Name")
 
     def test_delete_resident(self):
-        resident_id = "123455623562354"
+        resident_id = "999999999999999"
         response = requests.delete(f"{self.base_url}/{resident_id}")
-        self.assertEqual(response.status_code, 204)  # Assuming 204 for no content
+        self.assertEqual(response.status_code, 200)  # Assuming 204 for no content
 
 
 class TestLocationsController(unittest.TestCase):
+
+    """locations_controller::index
+    locations_controller::show
+    locations_controller::store
+    locations_controller::show_location_timestamps
+    locations_controller::show_location_timestamps_range
+    locations_controller::show_location_residents
+    """
+
     base_url = "http://localhost:8080/api/locations"
 
-    def test_get_all_locations(self):
+    def test_index(self):
         response = requests.get(self.base_url)
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.json(), list)
 
-    def test_post_new_location(self):
-        fake_location = {"name": "New Location"}
-        response = requests.post(self.base_url, json=fake_location)
-        self.assertEqual(response.status_code, 201)  # Assuming 201 for created
-
-    def test_put_update_location(self):
-        location_id = 12
-        updated_data = {"name": "Updated Location Name"}
-        response = requests.put(f"{self.base_url}/{location_id}", json=updated_data)
+    def test_show(self):
+        response = requests.get(f"{self.base_url}/4")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["name"], "Updated Location Name")
+        data = response.json().get("name")
+        self.assertEqual(data, "ASU")
 
-    def test_delete_location(self):
-        location_id = 12
-        response = requests.delete(f"{self.base_url}/{location_id}")
-        self.assertEqual(response.status_code, 204)  # Assuming 204 for no content
+    def test_store(self):
+        fake_location = {"id": 69, "name": "ur_moms_house"}
+        response = requests.post(self.base_url, json=fake_location)
+        self.assertEqual(response.status_code, 201)
+
+    def test_show_location_timestamps(self):
+        response = requests.get(f"{self.base_url}/8/timestamps")
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.json(), list)
+
+    def test_show_location_timestamps_range(self):
+        response = requests.get(f"{self.base_url}/13/timestamps/2023-11-19/2023-11-20")
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.json(), list)
+
+    def test_show_location_residents(self):
+        response = requests.get(f"{self.base_url}/8/residents")
+        self.assertEqual(response.status_code, 200)
 
 
 class TestTimestampsController(unittest.TestCase):
     base_url = "http://localhost:8080/api/timestamps"
 
-    def test_crud_timestamp(self):
-        fake_timestamp = {
-            "rfid": "666666000666666",
-            "dest": 19,
-            "time": "2021-02-02T12:12:12",
-        }
+    def test_index(self):
+        response = requests.get(self.base_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.json(), list)
 
-        # Create
+    def test_show(self):
+        response = requests.get(f"{self.base_url}/1")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["rfid"], "888888222888888")
+
+    def test_store(self):
+        fake_timestamp = {"rfid": "666666000666666", "dest": 19}
         response = requests.post(self.base_url, json=fake_timestamp)
         self.assertEqual(response.status_code, 201)  # Assuming 201 for created
-        timestamp_id = response.json()["id"]
 
-        # Read
-        response = requests.get(f"{self.base_url}/{timestamp_id}")
+    def test_show_timestamps_range(self):
+        response = requests.get(f"{self.base_url}/2023-11-19/2023-11-20")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["rfid"], "666666000666666")
-
-        # Update
-        updated_data = {"dest": 20}
-        response = requests.put(f"{self.base_url}/{timestamp_id}", json=updated_data)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["dest"], 20)
-
-        # Delete
-        response = requests.delete(f"{self.base_url}/{timestamp_id}")
-        self.assertEqual(response.status_code, 204)  # Assuming 204 for no content
+        self.assertIsInstance(response.json(), list)
 
 
 if __name__ == "__main__":

@@ -1,10 +1,16 @@
 use serde::{de::Error, Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Clone, Deserialize, Eq, PartialEq)]
+pub struct PostTimestamp {
+    pub rfid: String,
+    pub dest: usize,
+}
+
+#[derive(Debug, Serialize, Clone, Deserialize, Eq, PartialEq)]
 pub struct TimeStamp {
     pub rfid: String,
     pub dest: usize,
-    pub time: String,
+    pub time: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
@@ -16,7 +22,7 @@ pub struct Range {
 }
 
 impl TimeStamp {
-    pub fn new(rfid: String, dest: usize, time: String) -> Self {
+    pub fn new(rfid: String, dest: usize, time: Option<String>) -> Self {
         Self { rfid, dest, time }
     }
     pub fn get_test_timestamps_from_file() -> Result<Vec<TimeStamp>, serde_json::Error> {
