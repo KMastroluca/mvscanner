@@ -5,26 +5,29 @@
 ________________
 ### Resident:   
 ________________
-- __RFID__:     == `String` (17 digit num)
-- __Name__:     == `String` (Last, First)
-- __DOC__:      == `String` (982392)
-- __Pod__:      == `String` ("A" | "B" | "C")
-- __Room__:     == `String` (e.g 10b) 1 number && 'b' | t''
+- __rfid__:     == `String` (17 digit num)
+- __name__:     == `String` (Last, First)
+- __doc__:      == `String` (982392)
+- __room__:     == `String` (e.g 10b) 1 number && 'b' | t''
+ __unit:__     == `int`
 
 ### `/api/residents`
 **GET: Index** `/api/residents`
 
-**POST: Create** `/api/residents/{body=full payload}`
+**GET: SHOW** `/api/residents/{rfid}`
 
-**PUT: Update** `/api/residents/{id}/{body=updates}`
+**POST: Create** `/api/residents   body=full payload`
+
+**PATCH: Update** `/api/residents/{rfid}   body={any_updated_fields}`
 
 **DELETE: Delete** `/api/residents/{id}`  
 
-### `/api/residents/{id}/timestamps`
 
-**GET: Index** Get all timestamps for resident{id}
 
-(LOL silly rabbit. request bodies aren't for get methods)
+**GET: Index** `/api/residents/{id}/timestamps`
+Get all timestamps for X resident DEFAULT= TODAY
+
+**GET: Show** `/api/residents/{id}/timestamps/{start_date}/{end_date}`
 
 ========================================================
 ## Locations:  
@@ -43,25 +46,21 @@ ________________
 
 **GET: Show** Get all timestamps for X location DEFAULT= TODAY
 
+### `/api/locations/{id}/timestamps/{start_date}/{end_date}`
+
+**GET: Show** Get all timestamps for X location within date range
+
+
 ## Timestamps
 ### `/api/timestamps`
 
 - __rfid__: `string`
-- __destination_loc__: `String`
-- __Timestamp__: `String` (pretty printed but the DB will also store a timestamp we wont see)
+- __dest__: `string`
 
 **GET: Index** `/api/timestamps` Get timestamps for that day (default)
 
 **GET: Show** `/api/timestamps`
 
-#### __RANGE:__
-```JSON
-{
-  "date": {
-    "start": "MM/DD/YYYY",
-    "end": "MM/DD/YYYY",
-  }
-}
-```
 **POST: Create** `/api/timestamps/{body=timestamp}`
 
+**GET Show** `/api/timestamps/{start_date}/{end_date}`
