@@ -111,7 +111,7 @@ pub async fn index(db: web::Data<Pool>) -> Result<HttpResponse, ResidentsError> 
 #[rustfmt::skip]
 #[get("/api/residents/{rfid}")]
 pub async fn show(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>) -> Result<HttpResponse, ResidentsError> {
-    if let Ok(res) = query(&db, Query::ShowResident(rfid.rfid.clone())).await {
+    if let Ok(res) = query(&db, Query::ShowResident(&rfid.rfid)).await {
         match res {
             QueryResult::Resident(resident) => {
                 Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(resident))
@@ -143,8 +143,8 @@ pub async fn store(db: web::Data<Pool>, resident: web::Json<Resident>) -> Result
 pub async fn destroy(db: web::Data<Pool>, rfid: web::Path<String>,) -> Result<HttpResponse, ResidentsError> {
     if let Ok(res) = query(&db, Query::DestroyResident(rfid.into_inner())).await {
         match res {
-            QueryResult::Resident(resident) => {
-                Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(resident))
+            QueryResult::Success => {
+                Ok(HttpResponse::Ok().status(StatusCode::NO_CONTENT).insert_header(header::ContentType::json()).json("SUCCESS - Resident Deleted"))
             }
         _ => Err(ResidentsError::get(ErrorType::Database))
         }
@@ -155,13 +155,16 @@ pub async fn destroy(db: web::Data<Pool>, rfid: web::Path<String>,) -> Result<Ht
 
 #[rustfmt::skip]
 #[patch("/api/residents/{rfid}")]
-pub async fn update(db: web::Data<Pool>, rfid: web::Path<String>, resident: web::Json<UpdateResident>) -> Result<HttpResponse, ResidentsError> {
-    match query(&db, Query::ShowResident(rfid.into_inner())).await {
+pub async fn update(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>, resident: web::Json<UpdateResident>) -> Result<HttpResponse, ResidentsError> {
+    match query(&db, Query::ShowResident(&rfid.into_inner().rfid)).await {
         Ok(QueryResult::Resident(res)) => {
+            log::info!("fetched resident for updating: {:?}", res);
             let updated = resident.into_inner().apply_to(res.clone());
+            // We have to get the full resident from DB before we can update it
+            // so we can accept a JSON with only the fields they wish to update
             match query(&db, Query::UpdateResident(&updated)).await {
-                Ok(QueryResult::Resident(updated_resident)) => {
-                    Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(updated_resident))
+                Ok(QueryResult::Success) => {
+                    Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(updated))
                 }
                 _ => Err(ResidentsError::get(ErrorType::Database)),
             }

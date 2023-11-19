@@ -5,8 +5,26 @@ use crate::models::locations::Location;
 use actix_web::http::{header, StatusCode};
 use actix_web::ResponseError;
 use actix_web::{get, post, web, HttpResponse};
-use serde::Deserialize;
+use chrono::NaiveDate;
+use serde::{Deserialize, Deserializer};
 
+#[derive(Debug, Deserialize)]
+pub struct LocationRange {
+    location_id: usize,
+    #[serde(deserialize_with = "deserialize_date")]
+    start_date: NaiveDate,
+    #[serde(deserialize_with = "deserialize_date")]
+    end_date: NaiveDate,
+}
+
+// Deserialize date strings into NaiveDate
+fn deserialize_date<'de, D>(deserializer: D) -> Result<NaiveDate, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let date_str = String::deserialize(deserializer)?;
+    NaiveDate::parse_from_str(&date_str, "%Y-%m-%d").map_err(serde::de::Error::custom)
+}
 #[derive(Debug, Clone, Copy, Deserialize)]
 pub struct Id {
     pub location_id: usize,
@@ -69,11 +87,11 @@ pub async fn show(db: web::Data<Pool>, id: web::Path<Id>) -> Result<HttpResponse
 
 // include range in url to show timestamps from /start/end
 #[rustfmt::skip]
-#[get("/api/locations/{location_id}/timestamps/{start}/{end}")]
-pub async fn show_location_timestamps_range(db: web::Data<Pool>, id: web::Path<(usize, String, String)>) -> Result<HttpResponse, LocationsError> {
-    let (id, start, end) = id.into_inner();
+#[get("/api/locations/{location_id}/timestamps/{start_date}/{end_date}")]
+pub async fn show_location_timestamps_range(db: web::Data<Pool>, id: web::Path<LocationRange>) -> Result<HttpResponse, LocationsError> {
+    let loc_range = id.into_inner();
     log::info!("GET: Locations controller timestamps with range for ID");
-    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestampsRange(id, &start, &end)).await {
+    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestampsRange(loc_range.location_id, &loc_range.start_date, &loc_range.end_date)).await {
         Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(ts))
     } else {
         Err(LocationsError("Unable to retrieve timestamps".to_string()))

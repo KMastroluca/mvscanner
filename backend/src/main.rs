@@ -21,11 +21,16 @@ async fn main() -> io::Result<()> {
         .expect("Not pointing to proper file");
     if let Some(args) = std::env::args().nth(1) {
         match args.as_str() {
-            "--seed" => {
-                if query(&pool, Query::SeedTestData).await.is_ok() {
-                    log::info!("database seeded with test data");
+            "--test-seed" => {
+                if query(&pool, Query::Migrations).await.is_ok() {
+                    log::info!("database migrations complete");
+                    if query(&pool, Query::SeedTestData).await.is_ok() {
+                        log::info!("database seeded with test data");
+                    } else {
+                        log::info!("database seed failed");
+                    }
                 } else {
-                    log::info!("database seed failed");
+                    log::info!("database migrations failed");
                 }
             }
             "--migrate" => {

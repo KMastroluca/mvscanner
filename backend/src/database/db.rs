@@ -10,7 +10,7 @@ pub type Connection = r2d2::PooledConnection<r2d2_sqlite::SqliteConnectionManage
 #[derive(Debug, Clone, PartialEq)]
 pub enum Query<'a> {
     IndexResidents,
-    ShowResident(String),
+    ShowResident(&'a str),
     StoreResident(&'a Resident),
     UpdateResident(&'a Resident),
     DestroyResident(String),
@@ -21,7 +21,7 @@ pub enum Query<'a> {
     ShowLocation(usize),
     StoreLocation(&'a Location),
     ShowLocationTimestamps(usize),
-    ShowLocationTimestampsRange(usize, &'a str, &'a str),
+    ShowLocationTimestampsRange(usize, &'a NaiveDate, &'a NaiveDate),
     IndexTimestamps,
     ShowTimestamps(&'a NaiveDate, &'a NaiveDate),
     StoreTimestamp(&'a PostTimestamp),
@@ -54,7 +54,7 @@ pub async fn query(pool: &Pool, query: Query<'_>,) -> Result<QueryResult, Box<dy
         .await?
         .map_err(error::ErrorInternalServerError)?;
     match query {
-        Query::ShowResident(id) => Ok(QueryResult::Resident(show_resident(&id, conn)?)),
+        Query::ShowResident(id) => Ok(QueryResult::Resident(show_resident(id, conn)?)),
         Query::IndexResidents => Ok(QueryResult::Residents(index_residents(conn)?)),
         Query::StoreResident(resident) => {
             if store_resident(resident, conn).is_ok() {
@@ -374,7 +374,6 @@ fn index_timestamps(conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::err
     log::info!("Fetching timestamps between {} and {}", start, end);
         let start = start.format("%Y-%m-%d").to_string();
         let end = end.format("%Y-%m-%d").to_string();
-
         let mut stmt = conn.prepare(
             "SELECT * FROM timestamps WHERE DATE(ts) BETWEEN DATE(?1) AND DATE(?2)")?;
         let timestamps_iter = stmt.query_map(params![&start, &end], |row| {
@@ -384,15 +383,9 @@ fn index_timestamps(conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::err
                 row.get(3)?,
             ))
         })?;
-        let mut timestamps = Vec::new();
-        let _ = timestamps_iter
-            .filter(|ts| ts.as_ref().is_ok())
-            .map(|x| timestamps.push(x.unwrap()));
-        if timestamps.is_empty() {
-            Err(Box::new(rusqlite::Error::QueryReturnedNoRows))
-        } else {
-         Ok(timestamps)
-        }
+    Ok(timestamps_iter
+        .filter_map(|ts| ts.is_ok().then(|| ts.unwrap()))
+        .collect::<Vec<TimeStamp>>())
     }
 
 /// GET: (Show) /api/locations/{id}/timestamps
@@ -411,12 +404,14 @@ fn index_timestamps(conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::err
 
 /// GET: (Show) /api/locations/{id}/timestamps/{start}/{end}
 #[rustfmt::skip]
- fn show_timestamps_location_range(id: usize, start: &str, end: &str, conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
+ fn show_timestamps_location_range(id: usize, start: &NaiveDate, end: &NaiveDate, conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
     log::info!("Fetching timestamps between {} and {}", start, end);
+        let start = start.format("%Y-%m-%d").to_string();
+        let end = end.format("%Y-%m-%d").to_string();
         let mut stmt = conn.prepare(
-                "SELECT * FROM timestamps WHERE dest = ?1 AND DATE(ts) BETWEEN DATE('start') AND DATE('end')",
+                "SELECT * FROM timestamps WHERE dest = ?1 AND DATE(ts) BETWEEN DATE(?2) AND DATE(?3)",
             )?;
-        let timestamps_iter = stmt.query_map(params![&id], |row| {
+        let timestamps_iter = stmt.query_map(params![&id, &start, &end], |row| {
             Ok(TimeStamp::new(row.get(1)?, row.get(2)?, row.get(3)?))
         })?;
         Ok(timestamps_iter
