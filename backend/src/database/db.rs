@@ -1,7 +1,8 @@
 use crate::models::residents::Resident;
 use crate::models::timestamps::TimeStamp;
-use crate::models::{locations::Location, timestamps::Range};
+use crate::models::{locations::Location, timestamps::PostTimestamp};
 use actix_web::{error, web};
+use chrono::NaiveDate;
 use rusqlite::{params, Result};
 pub type Pool = r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>;
 
@@ -14,13 +15,16 @@ pub enum Query<'a> {
     UpdateResident(&'a Resident),
     DestroyResident(String),
     ShowResidentTimestamps(String),
+    ShowResidentTimestampsRange(&'a str, &'a NaiveDate, &'a NaiveDate),
+    ShowLocationResidents(usize),
     IndexLocations,
     ShowLocation(usize),
     StoreLocation(&'a Location),
     ShowLocationTimestamps(usize),
+    ShowLocationTimestampsRange(usize, &'a str, &'a str),
     IndexTimestamps,
-    ShowTimestamps(&'a Range),
-    StoreTimestamp(&'a TimeStamp),
+    ShowTimestamps(&'a NaiveDate, &'a NaiveDate),
+    StoreTimestamp(&'a PostTimestamp),
     Migrations,
     SeedTestData,
 }
@@ -61,11 +65,25 @@ pub async fn query(pool: &Pool, query: Query<'_>,) -> Result<QueryResult, Box<dy
                 Err(Box::new(rusqlite::Error::InvalidQuery))
             }
         }
+        Query::ShowResidentTimestampsRange(rfid, start, end) => {
+            if let Ok(timestamps) = show_resident_timestamps_range(rfid, start, end, conn) {
+            Ok(QueryResult::TimeStamps(timestamps))
+            } else {
+            Err(Box::new(rusqlite::Error::QueryReturnedNoRows))
+            }
+        }
         Query::UpdateResident(resident) => {
             if update_resident(resident, conn).is_ok() {
                 Ok(QueryResult::Success)
             } else {
                 Err(Box::new(rusqlite::Error::InvalidQuery))
+            }
+        }
+        Query::ShowLocationResidents(id) => {
+            if let Ok(residents) = show_location_residents(id, conn) {
+                Ok(QueryResult::Residents(residents))
+            } else {
+                Err(Box::new(rusqlite::Error::QueryReturnedNoRows))
             }
         }
         Query::DestroyResident(id) => {
@@ -100,12 +118,15 @@ pub async fn query(pool: &Pool, query: Query<'_>,) -> Result<QueryResult, Box<dy
             store_location(location, conn)?;
             Ok(QueryResult::Success)
         }
+        Query::ShowLocationTimestampsRange(id, start, end) => Ok(QueryResult::TimeStamps(
+            show_timestamps_location_range(id, start, end, conn)?,
+        )),
         Query::ShowLocationTimestamps(id) => Ok(QueryResult::TimeStamps(
-            show_timestamps_location_range(id, conn)?,
+            show_timestamps_location(id, conn)?,
         )),
         Query::IndexTimestamps => Ok(QueryResult::TimeStamps(index_timestamps(conn)?)),
-        Query::ShowTimestamps(range) => Ok(QueryResult::TimeStamps(index_timestamps_range(
-            range, conn,
+        Query::ShowTimestamps(start, end) => Ok(QueryResult::TimeStamps(show_timestamps_range(
+            start, end, conn,
         )?)),
         Query::StoreTimestamp(ts) => {
             if store_timestamp(ts, conn).is_ok() {
@@ -151,6 +172,8 @@ pub fn migrations(conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
                 name            TEXT NOT NULL,
                 doc             TEXT NOT NULL,
                 room            TEXT NOT NULL,
+                unit            INTEGER NOT NULL,
+                FOREIGN KEY (unit) REFERENCES locations (id)
                 UNIQUE (rfid, name, doc, room)
                 );",
             params![],
@@ -164,7 +187,6 @@ pub fn migrations(conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
                     id            INTEGER PRIMARY KEY AUTOINCREMENT,
                     rfid          TEXT NOT NULL,
                     dest          INTEGER NOT NULL,
-                    timestamp     TEXT NOT NULL,
                     ts            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (rfid) REFERENCES residents (rfid),
                     FOREIGN KEY (dest) REFERENCES locations (id)
@@ -196,22 +218,23 @@ pub fn seed_test_data(conn: Connection) -> Result<(), Box<dyn std::error::Error>
     for ts in timestamps {
         log::info!("Storing timestamp: {:?}", ts);
         conn.execute(
-            "INSERT INTO timestamps (rfid, dest, timestamp)
-                  VALUES (?1, ?2, ?3)",
-            params![&ts.rfid, &ts.dest, &ts.time],
+            "INSERT INTO timestamps (rfid, dest)
+                  VALUES (?1, ?2)",
+            params![&ts.rfid, &ts.dest],
         )?;
     }
 
     for resident in residents {
         log::info!("Storing resident: {:?}", resident);
         conn.execute(
-            "INSERT INTO residents (rfid, name, doc, room)
-                VALUES (?1, ?2, ?3, ?4)",
+            "INSERT INTO residents (rfid, name, doc, room, unit)
+                VALUES (?1, ?2, ?3, ?4, ?5)",
             params![
                 &resident.rfid,
                 &resident.name,
                 &resident.doc,
                 &resident.room,
+                &resident.unit
             ],
         )?;
     }
@@ -232,6 +255,7 @@ fn index_residents(conn: Connection) -> Result<Vec<Resident>, Box<dyn std::error
             row.get(1)?,
             row.get(2)?,
             row.get(3)?,
+            row.get(4)?,
         ))
     })?;
 
@@ -249,6 +273,7 @@ fn show_resident(id: &str, conn: Connection) -> Result<Resident, Box<dyn std::er
             row.get(1)?,
             row.get(2)?,
             row.get(3)?,
+            row.get(4)?,
         ))
     }) {
         Ok(resident)
@@ -262,7 +287,7 @@ fn show_resident(id: &str, conn: Connection) -> Result<Resident, Box<dyn std::er
 fn store_resident(resident: &Resident, conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
     log::info!("Storing resident: {:?}", resident);
 
-    let query = "INSERT OR IGNORE INTO residents (rfid, name, doc, room) VALUES (?1, ?2, ?3, ?4)";
+    let query = "INSERT OR IGNORE INTO residents (rfid, name, doc, room, unit) VALUES (?1, ?2, ?3, ?4, ?5)";
     
     let mut stmt = conn.prepare(query)?;
 
@@ -271,6 +296,7 @@ fn store_resident(resident: &Resident, conn: Connection) -> Result<(), Box<dyn s
         &resident.name,
         &resident.doc,
         &resident.room,
+        &resident.unit,
     ]) {
         Ok(_) => Ok(()),
         Err(err) => {
@@ -284,12 +310,13 @@ fn store_resident(resident: &Resident, conn: Connection) -> Result<(), Box<dyn s
 #[rustfmt::skip]
   fn update_resident(resident: &Resident, conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
         let mut stmt =
-            conn.prepare("UPDATE residents SET name = ?2, doc = ?3, room = ?4 WHERE rfid = ?1")?;
+            conn.prepare("UPDATE residents SET name = ?2, doc = ?3, room = ?4, unit = ?5 WHERE rfid = ?1")?;
         stmt.execute(params![
             &resident.rfid,
             &resident.name,
             &resident.doc,
             &resident.room,
+            &resident.unit,
         ])?;
         Ok(())
     }
@@ -311,12 +338,25 @@ fn store_resident(resident: &Resident, conn: Connection) -> Result<(), Box<dyn s
             Ok(TimeStamp::new(row.get(1)?, row.get(2)?, row.get(3)?))
         })?;
         Ok(last_iter.map(|ts| ts.unwrap()).collect::<Vec<TimeStamp>>())
-    }
+}
+
+#[rustfmt::skip]
+fn show_resident_timestamps_range(rfid: &str, start: &NaiveDate, end: &NaiveDate, conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
+    let start_date = start.format("%Y-%m-%d").to_string();
+    let end_date = end.format("%Y-%m-%d").to_string();
+    let mut stmt = conn
+        .prepare("SELECT * FROM timestamps WHERE rfid = ?1 AND DATE(ts) BETWEEN DATE(?2) AND DATE(?3)")?;
+    let last_iter = stmt.query_map(params![&rfid, &start_date, &end_date], |row| {
+        Ok(TimeStamp::new(row.get(1)?, row.get(2)?, row.get(3)?))
+    })?;
+    Ok(last_iter.map(|ts| ts.unwrap()).collect::<Vec<TimeStamp>>())
+}
 
 // +++++========================+++++==========================================++++++
 /// ----------------------------- TIMESTAMPS ---------------------------------///
 
 /// GET: (Index) /api/timestamps/
+#[rustfmt::skip]
 fn index_timestamps(conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
     let mut stmt = conn.prepare("SELECT * FROM timestamps WHERE DATE(ts) = DATE('now')")?;
     let timestamps = stmt.query_map([], |row| {
@@ -330,10 +370,14 @@ fn index_timestamps(conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::err
 
 /// GET: (Show) /api/timestamps/{range}
     #[rustfmt::skip]
- fn index_timestamps_range(range: &Range, conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
+ fn show_timestamps_range(start: &NaiveDate, end: &NaiveDate, conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
+    log::info!("Fetching timestamps between {} and {}", start, end);
+        let start = start.format("%Y-%m-%d").to_string();
+        let end = end.format("%Y-%m-%d").to_string();
+
         let mut stmt = conn.prepare(
-            "SELECT * FROM timestamps WHERE DATE(ts) BETWEEN ?2 AND ?3")?;
-        let timestamps_iter = stmt.query_map(params![&range.start, &range.end], |row| {
+            "SELECT * FROM timestamps WHERE DATE(ts) BETWEEN DATE(?1) AND DATE(?2)")?;
+        let timestamps_iter = stmt.query_map(params![&start, &end], |row| {
             Ok(TimeStamp::new(
                 row.get(1)?,
                 row.get(2)?,
@@ -351,9 +395,9 @@ fn index_timestamps(conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::err
         }
     }
 
-/// GET: (Show) /api/locations/{id}/timestamps/{range}
+/// GET: (Show) /api/locations/{id}/timestamps
 #[rustfmt::skip]
- fn show_timestamps_location_range(id: usize, conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
+ fn show_timestamps_location(id: usize, conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
         let mut stmt = conn.prepare(
                 "SELECT * FROM timestamps WHERE dest = ?1 AND DATE(ts) = DATE('now')",
             )?;
@@ -365,13 +409,28 @@ fn index_timestamps(conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::err
             .collect::<Vec<TimeStamp>>())
     }
 
+/// GET: (Show) /api/locations/{id}/timestamps/{start}/{end}
+#[rustfmt::skip]
+ fn show_timestamps_location_range(id: usize, start: &str, end: &str, conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
+    log::info!("Fetching timestamps between {} and {}", start, end);
+        let mut stmt = conn.prepare(
+                "SELECT * FROM timestamps WHERE dest = ?1 AND DATE(ts) BETWEEN DATE('start') AND DATE('end')",
+            )?;
+        let timestamps_iter = stmt.query_map(params![&id], |row| {
+            Ok(TimeStamp::new(row.get(1)?, row.get(2)?, row.get(3)?))
+        })?;
+        Ok(timestamps_iter
+            .filter_map(|ts| ts.is_ok().then(|| ts.unwrap()))
+            .collect::<Vec<TimeStamp>>())
+    }
+
 /// POST: (Store) /api/timestamps/{timestamp}
-fn store_timestamp(ts: &TimeStamp, conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
+fn store_timestamp(ts: &PostTimestamp, conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
     let mut stmt = conn.prepare(
-        "INSERT INTO timestamps (rfid, dest, timestamp)
-                  VALUES (?1, ?2, ?3)",
+        "INSERT INTO timestamps (rfid, dest)
+                  VALUES (?1, ?2)",
     )?;
-    let _ = stmt.insert(params![&ts.rfid, &ts.dest, &ts.time])?;
+    let _ = stmt.insert(params![&ts.rfid, &ts.dest])?;
     Ok(())
 }
 
@@ -405,4 +464,22 @@ fn show_location(id: usize, conn: Connection) -> Result<Location, Box<dyn std::e
     } else {
         Err(Box::new(rusqlite::Error::QueryReturnedNoRows))
     }
+}
+
+/// GET: (Show) /api/locations/{id}/residents
+#[rustfmt::skip]
+fn show_location_residents(id: usize, conn: Connection) -> Result<Vec<Resident>, Box<dyn std::error::Error>> {
+    let mut stmt = conn.prepare("SELECT * FROM residents WHERE unit = ?1")?;
+    let residents_iter = stmt.query_map(params![&id], |row| {
+        Ok(Resident::new(
+            row.get(0)?,
+            row.get(1)?,
+            row.get(2)?,
+            row.get(3)?,
+            row.get(4)?,
+        ))
+    })?;
+    Ok(residents_iter
+        .filter_map(|res| res.is_ok().then(|| res.unwrap()))
+        .collect::<Vec<Resident>>())
 }
