@@ -9,7 +9,7 @@ use actix_web::{
 };
 
 use chrono::NaiveDate;
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Deserializer};
 
 #[derive(Debug, Deserialize)]
 pub struct RangeParams {
@@ -57,15 +57,13 @@ pub async fn store_timestamp(db: web::Data<Pool>, ts: web::Json<PostTimestamp>) 
 
 /// GET: /api/timestamps/{start}/{end}
 #[get("/api/timestamps/{start_date}/{end_date}")]
+#[rustfmt::skip]
 pub async fn show_range(db: web::Data<Pool>, range: web::Path<RangeParams>) -> impl Responder {
     let range = &range.into_inner();
-    if let Ok(QueryResult::TimeStamps(ts)) = query(
-        &db,
-        Query::ShowTimestamps(&range.start_date, &range.end_date),
-    )
-    .await
-    {
-        HttpResponse::Ok().json(ts)
+    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowTimestamps(&range.start_date, &range.end_date)).await {
+        HttpResponse::Ok()
+            .insert_header(ContentType::json())
+            .json(ts)
     } else {
         HttpResponse::BadRequest().body("Unable to process request")
     }

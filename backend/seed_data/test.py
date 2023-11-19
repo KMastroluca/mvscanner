@@ -28,7 +28,7 @@ class TestResidentsController(unittest.TestCase):
 
     def test_store(self):
         fake_resident = {
-            "rfid": "888888222888800",
+            "rfid": "888888222888844",
             "name": "Fake Resident",
             "doc": "999999",
             "room": "C-3",
@@ -44,9 +44,9 @@ class TestResidentsController(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_delete_resident(self):
-        resident_id = "999999999999999"
+        resident_id = "333333333333333"
         response = requests.delete(f"{self.base_url}/{resident_id}")
-        self.assertEqual(response.status_code, 200)  # Assuming 204 for no content
+        self.assertEqual(response.status_code, 204)  # Assuming 204 for no content
 
 
 class TestLocationsController(unittest.TestCase):
