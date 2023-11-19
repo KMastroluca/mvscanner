@@ -20,9 +20,11 @@ ________________
 
 **DELETE: Delete** `/api/residents/{id}`  
 
-### `/api/residents/{id}/timestamps{body=range}`
+### `/api/residents/{id}/timestamps`
 
 **GET: Index** Get all timestamps for resident{id}
+
+(LOL silly rabbit. request bodies aren't for get methods)
 
 ========================================================
 ## Locations:  
@@ -37,9 +39,9 @@ ________________
 
 **POST: Create** `/api/locations{body=full_payload}` Add a new location to sign out to
 
-### `/api/locations/{id}/timestamps/{body=range}`
+### `/api/locations/{id}/timestamps`
 
-**GET: Show** Get all timestamps for X location in N range
+**GET: Show** Get all timestamps for X location DEFAULT= TODAY
 
 ## Timestamps
 ### `/api/timestamps`
@@ -50,7 +52,7 @@ ________________
 
 **GET: Index** `/api/timestamps` Get timestamps for that day (default)
 
-**GET: Show** `/api/timestamps/{body=range}`
+**GET: Show** `/api/timestamps`
 
 #### __RANGE:__
 ```JSON

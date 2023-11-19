@@ -67,9 +67,9 @@ pub async fn show(db: web::Data<Pool>, id: web::Path<Id>) -> Result<HttpResponse
 
 #[rustfmt::skip]
 #[get("/api/locations/{location_id}/timestamps")]
-pub async fn show_location_range(db: web::Data<Pool>, id: web::Path<Id>, range: web::Json<Range>) -> Result<HttpResponse, LocationsError> {
+pub async fn show_location_range(db: web::Data<Pool>, id: web::Path<Id>) -> Result<HttpResponse, LocationsError> {
     log::info!("GET: Locations controller timestamps with range for ID");
-    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestamps(id.into_inner().location_id, &range.into_inner())).await {
+    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestamps(id.into_inner().location_id)).await {
         Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(ts))
     } else {
         Err(LocationsError("Unable to retrieve timestamps".to_string()))
