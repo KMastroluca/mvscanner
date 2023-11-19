@@ -1,3 +1,4 @@
+use actix_cors::Cors;
 use actix_web::{
     middleware,
     web::{Data, JsonConfig},
@@ -48,6 +49,11 @@ async fn main() -> io::Result<()> {
     log::info!("starting Actix-Web HTTP server at http://localhost:8080");
     let json_config = JsonConfig::default().limit(4096);
     HttpServer::new(move || {
+        let cors = Cors::default()
+            .allow_any_origin()
+            .allow_any_method()
+            .max_age(3600);
+
         App::new()
             .app_data(Data::new(pool.clone()))
             .app_data(json_config.clone())
@@ -68,6 +74,7 @@ async fn main() -> io::Result<()> {
             .service(timestamps_controller::show_range)
             .service(timestamps_controller::store_timestamp)
             .wrap(middleware::Logger::default())
+            .wrap(cors)
     })
     .bind(("127.0.0.1", 8080))?
     .workers(2)
