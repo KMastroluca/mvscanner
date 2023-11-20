@@ -32,54 +32,41 @@
 
 @layer components {
 
-    /* Table Cells */
-    th, td {
-        @apply min-w-[20px] table-fixed;
-    }
-
-    /* Styled / Formatted Table Cells */
-
-    table {
-        border-collapse: separate;
-        border-spacing: 0;
-        overflow: hidden;
-        border-radius: 10px;
-        border-style: hidden;
-
-    }
 
     .stable-wrapper {
-        @apply border-2 w-fit h-fit;
-        border-radius: 10px;
-        overflow: hidden;
+        @apply relative overflow-x-hidden overflow-y-auto scrollbar-thin scrollbar-track-slate-100 scrollbar-thumb-slate-300 max-h-[90vh] bg-neutral-100 shadow-[inset_0_-3px_4px_0_#E1E1E1] border-[1px] rounded-ss-xl;
     }
 
+    table {
+        @apply table-auto w-full border-collapse;
+    }
+
+    thead {
+        @apply sticky top-0 bg-white z-10;
+    }
 
     thead tr {
-        @apply  bg-gray-50;
-        font-family: Raleway, sans-serif;
+        @apply sticky top-0;
     }
 
-    tbody tr:last-child .cell-inner {
-        @apply shadow-[0_0_0_0];
+    thead tr th {
+        @apply sticky top-0;
     }
+
+    tbody tr {
+        @apply bg-white;
+    }
+
 
     .cell-inner {
-     @apply flex items-center text-left px-5 py-3 h-12 gap-3.5 shadow-[inset_0_-1px_0_0_#E1E1E1];
-
+        @apply flex items-center px-4 justify-start text-start h-16 border-r-[1px];
+        box-shadow: 0 1px 0 0 #E1E1E1; /* Border bottom */
     }
 
-    tbody .cell-inner {
-        @apply text-sm ;
+    tbody tr:nth-child(even) td {
+        @apply bg-neutral-100;
     }
 
-    th .cell-inner {
-        @apply py-5;
-    }
-
-    tr:nth-child(even) {
-        @apply bg-gray-50;
-    }
 
 
 
