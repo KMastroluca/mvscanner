@@ -1,5 +1,4 @@
 use actix_web::{
-    http,
     middleware,
     web::{Data, JsonConfig},
     App, HttpServer,
@@ -44,13 +43,7 @@ async fn main() -> io::Result<()> {
     log::info!("starting Actix-Web HTTP server at http://localhost:8080");
     let json_config = JsonConfig::default().limit(4096);
     HttpServer::new(move || {
-        let cors = actix_cors::Cors::default()
-            .allowed_origin("http://localhost:5173")
-            .allowed_methods(vec!["GET", "POST", "PUT"])
-            .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT, http::header::CONTENT_TYPE]);
-            
         App::new()
-            .wrap(cors)
             .app_data(Data::new(pool.clone()))
             .app_data(json_config.clone())
             .service(locations_controller::index)

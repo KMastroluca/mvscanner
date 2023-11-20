@@ -34,7 +34,7 @@
 
 
     .stable-wrapper {
-        @apply relative overflow-x-hidden overflow-y-auto scrollbar scrollbar-thin scrollbar-track-slate-100 scrollbar-thumb-slate-300 max-h-[90vh] bg-neutral-100 shadow-[inset_0_-3px_4px_0_#E1E1E1] border-[1px] rounded-ss-xl;
+        @apply relative overflow-x-hidden overflow-y-auto scrollbar-thin scrollbar-track-slate-100 scrollbar-thumb-slate-300 max-h-[90vh] bg-neutral-100 shadow-[inset_0_-3px_4px_0_#E1E1E1] border-[1px] rounded-ss-xl;
     }
 
     table {
