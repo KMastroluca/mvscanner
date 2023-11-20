@@ -32,8 +32,10 @@ import {SLocation, SResident, STimestamp, STimestampResident} from "../types/Mod
 import {Component, createEffect, createMemo, createSignal, For, JSXElement, onMount} from "solid-js";
 
 import '../styles/STable.css';
-import {TbArrowsSort} from "solid-icons/tb";
+import {TbArrowsSort, TbSettings2, TbEdit} from "solid-icons/tb";
+
 import { uniqueId } from "lodash";
+import { table } from "console";
 
 export interface STableProps {
     type: "Resident" | "Location" | "Timestamp" | "TimestampResident";
@@ -51,7 +53,6 @@ export interface STableColumn {
     key?:string;
     sortable:boolean;
     icon?:JSXElement;
-    colWidth:number;
     sortType?:SortDataType;
 }
 
@@ -72,18 +73,18 @@ export type SortDataDate = {
 };
 export type SortDataType = SortDataString|SortDataNumerical|SortDataDate;
 export enum StringSort {
-    Alphabetical,
-    AlphaReverse
+    Alphabetical = 0,
+    AlphaReverse = 1,
 }
 
 export enum NumericalSort {
-    Ascending,
-    Decending
+    Ascending = 2,
+    Decending = 3,
 }
 
 export enum DateSort {
-    LatestFirst,
-    OldestFirst,
+    LatestFirst = 4,
+    OldestFirst = 5,
 }
 
 export const STable: Component<STableProps> = (props:STableProps) => {
@@ -104,21 +105,19 @@ export const STable: Component<STableProps> = (props:STableProps) => {
             let columns:STableColumn[] = [
                 {
                     label:"Resident Name:",
-                    sortable:false,
+                    sortable:true,
+                    sortType:{type:"String"},
                     key:"name",
-                    colWidth:100,
                 },
                 {
                   label:"DOC #:",
                     key:"doc",
                   sortable: false,
-                  colWidth:100,
                 },
                 {
                     label:"POD - Housing:",
                     key:"pod",
                     sortable:false,
-                    colWidth:100,
                 }
             ];
             setTableColumns(columns);
@@ -128,13 +127,11 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                     label:"ID",
                     sortable:true,
                     sortType: {type:"Numerical"},
-                    colWidth:100,
                 },
                 {
                     label:"Name",
                     sortable:true,
                     sortType:{type:"String"},
-                    colWidth:100,
                 }
             ];
             setTableColumns(columns);
@@ -143,19 +140,15 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                 {
                     label:"RFID",
                     sortable:false,
-                    colWidth:100,
                 },
                 {
                     label:"Destination",
                     sortable:false,
-                    colWidth:100,
                 },
                 {
                     label:"Timestamp",
                     sortable:true,
                     sortType: {type:"Date"},
-                    colWidth:100,
-
                 }
             ];
             setTableColumns(columns);
@@ -166,33 +159,28 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                     sortable:true,
                     sortType: {type:"String"},
                     key:"name",
-                    colWidth:100,
                 },
                 {
                     label:"DOC #:",
                     sortable:false,
-                    colWidth:100,
                 },
                 {
                     label:"POD - Housing:",
                     sortable:true,
                     sortType: {type:"String"},
                     key:"room",
-                    colWidth:100,
                 },
                 {
                     label:"Departed At:",
                     sortable:true,
                     sortType: {type:"Date"},
                     key:"timestampLeft",
-                    colWidth:100,
                 },
                 {
                     label:"Destination:",
                     sortable:true,
                     sortType: {type:"String"},
                     key:"destinationLabel",
-                    colWidth:100,
                 }
             ];
             setTableColumns(columns);
@@ -346,7 +334,7 @@ export const STable: Component<STableProps> = (props:STableProps) => {
     };
 
     const reSortData = (data:{type:SortType, columnIndex:number}) => {
-        console.log("[+] Re-Sort Data Was Executed!");
+        console.log("[+] Re-Sort Data Was Executed!", data);
         let columnToSort = tableColumns()![data.columnIndex];
         console.log(columnToSort);
         if (columnToSort.key) {
@@ -394,6 +382,23 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                     console.log("[+] Result Of Reverse Alphabetical Sort: ",tableCopy)
                     setTableData(tableCopy);
                     console.log("[+] Completed Reverse Alphabetical Sort.");
+                    break;
+                }
+                case DateSort.LatestFirst: {
+                    console.log("[+] Executing Date Sort Latest First");
+
+                    // For this, we need to convert the date strings to Date objects
+                    let tableCopy = [...tableData()!];
+
+                    tableCopy.sort((a, b) => {
+                        let aDate = new Date(a.item[key] as string);
+                        let bDate = new Date(b.item[key] as string);
+                        return aDate.getTime() - bDate.getTime();
+                    });
+
+                    console.log("[+] Result Of Date Sort Latest First: ", tableCopy);
+                    setTableData(tableCopy);
+                    console.log("[+] Completed Date Sort Latest First");
                     break;
                 }
                 default:
@@ -468,7 +473,7 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                     {props.actions !== undefined || props.actions ? (
                         <th>
                             <div class={"cell-inner"}>
-                                <span>Actions</span>
+                                <span class="flex w-full justify-center"><TbSettings2 size={24} /></span>
                             </div>
                         </th>
                     ) : false}
@@ -502,11 +507,22 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                                     <td>
                                         <div class={"cell-inner"}>
                                             <For each={props.actions} >
-                                                {(action) => (
+                                                {(action) => {
+
+                                                    if (action.actionLabel === "Edit") { 
+                                                        return (
+                                                            <button onClick={action.actionFunction}>
+                                                                <TbEdit size={24} />
+                                                            </button>
+                                                        );
+                                                    }
+
+                                                    return (
                                                     <button onClick={action.actionFunction}>
                                                         {action.actionLabel}
                                                     </button>
-                                                )}
+                                                    );
+                                                }}
                                             </For>
                                         </div>
                                     </td>

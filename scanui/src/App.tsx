@@ -31,28 +31,39 @@ import { createEffect, createResource, createSignal } from 'solid-js';
 import {makeAbortable, makeCache, createAggregated} from '@solid-primitives/resource';
 import './App.css'
 import { getResidentsOut, getResidentsIn } from './api/ResidentInOut';
-import { STable } from './components/STable';
+import { STable, STableAction } from './components/STable';
 
 function App() {
+
+  const residentActions:STableAction[] = [
+    {
+      actionLabel: 'Edit',
+      actionFunction: () => {
+        console.log("Edit");
+      }
+    }
+
+  ];
+
 
   const [outResidentsData] = createResource(getResidentsOut, { initialValue: [] });
   const [inResidentsData] = createResource(getResidentsIn, {initialValue: []});
 
   return (
     <div class={"flex flex-row justify-end gap-x-2 px-2 py-3"}>
-    <div class={"flex w-[49em]"}>
-      {outResidentsData.loading ? (<div>Loading...</div>): (
-        <STable type='TimestampResident' data={outResidentsData()} />
-      )}
-    </div>
 
-    <div class={"flex w-[24em]"}>
-      {inResidentsData.loading ? (<div>Loading...</div>): (
-        <STable type='Resident' data={inResidentsData()} />
-      )}
-    </div>
+      <div class={"flex w-[49em]"}>
+        {outResidentsData.loading ? (<div>Loading...</div>): (
+          <STable type='TimestampResident' data={outResidentsData()} />
+        )}
+      </div>
 
-    
+      <div class={"flex w-[30em]"}>
+        {inResidentsData.loading ? (<div>Loading...</div>): (
+          <STable type='Resident' data={inResidentsData()} actions={residentActions} />
+        )}
+      </div>
+
     </div>
   );
 ;
