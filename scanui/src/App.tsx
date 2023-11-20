@@ -27,11 +27,10 @@
  * ********************************************************************************
  */
 
-import { createEffect, createResource, createSignal } from 'solid-js';
-import {makeAbortable, makeCache, createAggregated} from '@solid-primitives/resource';
+import { createResource } from 'solid-js';
 import './App.css'
 import { getResidentsOut, getResidentsIn } from './api/ResidentInOut';
-import { STable, STableAction } from './components/STable';
+import { STable, STableAction} from './components/STable';
 
 function App() {
 
@@ -46,8 +45,8 @@ function App() {
   ];
 
 
-  const [outResidentsData] = createResource(getResidentsOut, { initialValue: [] });
-  const [inResidentsData] = createResource(getResidentsIn, {initialValue: []});
+  const [outResidentsData] = createResource(getResidentsOut,  {initialValue:    {data:[], priorityData:[]} });
+  const [inResidentsData] = createResource(getResidentsIn,    {initialValue:    {data:[]} });
 
   return (
     <div class={"flex flex-row justify-end gap-x-2 px-2 py-3"}>

@@ -28,18 +28,64 @@
  */
 
 
+import {STableData} from '../components/STable';
 import { SResident, STimestampResident } from "../types/Models"
 
-export const getResidentsIn = async (): Promise<SResident[]> => {
+export const getResidentsIn = async (): Promise<STableData> => {
    let addr = import.meta.env.VITE_BACKEND_ADDR;
    let port = import.meta.env.VITE_BACKEND_PORT;
 
    let response = await fetch('http://' + addr + ':' + port + '/api/residents');
    let data = await response.json();
-   return data;
+   return {
+      data:data,
+   } as STableData;
 };
 
-export const getResidentsOut = async (): Promise<STimestampResident[]> => {
+
+
+/**
+ * We also gotta calculate the priority residents, which are residents whom, as far as we can tell,
+ * have left and not yet returned.
+ */
+export function getPriorityOutResidents(rdata:STimestampResident[]):STimestampResident[] {
+   console.log("Getting Priority Out Residents.");
+   
+   let residentLocations:Map<string, STimestampResident> = new Map();
+
+   for (let timestamp of rdata) {
+      /**
+       * Okay, we iterate thru and find all the entries that signal a resident has left
+       */
+
+      // If the resident has left the unit
+      if (timestamp.room !== timestamp.destinationLabel ) {
+         
+         // Check if we have a location for this resident.
+         let currentLocation = residentLocations.get(timestamp.rfid);
+
+
+         // If we do, and thier current timestamp is later than the one we stored, or it doesnt exist
+         if (!currentLocation || timestamp.timestampLeft > currentLocation.timestampLeft) {
+            // update the set
+            residentLocations.set(timestamp.rfid, timestamp);
+         } 
+
+      }
+   }
+
+
+
+   let residentsWithoutReturn: STimestampResident[] = Array.from(residentLocations.values());
+   return residentsWithoutReturn;
+
+
+
+};
+
+
+
+export const getResidentsOut = async (): Promise<STableData> => {
    console.log("Executed GetResidentsOut");
    let addr = import.meta.env.VITE_BACKEND_ADDR;
    let port = import.meta.env.VITE_BACKEND_PORT;
@@ -86,8 +132,10 @@ export const getResidentsOut = async (): Promise<STimestampResident[]> => {
       residentsOut.push(timestampResident);
    }
 
-   console.log(residentsOut);
-   return residentsOut;
+   
+   let priorityOutResidents = getPriorityOutResidents(residentsOut);
 
+   let returnObj = {data:residentsOut, priorityData:priorityOutResidents};
+   return returnObj;
 
 }
