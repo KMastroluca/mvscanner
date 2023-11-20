@@ -589,8 +589,8 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                         let timestampItem = item.item as STimestampResident;
 
                         return (
-                           <tr>
-                              <td>
+                           <tr class={"text-white"}>
+                              <td class={"bg-red-500"}>
                                  <div class={"cell-inner"}>
                                     <label class={"stable-checkbox"}>
                                        <input class={"stable-checkbox-input"}
@@ -602,11 +602,11 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                                     </label>   
                                  </div>
                               </td>
-                              <td><div class={"cell-inner"}>{timestampItem.name}</div></td>
-                              <td><div class={"cell-inner"}>{timestampItem.doc}</div></td>
-                              <td><div class={"cell-inner"}>{timestampItem.room}</div></td>
-                              <td><div class={"cell-inner"}>{timestampItem.timestampLeft}</div></td>
-                              <td><div class={"cell-inner"}>{timestampItem.destinationLabel}</div></td>
+                              <td class={"bg-red-500"}><div class={"cell-inner"}>{timestampItem.name}</div></td>
+                              <td class={"bg-red-500"}><div class={"cell-inner"}>{timestampItem.doc}</div></td>
+                              <td class={"bg-red-500"}><div class={"cell-inner"}>{timestampItem.room}</div></td>
+                              <td class={"bg-red-500"}><div class={"cell-inner"}>{timestampItem.timestampLeft}</div></td>
+                              <td class={"bg-red-500"}><div class={"cell-inner"}>{timestampItem.destinationLabel}</div></td>
                            </tr>
                         );
                      }}
