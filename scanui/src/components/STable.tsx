@@ -35,7 +35,6 @@ import '../styles/STable.css';
 import {TbArrowsSort, TbSettings2, TbEdit} from "solid-icons/tb";
 
 import { uniqueId } from "lodash";
-import { table } from "console";
 
 export interface STableProps {
     type: "Resident" | "Location" | "Timestamp" | "TimestampResident";
