@@ -1,3 +1,4 @@
+use actix_cors::Cors;
 use actix_web::{
     middleware,
     web::{Data, JsonConfig},
@@ -21,11 +22,16 @@ async fn main() -> io::Result<()> {
         .expect("Not pointing to proper file");
     if let Some(args) = std::env::args().nth(1) {
         match args.as_str() {
-            "--seed" => {
-                if query(&pool, Query::SeedTestData).await.is_ok() {
-                    log::info!("database seeded with test data");
+            "--test-seed" => {
+                if query(&pool, Query::Migrations).await.is_ok() {
+                    log::info!("database migrations complete");
+                    if query(&pool, Query::SeedTestData).await.is_ok() {
+                        log::info!("database seeded with test data");
+                    } else {
+                        log::info!("database seed failed");
+                    }
                 } else {
-                    log::info!("database seed failed");
+                    log::info!("database migrations failed");
                 }
             }
             "--migrate" => {
@@ -43,16 +49,24 @@ async fn main() -> io::Result<()> {
     log::info!("starting Actix-Web HTTP server at http://localhost:8080");
     let json_config = JsonConfig::default().limit(4096);
     HttpServer::new(move || {
+        let cors = Cors::default()
+            .allow_any_origin()
+            .allow_any_method()
+            .max_age(3600);
+
         App::new()
             .app_data(Data::new(pool.clone()))
             .app_data(json_config.clone())
             .service(locations_controller::index)
             .service(locations_controller::show)
-            .service(locations_controller::show_location_range)
+            .service(locations_controller::show_location_timestamps)
+            .service(locations_controller::show_location_timestamps_range)
+            .service(locations_controller::show_location_residents)
             .service(locations_controller::store)
             .service(residents_controller::index)
             .service(residents_controller::show)
             .service(residents_controller::show_resident_timestamps)
+            .service(residents_controller::show_resident_timestamps_range)
             .service(residents_controller::store)
             .service(residents_controller::destroy)
             .service(residents_controller::update)
@@ -60,6 +74,7 @@ async fn main() -> io::Result<()> {
             .service(timestamps_controller::show_range)
             .service(timestamps_controller::store_timestamp)
             .wrap(middleware::Logger::default())
+            .wrap(cors)
     })
     .bind(("127.0.0.1", 8080))?
     .workers(2)
