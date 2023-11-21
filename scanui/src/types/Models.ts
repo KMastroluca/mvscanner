@@ -48,6 +48,7 @@ export interface SResident {
     name:string;
     doc:string;
     room:string;
+    unit:number; // Unit ID
 }
 
 
@@ -61,9 +62,9 @@ export interface SLocation {
 
 
 export interface STimestamp {
-    [key:string]:string|number;
+    [key:string]:string|number|undefined;
     rfid:string;
     destinationId:number;
-    timestamp:string;
+    timestamp?:string;
 }
 

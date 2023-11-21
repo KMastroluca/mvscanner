@@ -31,8 +31,29 @@ import { createResource } from 'solid-js';
 import './App.css'
 import { getResidentsOut, getResidentsIn } from './api/ResidentInOut';
 import { STable, STableAction} from './components/STable';
+import { createResident } from './api/CreateResident';
+import { createTimestamp } from './api/CreateTimestamp';
 
 function App() {
+
+
+  console.log("[+] - Calling Create Resident");
+  // Call Resident API
+  createResident({
+    name: "Lorenzo A. Banks",
+    doc: "122750",
+    rfid: "02938172839483728",
+    room: "A-1",
+    unit: 7,
+  });
+
+  console.log("[+] - Calling Create Resident");
+  // 
+  createTimestamp({
+    rfid: "02938172839483728",
+    destinationId: 12,
+  });
+
 
   const residentActions:STableAction[] = [
     {

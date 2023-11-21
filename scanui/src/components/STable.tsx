@@ -215,6 +215,12 @@ export const STable: Component<STableProps> = (props:STableProps) => {
 
     });
 
+    /**
+     * @function handleSelectRow - Handles Selecting A Row
+     * @param e 
+     * @param item 
+     * @returns 
+     */
     const handleSelectRow = (e:Event, item:STableRowItem|null) => {
         //console.log("Handle Select Row ", item);
         e.preventDefault();
@@ -239,8 +245,11 @@ export const STable: Component<STableProps> = (props:STableProps) => {
             setTableData(tableCpy);
         }
 
-    }
+    };
 
+    /**
+     * @function handleAllSelectChange - Handles Selecting All Rows
+     */
     const handleAllSelectChange = () => {
         console.log("handleAllSelect Change Executed!");
         let dataCpy:STableRowItem[] = [];
@@ -256,10 +265,12 @@ export const STable: Component<STableProps> = (props:STableProps) => {
         }
         setTableAllSelect({allSelected:!tableAllSelect().allSelected});
         setTableData(dataCpy);
-    }
+    };
 
 
-    // Effect To Handle All Select Stuff
+    /**
+     * This effect is used to set the selected items in the table.
+     */
     createEffect(() => {
         console.log("[+] Effect: Account For Selected Items");
         createMemo(() => {
@@ -277,13 +288,15 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                 setTableSelectedItems([]);
             }
         });
-    })
+    });
 
 
     // Sorting ********************************************
 
 
-    // Toggles The Current Sorting Algorithim No Matter What Data Type
+    /**
+     * Toggles The Current Sorting Algorithim No Matter What Data Type
+     */
     const toggleCurrentSort = () => {
         if (currentSort() !== null) {
             if (tableColumns()![currentSort()!.columnIndex].sortType!.type === "String") {
@@ -310,6 +323,12 @@ export const STable: Component<STableProps> = (props:STableProps) => {
         }
     }
 
+    /**
+     * @function setCurrentSortColumn
+     * @param columnIndex 
+     * @returns 
+     * This sets the current sort column.
+     */
     const setCurrentSortColumn = (columnIndex:number) => {
         console.log("Run setCurrentSortColumn");
         // If we already have a sort set, with this columnIndex and we're running this function again,
@@ -352,7 +371,10 @@ export const STable: Component<STableProps> = (props:STableProps) => {
         }
 
     };
-
+    /**
+     * @function reSortData - Sorts The Data Based On The Current Sort
+     * @param data {type:SortType, columnIndex:number}
+     */
     const reSortData = (data:{type:SortType, columnIndex:number}) => {
         console.log("[+] Re-Sort Data Was Executed!", data);
         let columnToSort = tableColumns()![data.columnIndex];
@@ -427,7 +449,9 @@ export const STable: Component<STableProps> = (props:STableProps) => {
         }
     };
 
-
+    /**
+     * This effect is used to call reSortData when the sort state has changed.
+     */
     createEffect(() => {
         if (currentSort() !== previousSort()) {
             console.log("[+] Effect: Sort Has Changed, Setting Previous Sort, Setting New Current Sort");
@@ -435,13 +459,16 @@ export const STable: Component<STableProps> = (props:STableProps) => {
             // Set Previous Sort To Current Sort
             setPreviousSort(currentSort());
         }
-    }, [currentSort()?.type, currentSort()?.columnIndex])
+    }, [currentSort()?.type, currentSort()?.columnIndex]);
 
-
+    /**
+     * This effect just prints a log when the table data changes.
+     * But might be used in the future for something.
+     */
     createEffect(() => {
         console.log("Table Data Changed:", tableData());
 
-    })
+    });
 
 
 

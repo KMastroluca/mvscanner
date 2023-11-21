@@ -5,6 +5,7 @@ use actix_web::{
     App, HttpServer,
 };
 use r2d2_sqlite::SqliteConnectionManager;
+use reqwest::header;
 use scan_mvcf::{
     controllers::{locations_controller, residents_controller, timestamps_controller},
     database::db::{query, Query},
@@ -51,7 +52,8 @@ async fn main() -> io::Result<()> {
     HttpServer::new(move || {
         let cors = Cors::default()
             .allow_any_origin()
-            .allow_any_method()
+            .allowed_methods(vec!["GET", "POST", "PUT", "PATCH"])
+            .allowed_headers(vec![header::AUTHORIZATION, header::CONTENT_TYPE, header::ACCEPT])
             .max_age(3600);
 
         App::new()
