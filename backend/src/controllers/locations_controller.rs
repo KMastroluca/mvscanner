@@ -1,10 +1,12 @@
 use std::fmt::{Display, Formatter};
 
+use crate::controllers::timestamps_controller::TimestampResponse;
 use crate::database::db::{query, Pool, Query, QueryResult};
-use crate::models::locations::Location;
+use crate::models::locations::{Location, LocationsResponse};
+use crate::models::residents::ResidentResponse;
 use actix_web::http::{header, StatusCode};
-use actix_web::ResponseError;
 use actix_web::{get, post, web, HttpResponse};
+use actix_web::{Responder, ResponseError};
 use chrono::NaiveDate;
 use serde::{Deserialize, Deserializer};
 
@@ -49,12 +51,18 @@ impl std::fmt::Display for LocationsError {
 // index all locations
 #[rustfmt::skip]
 #[get("/api/locations")]
-pub async fn index(db: web::Data<Pool>) -> Result<HttpResponse, LocationsError> {
+pub async fn index(db: web::Data<Pool>) -> impl Responder {
     log::info!("GET: locations controller");
     if let Ok(res) = query(&db, Query::IndexLocations).await {
         match res {
-        QueryResult::Locations(locations) => Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(locations)),
-        _ => Err(LocationsError("Unable to retrieve locations".to_string())),
+        QueryResult::Locations(locations) => {
+                let response = LocationsResponse::from_locations(locations);
+            Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
+            } 
+        _ => {
+    let response = LocationsResponse::from_error("Error retrieving locations");
+            Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
+    } 
         }
     } else {
         Err(LocationsError("Unable to retrieve locations".to_string()))
@@ -66,7 +74,8 @@ pub async fn index(db: web::Data<Pool>) -> Result<HttpResponse, LocationsError> 
 pub async fn store(db: web::Data<Pool>, loc: web::Json<Location>) -> Result<HttpResponse, LocationsError> {
     log::info!("POST: locations controller");
     if let Ok(QueryResult::Success) = query(&db, Query::StoreLocation(&loc.into_inner())).await {
-        Ok(HttpResponse::Ok().status(StatusCode::CREATED).insert_header(header::ContentType::json()).json("Location added successfully"))
+        let response = LocationsResponse::from_success("Location successfully added");
+        Ok(HttpResponse::Ok().status(StatusCode::CREATED).insert_header(header::ContentType::json()).json(response))
     } else {
         Err(LocationsError("Unable to add location".to_string()))
     }
@@ -77,6 +86,7 @@ pub async fn store(db: web::Data<Pool>, loc: web::Json<Location>) -> Result<Http
 pub async fn show(db: web::Data<Pool>, id: web::Path<Id>) -> Result<HttpResponse, LocationsError> {
     log::info!("GET: locations controller with id: {}", id.location_id);
     if let Ok(QueryResult::Location(loc)) = query(&db, Query::ShowLocation(id.location_id)).await {
+        let loc = LocationsResponse::from_location(loc);
         Ok(HttpResponse::Ok()
             .insert_header(header::ContentType::json())
             .json(loc))
@@ -92,7 +102,8 @@ pub async fn show_location_timestamps_range(db: web::Data<Pool>, id: web::Path<L
     let loc_range = id.into_inner();
     log::info!("GET: Locations controller timestamps with range for ID");
     if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestampsRange(loc_range.location_id, &loc_range.start_date, &loc_range.end_date)).await {
-        Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(ts))
+        let response = TimestampResponse::from_db(ts);
+        Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
     } else {
         Err(LocationsError("Unable to retrieve timestamps".to_string()))
     }
@@ -101,11 +112,12 @@ pub async fn show_location_timestamps_range(db: web::Data<Pool>, id: web::Path<L
 // show timestamps from today for a location
 #[rustfmt::skip]
 #[get("/api/locations/{location_id}/timestamps")]
-pub async fn show_location_timestamps(db: web::Data<Pool>, id: web::Path<Id>) -> Result<HttpResponse, LocationsError> {
+pub async fn show_location_timestamps(db: web::Data<Pool>, id: web::Path<Id>) -> impl Responder {
     let id = id.into_inner().location_id;
     log::info!("GET: Locations controller timestamps for ID");
     if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestamps(id)).await {
-        Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(ts))
+        let response = TimestampResponse::from_db(ts);
+        Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
     } else {
         Err(LocationsError("Unable to retrieve timestamps".to_string()))
     }
@@ -118,9 +130,10 @@ pub async fn show_location_residents(db: web::Data<Pool>, id: web::Path<Id>) -> 
     let id = id.into_inner().location_id;
     log::info!("GET: Locations controller residents for ID");
     if let Ok(QueryResult::Residents(res)) = query(&db, Query::ShowLocationResidents(id)).await {
+        let response = ResidentResponse::from_vec(res);
         Ok(HttpResponse::Ok()
             .insert_header(header::ContentType::json())
-            .json(res))
+            .json(response))
     } else {
         Err(LocationsError("Unable to retrieve residents".to_string()))
     }

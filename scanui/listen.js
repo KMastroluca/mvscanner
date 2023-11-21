@@ -1,6 +1,6 @@
 let scannedRFID = '';
 let lastKeyPress = 0;
-let scanLocation = localStorage.getIten("scanLocation");
+let scanLocation = localStorage.getItem("scanLocation");
 
 if (scanLocation === null) {
   scanLocation = prompt("Please enter the scan location");
@@ -52,6 +52,8 @@ async function handleScan(rfid) {
     if (data === null) {
       promptResident(rfid);
       return;
+    } else {
+      alert(`Resident ${data.name} has been scanned in at ${scanLocation}`)
     }
   } catch (error) {
     console.error('Error fetching resident data:', error);
