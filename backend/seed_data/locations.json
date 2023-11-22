@@ -1,5 +1,9 @@
 [
   {
+    "id": 0,
+    "name": "SIGNED_OUT"
+  },
+  {
     "id": 2,
     "name": "ACTIVITIES"
   },

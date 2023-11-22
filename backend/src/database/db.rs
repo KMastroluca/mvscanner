@@ -35,6 +35,7 @@ pub enum QueryResult {
     TimeStamps(Vec<TimeStamp>),
     Locations(Vec<Location>),
     Location(Location),
+    PostTimestamp(PostTimestamp),
     Success,
     Failure,
     NotFound,
@@ -129,8 +130,8 @@ pub async fn query(pool: &Pool, query: Query<'_>,) -> Result<QueryResult, Box<dy
             start, end, conn,
         )?)),
         Query::StoreTimestamp(ts) => {
-            if store_timestamp(ts, conn).is_ok() {
-                Ok(QueryResult::Success)
+            if let Ok(timestamp) = store_timestamp(ts, conn) {
+                Ok(QueryResult::PostTimestamp(timestamp))
             } else {
                 Err(Box::new(rusqlite::Error::InvalidQuery))
             }
@@ -168,13 +169,15 @@ pub fn migrations(conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
     let _ = conn
         .execute(
             "CREATE TABLE IF NOT EXISTS residents (
-                rfid            TEXT PRIMARY KEY NOT NULL,
-                name            TEXT NOT NULL,
-                doc             TEXT NOT NULL,
-                room            TEXT NOT NULL,
-                unit            INTEGER NOT NULL,
+                rfid             TEXT PRIMARY KEY NOT NULL,
+                name             TEXT NOT NULL,
+                doc              TEXT NOT NULL,
+                room             TEXT NOT NULL,
+                unit             INTEGER NOT NULL,
+                current_location INTEGER,
                 FOREIGN KEY (unit) REFERENCES locations (id)
-                UNIQUE (rfid, name, doc, room)
+                FOREIGN KEY (current_location) REFERENCES locations (id)
+                UNIQUE (rfid, name, doc)
                 );",
             params![],
         )
@@ -186,10 +189,10 @@ pub fn migrations(conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
             "CREATE TABLE IF NOT EXISTS timestamps (
                     id            INTEGER PRIMARY KEY AUTOINCREMENT,
                     rfid          TEXT NOT NULL,
-                    dest          INTEGER NOT NULL,
+                    location      INTEGER NOT NULL,
                     ts            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (rfid) REFERENCES residents (rfid),
-                    FOREIGN KEY (dest) REFERENCES locations (id)
+                    FOREIGN KEY (location) REFERENCES locations (id)
                 );",
             params![],
         )
@@ -212,29 +215,32 @@ pub fn migrations(conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
 
 pub fn seed_test_data(conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
     let residents = Resident::get_test_residents_from_file();
+    log::info!("SUCESS RESIDENTS");
     let timestamps = TimeStamp::get_test_timestamps_from_file()?;
+    log::info!("SUCESS TIMESTAMPS");
     conn.execute_batch("BEGIN TRANSACTION;")?;
 
     for ts in timestamps {
         log::info!("Storing timestamp: {:?}", ts);
         conn.execute(
-            "INSERT INTO timestamps (rfid, dest)
+            "INSERT INTO timestamps (rfid, location)
                   VALUES (?1, ?2)",
-            params![&ts.rfid, &ts.dest],
+            params![&ts.rfid, &ts.location],
         )?;
     }
 
     for resident in residents {
         log::info!("Storing resident: {:?}", resident);
         conn.execute(
-            "INSERT INTO residents (rfid, name, doc, room, unit)
-                VALUES (?1, ?2, ?3, ?4, ?5)",
+            "INSERT INTO residents (rfid, name, doc, room, unit, current_location)
+                VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
             params![
                 &resident.rfid,
                 &resident.name,
                 &resident.doc,
                 &resident.room,
-                &resident.unit
+                &resident.unit,
+                &resident.current_location
             ],
         )?;
     }
@@ -256,6 +262,7 @@ fn index_residents(conn: Connection) -> Result<Vec<Resident>, Box<dyn std::error
             row.get(2)?,
             row.get(3)?,
             row.get(4)?,
+            row.get(5)?,
         ))
     })?;
 
@@ -274,6 +281,7 @@ fn show_resident(id: &str, conn: Connection) -> Result<Resident, Box<dyn std::er
             row.get(2)?,
             row.get(3)?,
             row.get(4)?,
+            row.get(5)?,
         ))
     }) {
         Ok(resident)
@@ -286,9 +294,7 @@ fn show_resident(id: &str, conn: Connection) -> Result<Resident, Box<dyn std::er
 #[rustfmt::skip]
 fn store_resident(resident: &Resident, conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
     log::info!("Storing resident: {:?}", resident);
-
-    let query = "INSERT OR IGNORE INTO residents (rfid, name, doc, room, unit) VALUES (?1, ?2, ?3, ?4, ?5)";
-    
+    let query = "INSERT OR IGNORE INTO residents (rfid, name, doc, room, unit, current_location) VALUES (?1, ?2, ?3, ?4, ?5, ?6)";
     let mut stmt = conn.prepare(query)?;
 
     match stmt.execute(params![
@@ -297,6 +303,7 @@ fn store_resident(resident: &Resident, conn: Connection) -> Result<(), Box<dyn s
         &resident.doc,
         &resident.room,
         &resident.unit,
+        &resident.current_location,
     ]) {
         Ok(_) => Ok(()),
         Err(err) => {
@@ -310,13 +317,14 @@ fn store_resident(resident: &Resident, conn: Connection) -> Result<(), Box<dyn s
 #[rustfmt::skip]
   fn update_resident(resident: &Resident, conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
         let mut stmt =
-            conn.prepare("UPDATE residents SET name = ?2, doc = ?3, room = ?4, unit = ?5 WHERE rfid = ?1")?;
+            conn.prepare("UPDATE residents SET name = ?2, doc = ?3, room = ?4, unit = ?5, current_location = ?6 WHERE rfid = ?1")?;
         stmt.execute(params![
             &resident.rfid,
             &resident.name,
             &resident.doc,
             &resident.room,
             &resident.unit,
+            &resident.current_location
         ])?;
         Ok(())
     }
@@ -420,13 +428,41 @@ fn index_timestamps(conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::err
     }
 
 /// POST: (Store) /api/timestamps/{timestamp}
-fn store_timestamp(ts: &PostTimestamp, conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
+fn store_timestamp(
+    ts: &PostTimestamp,
+    conn: Connection,
+) -> Result<PostTimestamp, Box<dyn std::error::Error>> {
+    conn.execute_batch("BEGIN TRANSACTION;")?;
+    let mut stmt = conn.prepare("SELECT * FROM residents WHERE rfid = ?1")?;
+    let mut resident = stmt.query_row(params![&ts.rfid], |row| {
+        Ok(Resident::new(
+            row.get(0)?,
+            row.get(1)?,
+            row.get(2)?,
+            row.get(3)?,
+            row.get(4)?,
+            row.get(5)?,
+        ))
+    })?;
+    resident.update_location(ts.location);
+    let mut update_stmt =
+        conn.prepare("UPDATE residents SET name = ?2, doc = ?3, room = ?4, unit = ?5, current_location = ?6 WHERE rfid = ?1")?;
+    update_stmt.execute(params![
+        &resident.rfid,
+        &resident.name,
+        &resident.doc,
+        &resident.room,
+        &resident.unit,
+        &resident.current_location
+    ])?;
     let mut stmt = conn.prepare(
-        "INSERT INTO timestamps (rfid, dest)
+        "INSERT INTO timestamps (rfid, location)
                   VALUES (?1, ?2)",
     )?;
-    let _ = stmt.insert(params![&ts.rfid, &ts.dest])?;
-    Ok(())
+    let _ = stmt.insert(params![&ts.rfid, &ts.location])?;
+    conn.execute_batch("COMMIT;")?;
+    let timestamp = PostTimestamp::new(ts.rfid.clone(), resident.current_location);
+    Ok(timestamp)
 }
 
 fn index_locations(conn: Connection) -> Result<Vec<Location>, Box<dyn std::error::Error>> {
@@ -472,6 +508,7 @@ fn show_location_residents(id: usize, conn: Connection) -> Result<Vec<Resident>,
             row.get(2)?,
             row.get(3)?,
             row.get(4)?,
+            row.get(5)?,
         ))
     })?;
     Ok(residents_iter

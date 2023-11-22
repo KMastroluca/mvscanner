@@ -52,6 +52,7 @@ Get all timestamps for X resident DEFAULT= TODAY
 
 
 ## Timestamps
+
 ### `/api/timestamps`
 
 - __rfid__: `string`
@@ -62,5 +63,25 @@ Get all timestamps for X resident DEFAULT= TODAY
 **GET: Show** `/api/timestamps`
 
 **POST: Create** `/api/timestamps/{body=timestamp}`
+
+TIMESTAMP (Sent by front-end)
+```json
+  [ 
+    {
+      "rfid": "12345678901234567",
+      "location": 8
+    }
+  ]
+```
+RETURNS: (from back-end)
+```json
+  {
+    "rfid": "12345678901234567",
+    "location": 0,
+    "timestamp": "2019-10-10 10:10:10"
+  }
+```
+### IF two timestamps are received at the same location, the location returned will be 0: "AWAY" and that can be checked for on the front-end, and you can send another timestamp after prompting the user
+
 
 **GET Show** `/api/timestamps/{start_date}/{end_date}`

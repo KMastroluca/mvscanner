@@ -1,6 +1,6 @@
 use crate::{
     database::db::{query, Pool, Query, QueryResult},
-    models::timestamps::PostTimestamp,
+    models::timestamps::{PostTimestamp, RangeParams, TimestampResponse},
 };
 use actix_web::{
     get,
@@ -8,50 +8,36 @@ use actix_web::{
     post, web, HttpResponse, Responder,
 };
 
-use chrono::NaiveDate;
-use serde::{Deserialize, Deserializer};
-
-#[derive(Debug, Deserialize)]
-pub struct RangeParams {
-    #[serde(deserialize_with = "deserialize_date")]
-    start_date: NaiveDate,
-    #[serde(deserialize_with = "deserialize_date")]
-    end_date: NaiveDate,
-}
-
-// Deserialize date strings into NaiveDate
-fn deserialize_date<'de, D>(deserializer: D) -> Result<NaiveDate, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let date_str = String::deserialize(deserializer)?;
-    NaiveDate::parse_from_str(&date_str, "%Y-%m-%d").map_err(serde::de::Error::custom)
-}
-
 /// GET: /api/timestamps  DEFAULT: Today
 #[get("/api/timestamps")]
 pub async fn index_timestamps(db: web::Data<Pool>) -> impl Responder {
     if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::IndexTimestamps).await {
+        let response = TimestampResponse::from_db(ts);
         HttpResponse::Ok()
             .content_type(ContentType::json())
-            .json(ts)
+            .json(response)
     } else {
-        HttpResponse::BadRequest().body("Unable to process request")
+        let error = TimestampResponse::from_error("Error Retrieving timestamps");
+        HttpResponse::Ok().json(error)
     }
 }
 
 /// POST: /api/timestamps/{timestamp}
+#[rustfmt::skip]
 #[post("/api/timestamps")]
 pub async fn store_timestamp(db: web::Data<Pool>, ts: web::Json<PostTimestamp>) -> impl Responder {
     let ts = ts.into_inner();
     log::info!("Storing timestamp: {:?}", ts);
-    if let Ok(QueryResult::Success) = query(&db, Query::StoreTimestamp(&ts)).await {
+    if let Ok(QueryResult::PostTimestamp(timestamp)) = query(&db, Query::StoreTimestamp(&ts)).await
+    {
+        let res = TimestampResponse::from_ts(&timestamp);
         HttpResponse::Ok()
             .status(StatusCode::CREATED)
             .insert_header(ContentType::json())
-            .json("SUCCESS: Timestamp stored successfully")
+            .json(res)
     } else {
-        HttpResponse::BadRequest().body("Unable to process request")
+        let error = TimestampResponse::from_error("Error storing timestamp");
+        HttpResponse::from_error(error)
     }
 }
 
@@ -65,6 +51,9 @@ pub async fn show_range(db: web::Data<Pool>, range: web::Path<RangeParams>) -> i
             .insert_header(ContentType::json())
             .json(ts)
     } else {
-        HttpResponse::BadRequest().body("Unable to process request")
+        let resp = TimestampResponse::from_error("Error retrieving timestamps");
+        HttpResponse::Ok()
+            .insert_header(ContentType::json())
+            .json(resp)
     }
 }
