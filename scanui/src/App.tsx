@@ -37,23 +37,14 @@ import { createTimestamp } from './api/CreateTimestamp';
 function App() {
 
 
-  console.log("[+] - Calling Create Resident");
-  // Call Resident API
-  createResident({
-    name: "Lorenzo A. Banks",
-    doc: "122750",
-    rfid: "02938172839483728",
-    room: "A-1",
-    unit: 7,
-  });
 
-  console.log("[+] - Calling Create Resident");
+
+  console.log("[+] - Calling Create Timestamp");
   // 
   createTimestamp({
     rfid: "02938172839483728",
     destinationId: 12,
   });
-
 
   const residentActions:STableAction[] = [
     {
@@ -70,20 +61,30 @@ function App() {
   const [inResidentsData] = createResource(getResidentsIn,    {initialValue:    {data:[]} });
 
   return (
-    <div class={"flex flex-row justify-end gap-x-2 px-2 py-3"}>
-
-      <div class={"flex w-[49em]"}>
-        {outResidentsData.loading ? (<div>Loading...</div>): (
-          <STable type='TimestampResident' data={outResidentsData()} />
-        )}
+    <div class={"flex flex-col w-screen h-screen"}>
+      <div class={"flex flex-row w-full h-10 sticky top-0 z-10 bg-slate-400"}>
+          
       </div>
+      <div class={"flex flex-row justify-end gap-x-2 px-2 py-3"}>
 
-      <div class={"flex w-[30em]"}>
-        {inResidentsData.loading ? (<div>Loading...</div>): (
-          <STable type='Resident' data={inResidentsData()} actions={residentActions} />
-        )}
+        <div class={"flex flex-col w-[20em] bg-slate-300 border-2"}>
+
+        </div>
+
+
+        <div class={"flex w-[49em]"}>
+          {outResidentsData.loading ? (<div>Loading...</div>): (
+            <STable type='TimestampResident' data={outResidentsData()} />
+          )}
+        </div>
+
+        <div class={"flex w-[30em]"}>
+          {inResidentsData.loading ? (<div>Loading...</div>): (
+            <STable type='Resident' data={inResidentsData()} actions={residentActions} />
+          )}
+        </div>
+
       </div>
-
     </div>
   );
 ;

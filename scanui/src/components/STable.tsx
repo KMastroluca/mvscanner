@@ -253,18 +253,32 @@ export const STable: Component<STableProps> = (props:STableProps) => {
     const handleAllSelectChange = () => {
         console.log("handleAllSelect Change Executed!");
         let dataCpy:STableRowItem[] = [];
+        let priorityDataCpy:STableRowItem[] = [];
         // If We're not active, then activating means selecting all items
         if (!tableAllSelect().allSelected) {
+            // Select The Regular Data
             dataCpy = tableData()?.map((item) => {
                 return {item:item.item, selected:true};
             })!;
+            if (priorityTableData() !== null) {
+                // Also Select The Priority Data
+                priorityDataCpy = priorityTableData()?.map((item) => {
+                    return {item:item.item, selected:true};
+                })!;
+            }
         } else {
             dataCpy = tableData()?.map((item) => {
                 return {item:item.item, selected:false};
             })!;
+            if (priorityTableData() !== null) {
+                priorityDataCpy = priorityTableData()?.map((item) => {
+                    return {item:item.item, selected:false};
+                })!;
+            }   
         }
         setTableAllSelect({allSelected:!tableAllSelect().allSelected});
         setTableData(dataCpy);
+        setPriorityTableData(priorityDataCpy);
     };
 
 

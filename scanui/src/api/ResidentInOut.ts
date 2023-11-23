@@ -49,37 +49,21 @@ export const getResidentsIn = async (): Promise<STableData> => {
  * have left and not yet returned.
  */
 export function getPriorityOutResidents(rdata:STimestampResident[]):STimestampResident[] {
-   console.log("Getting Priority Out Residents.");
    
-   let residentLocations:Map<string, STimestampResident> = new Map();
-
-   for (let timestamp of rdata) {
-      /**
-       * Okay, we iterate thru and find all the entries that signal a resident has left
-       */
-
-      // If the resident has left the unit
-      if (timestamp.room !== timestamp.destinationLabel ) {
-         
-         // Check if we have a location for this resident.
-         let currentLocation = residentLocations.get(timestamp.rfid);
+   console.log("Getting Priority Out Residents: Start RD: ", rdata);
 
 
-         // If we do, and thier current timestamp is later than the one we stored, or it doesnt exist
-         if (!currentLocation || timestamp.timestampLeft > currentLocation.timestampLeft) {
-            // update the set
-            residentLocations.set(timestamp.rfid, timestamp);
-         } 
+   const unreturnedResidents:{[key:string]: STimestampResident} = {};
 
+   rdata.forEach((stamp) => {
+      if (stamp.unit !== stamp.destinationId) {
+         unreturnedResidents[stamp.rfid] = stamp;
+      } else {
+         delete unreturnedResidents[stamp.rfid];
       }
-   }
+   });
 
-
-
-   let residentsWithoutReturn: STimestampResident[] = Array.from(residentLocations.values());
-   return residentsWithoutReturn;
-
-
+   return Object.values(unreturnedResidents);
 
 };
 
@@ -92,50 +76,67 @@ export const getResidentsOut = async (): Promise<STableData> => {
 
    let responseResidents = await fetch('http://' + addr + ':' + port + '/api/residents');
    let residentsData = await responseResidents.json();
-   console.log("Residents:", residentsData);
-   
+
+   console.log("Residents From DB:", residentsData);
 
    let responseTimestamps = await fetch('http://' + addr + ':' + port + '/api/timestamps');
    let timestampsData = await responseTimestamps.json();
-   console.log("Timestamps:", timestampsData);
+   
+   console.log("Timestamps From DB: ", timestampsData);
 
    let residentsOut:STimestampResident[] = [];
    for (let timestamp of timestampsData) {
-      console.log("Timestamp: ", timestamp);
+  
       if (timestamp.date === null) {
          continue;
       }
       let resident = residentsData.find((resident:SResident) => resident.rfid === timestamp.rfid);
-      console.log("Resident: ", resident);
+   
       if (resident === undefined) {
          continue;
       }
 
       let responseLocation = await fetch("http://" + addr + ":" + port + "/api/locations/" + timestamp.dest);
       let locationData = await responseLocation.json();
-      console.log("Location Data:", locationData);
+   
       if (locationData === undefined && locationData.name === undefined) {
          continue;
       }
-
-
-
-
+      
       let timestampResident:STimestampResident = {
          rfid: resident.rfid,
          name: resident.name,
          doc: resident.doc,
          room: resident.room,
+         unit: resident.unit,
          timestampLeft: timestamp.time,
+         destinationId: timestamp.dest,
          destinationLabel: locationData.name
       }
       residentsOut.push(timestampResident);
    }
 
    
-   let priorityOutResidents = getPriorityOutResidents(residentsOut);
+   console.log("Result Of Getting Residents Out: ", residentsOut);
 
-   let returnObj = {data:residentsOut, priorityData:priorityOutResidents};
+   /**
+    * Get the residents who are still out.
+    */  
+   let priorityOutResidents = getPriorityOutResidents([...residentsOut]);
+
+   /**
+    * Get the residents who have returned.
+    */
+   let residentStamps:STimestampResident[] = [];
+
+
+      
+   console.log("Resident Stamps: ", residentStamps);
+   console.log("Priority Stamps: ", priorityOutResidents);
+
+   let returnObj = {data:residentStamps, priorityData:priorityOutResidents};
    return returnObj;
 
 }
+
+

@@ -37,7 +37,9 @@ export interface STimestampResident {
     name:string;
     doc:string;
     room:string;
+    unit:number;
     timestampLeft:string;
+    destinationId:number;
     destinationLabel:string; // The idea is this comes from the Timestamp destinationId, and is resolved to a location name
 }
 
