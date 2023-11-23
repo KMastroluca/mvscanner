@@ -31,6 +31,8 @@
 import {STableData} from '../components/STable';
 import { SResident, STimestampResident } from "../types/Models"
 
+import _ from 'lodash';
+
 export const getResidentsIn = async (): Promise<STableData> => {
    let addr = import.meta.env.VITE_BACKEND_ADDR;
    let port = import.meta.env.VITE_BACKEND_PORT;
@@ -43,6 +45,46 @@ export const getResidentsIn = async (): Promise<STableData> => {
 };
 
 
+export function getRoundTrips(rdata:STimestampResident[]):STimestampResident[][] {
+   const groupedStamps = _.groupBy(rdata, 'rfid');
+
+   let roundTrips:STimestampResident[][] = [];
+   Object.keys(groupedStamps).forEach((key) => {
+      let group = groupedStamps[key];
+      let roundTrip = [];
+      
+      for (let i = 0; i < group.length; i++) {
+         roundTrip.push(group[i]);
+         if (i > 0 && group[i].unit === group[i].destinationId) {
+            roundTrips.push(roundTrip);
+            roundTrip = [];
+         }
+      }
+   });
+
+   return roundTrips;
+}
+
+
+/**
+ * 
+ * Calculate resident timestamps that have returned.
+ * @returns 
+ */
+export function getReturnedResidents(rdata:STimestampResident[]):{[key:string]:STimestampResident[]} {
+   const lastReturnedResidents:{[key:string]:STimestampResident[]} = {};
+
+   rdata.forEach((stamp) => {
+      if (!lastReturnedResidents[stamp.rfid]) {
+         lastReturnedResidents[stamp.rfid] = [];
+      }
+      if (stamp.unit === stamp.destinationId) {
+         lastReturnedResidents[stamp.rfid].push(stamp);
+      }
+   });
+
+   return lastReturnedResidents;
+}
 
 /**
  * We also gotta calculate the priority residents, which are residents whom, as far as we can tell,
@@ -127,14 +169,18 @@ export const getResidentsOut = async (): Promise<STableData> => {
    /**
     * Get the residents who have returned.
     */
-   let residentStamps:STimestampResident[] = [];
-
-
+   let residentStamps:STimestampResident[][] = getRoundTrips([...residentsOut]).reverse();
       
    console.log("Resident Stamps: ", residentStamps);
    console.log("Priority Stamps: ", priorityOutResidents);
 
-   let returnObj = {data:residentStamps, priorityData:priorityOutResidents};
+   let rstamps:STimestampResident[] = [];
+
+   residentStamps.forEach((residentArr) => {
+      rstamps.push(...residentArr);
+   });
+
+   let returnObj = {data:rstamps, priorityData:priorityOutResidents};
    return returnObj;
 
 }
