@@ -28,22 +28,30 @@ impl Display for TimestampResponse {
 }
 
 impl ResponseError for TimestampResponse {}
-
-impl TimestampResponse {
-    pub fn from_ts(ts: &TimeStamp) -> Self {
+impl From<rusqlite::Error> for TimestampResponse {
+    fn from(e: rusqlite::Error) -> Self {
+        Self::from_error(e.to_string().as_str())
+    }
+}
+impl From<TimeStamp> for TimestampResponse {
+    fn from(ts: TimeStamp) -> Self {
         Self {
             success: true,
             message: "Timestamp successfully retrieved".to_string(),
-            data: Some(vec![ts.clone()]),
+            data: Some(vec![ts]),
         }
     }
-    pub fn from_db(ts: Vec<TimeStamp>) -> Self {
+}
+impl From<Vec<TimeStamp>> for TimestampResponse {
+    fn from(ts: Vec<TimeStamp>) -> Self {
         Self {
             success: true,
             message: "Timestamps successfully retrieved".to_string(),
             data: Some(ts),
         }
     }
+}
+impl TimestampResponse {
     pub fn from_error(msg: &str) -> Self {
         Self {
             success: false,

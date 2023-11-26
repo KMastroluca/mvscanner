@@ -24,26 +24,30 @@ impl Display for ResidentResponse {
         write!(f, "{}", self.message)
     }
 }
-impl ResidentResponse {
-    pub fn from_resident(resident: &Resident) -> Self {
+impl From<Resident> for ResidentResponse {
+    fn from(res: Resident) -> Self {
         Self {
             success: true,
             message: "Resident successfully retrieved".to_string(),
-            data: Some(vec![resident.clone()]),
+            data: Some(vec![res]),
         }
     }
+}
+impl From<Vec<Resident>> for ResidentResponse {
+    fn from(res: Vec<Resident>) -> Self {
+        Self {
+            success: true,
+            message: "Residents successfully retrieved".to_string(),
+            data: Some(res),
+        }
+    }
+}
+impl ResidentResponse {
     pub fn from_success(s: &str) -> Self {
         Self {
             success: true,
             message: s.to_string(),
             data: None,
-        }
-    }
-    pub fn from_vec(residents: Vec<Resident>) -> Self {
-        Self {
-            success: true,
-            message: "Residents successfully retrieved".to_string(),
-            data: Some(residents),
         }
     }
     pub fn from_error(msg: &str) -> Self {

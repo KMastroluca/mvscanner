@@ -12,7 +12,7 @@ use actix_web::{
 #[get("/api/timestamps")]
 pub async fn index_timestamps(db: web::Data<Pool>) -> impl Responder {
     if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::IndexTimestamps).await {
-        let response = TimestampResponse::from_db(ts);
+        let response: TimestampResponse = ts.into();
         HttpResponse::Ok()
             .content_type(ContentType::json())
             .json(response)
@@ -28,10 +28,8 @@ pub async fn index_timestamps(db: web::Data<Pool>) -> impl Responder {
 pub async fn store_timestamp(db: web::Data<Pool>, ts: web::Json<TimeStamp>) -> impl Responder {
     let ts = ts.into_inner();
     log::info!("Storing timestamp: {:?}", ts);
-    if let Ok(QueryResult::PostTimestamp(timestamp)) = query(&db, Query::StoreTimestamp(&ts)).await
-    {
-        log::info!("MADE IT HERE!!!!!");
-        let res = TimestampResponse::from_ts(&timestamp);
+    if let Ok(QueryResult::PostTimestamp(timestamp)) = query(&db, Query::StoreTimestamp(&ts)).await {
+        let res: TimestampResponse = timestamp.into();
         HttpResponse::Ok()
             .status(StatusCode::CREATED)
             .insert_header(ContentType::json())
@@ -48,9 +46,10 @@ pub async fn store_timestamp(db: web::Data<Pool>, ts: web::Json<TimeStamp>) -> i
 pub async fn show_range(db: web::Data<Pool>, range: web::Path<RangeParams>) -> impl Responder {
     let range = &range.into_inner();
     if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowTimestamps(&range.start_date, &range.end_date)).await {
+        let response: TimestampResponse = ts.into(); 
         HttpResponse::Ok()
             .insert_header(ContentType::json())
-            .json(ts)
+            .json(response)
     } else {
         let resp = TimestampResponse::from_error("Error retrieving timestamps");
         HttpResponse::Ok()

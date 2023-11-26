@@ -18,7 +18,7 @@ pub async fn index(db: web::Data<Pool>) -> impl Responder {
     if let Ok(res) = query(&db, Query::IndexResidents).await {
         match res {
             QueryResult::Residents(residents) => {
-                let response = ResidentResponse::from_vec(residents);
+                let response: ResidentResponse = residents.into();
                 Ok(actix_web::HttpResponse::Ok()
                     .insert_header(header::ContentType::json())
                     .json(response))
@@ -38,7 +38,7 @@ pub async fn show(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>) -> impl
     if let Ok(res) = query(&db, Query::ShowResident(&rfid.into_inner().rfid)).await {
         match res {
             QueryResult::Resident(resident) => {
-                let response = ResidentResponse::from_resident(&resident);
+                let response: ResidentResponse = resident.into();
                 Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
             }
             _ => {
@@ -102,8 +102,8 @@ pub async fn update(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>, resid
             // so we can accept a JSON with only the fields they wish to update
             match query(&db, Query::UpdateResident(&updated)).await {
                 Ok(QueryResult::Success) => {
-                    let updated = ResidentResponse::from_resident(&updated);
-                    Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(updated))
+                    let updated_res: ResidentResponse = updated.into();
+                    Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(updated_res))
                 }
                 _ => {
                     let error = ResidentResponse::from_error("Error updating resident");
@@ -121,7 +121,7 @@ pub async fn show_resident_timestamps(db: web::Data<Pool>, rfid: actix_web::web:
     if let Ok(ts) = query(&db, Query::ShowResidentTimestamps(rfid.rfid.clone())).await {
         match ts {
             QueryResult::TimeStamps(ts) => {
-                let response = TimestampResponse::from_db(ts);
+                let response: TimestampResponse = ts.into();
                 Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
         }
         _ => {
@@ -145,7 +145,7 @@ pub async fn show_resident_timestamps_range(db: web::Data<Pool>, rfid: actix_web
     if let Ok(ts) = query(&db, Query::ShowResidentTimestampsRange(&rfid, &start, &end)).await {
         match ts {
             QueryResult::TimeStamps(ts) => {
-                let response = TimestampResponse::from_db(ts);
+                let response: TimestampResponse = ts.into();
                 Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
             }
             _ => {

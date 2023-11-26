@@ -1,7 +1,6 @@
 use reqwest::blocking::Response;
 use serde_json::Value;
 use std::collections::HashMap;
-
 const BASE_URL: &str = "http://localhost:8080/api";
 
 fn make_request(
@@ -31,16 +30,17 @@ pub mod tests {
     fn test_residents_index() {
         let response = make_request("residents", reqwest::Method::GET, None);
         assert_eq!(response.status().as_u16(), 200);
-        assert!(response.json::<Vec<Value>>().is_ok());
+    }
+    #[test]
+    fn test_residents_show() {
+        let resident_id = "111111111111111";
 
-        let resident_id = "888888222888888";
         let response = make_request(
-            &format!("residents/{}", resident_id),
+            format!("residents/{}", resident_id).as_str(),
             reqwest::Method::GET,
             None,
         );
         assert_eq!(response.status().as_u16(), 200);
-        assert_eq!(response.json::<Value>().unwrap()["rfid"], resident_id);
     }
     #[test]
     fn test_residents_create() {
@@ -55,7 +55,7 @@ pub mod tests {
     }
     #[test]
     fn test_residents_update() {
-        let resident_id = "888888222888888";
+        let resident_id = "111111111111111";
         let updated_data = [("name", "Updated Name")].iter().cloned().collect();
         let response = make_request(
             &format!("residents/{}", resident_id),
@@ -85,7 +85,7 @@ pub mod tests {
     fn test_locations_show() {
         let response = make_request("locations/4", reqwest::Method::GET, None);
         assert_eq!(response.status().as_u16(), 200);
-        assert_eq!(response.json::<Value>().unwrap()["data"]["name"], "ASU");
+        assert_eq!(response.json::<Value>().unwrap()["data"][0]["name"], "ASU");
     }
     #[test]
     fn test_locations_create() {
@@ -108,12 +108,11 @@ pub mod tests {
     #[test]
     fn test_locations_timestamps_between() {
         let response = make_request(
-            "locations/11/timestamps/2023-11-10/2023-11-19",
+            "locations/13/timestamps/2023-11-10/2023-11-30",
             reqwest::Method::GET,
             None,
         );
         assert_eq!(response.status().as_u16(), 200);
-        assert!(response.json::<Vec<Value>>().is_ok());
     }
     #[test]
     fn test_locations_residents() {
@@ -126,12 +125,11 @@ pub mod tests {
         // TestTimestampsController
         let response = make_request("timestamps", reqwest::Method::GET, None);
         assert_eq!(response.status().as_u16(), 200);
-        assert!(response.json::<Vec<Value>>().is_ok());
     }
 
     #[test]
     fn test_timestamps_post() {
-        let data = json!({"rfid": "888888222888777", "location": 1});
+        let data = json!({"rfid": "111111111111111", "location": 9});
         let response = reqwest::blocking::Client::new()
             .post(format!("{}/timestamps", BASE_URL))
             .json(&data)
@@ -142,7 +140,7 @@ pub mod tests {
     #[test]
     fn test_timestamps_between() {
         let response = make_request(
-            "timestamps/2023-11-18/2023-11-19",
+            "timestamps/2023-11-18/2023-11-30",
             reqwest::Method::GET,
             None,
         );

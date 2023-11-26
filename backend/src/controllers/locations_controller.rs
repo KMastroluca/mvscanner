@@ -103,7 +103,7 @@ pub async fn show_location_timestamps_range(db: web::Data<Pool>, id: web::Path<L
     let loc_range = id.into_inner();
     log::info!("GET: Locations controller timestamps with range for ID");
     if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestampsRange(loc_range.location_id, &loc_range.start_date, &loc_range.end_date)).await {
-        let response = TimestampResponse::from_db(ts);
+        let response: TimestampResponse = ts.into();
         Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
     } else {
         Err(LocationsError("Unable to retrieve timestamps".to_string()))
@@ -117,7 +117,7 @@ pub async fn show_location_timestamps(db: web::Data<Pool>, id: web::Path<Id>) ->
     let id = id.into_inner().location_id;
     log::info!("GET: Locations controller timestamps for ID");
     if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestamps(id)).await {
-        let response = TimestampResponse::from_db(ts);
+        let response: TimestampResponse = ts.into();
         Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
     } else {
         Err(LocationsError("Unable to retrieve timestamps".to_string()))
@@ -131,7 +131,7 @@ pub async fn show_location_residents(db: web::Data<Pool>, id: web::Path<Id>) -> 
     let id = id.into_inner().location_id;
     log::info!("GET: Locations controller residents for ID");
     if let Ok(QueryResult::Residents(res)) = query(&db, Query::ShowLocationResidents(id)).await {
-        let response = ResidentResponse::from_vec(res);
+        let response: ResidentResponse = res.into();
         Ok(HttpResponse::Ok()
             .insert_header(header::ContentType::json())
             .json(response))
