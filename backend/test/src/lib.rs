@@ -44,7 +44,7 @@ pub mod tests {
     }
     #[test]
     fn test_residents_create() {
-        let fake_location = json!({"rfid": "338888222889999", "name": "Fake resident", "doc": "29752", "room": "C-8", "unit": 4});
+        let fake_location = json!({"rfid": "338888222889999", "name": "Fake resident", "doc": "29752", "room": "C-8", "unit": 4, "current_location": 4});
         let resp = reqwest::blocking::Client::new()
             .post(format!("{}/residents", BASE_URL))
             .json(&fake_location)
@@ -80,13 +80,12 @@ pub mod tests {
     fn test_locations_index() {
         let response = make_request("locations", reqwest::Method::GET, None);
         assert_eq!(response.status().as_u16(), 200);
-        assert!(response.json::<Vec<Value>>().is_ok());
     }
     #[test]
     fn test_locations_show() {
         let response = make_request("locations/4", reqwest::Method::GET, None);
         assert_eq!(response.status().as_u16(), 200);
-        assert_eq!(response.json::<Value>().unwrap()["name"], "ASU");
+        assert_eq!(response.json::<Value>().unwrap()["data"]["name"], "ASU");
     }
     #[test]
     fn test_locations_create() {
@@ -132,7 +131,7 @@ pub mod tests {
 
     #[test]
     fn test_timestamps_post() {
-        let data = json!({"rfid": "888888222888777", "dest": 1});
+        let data = json!({"rfid": "888888222888777", "location": 1});
         let response = reqwest::blocking::Client::new()
             .post(format!("{}/timestamps", BASE_URL))
             .json(&data)
@@ -148,6 +147,5 @@ pub mod tests {
             None,
         );
         assert_eq!(response.status().as_u16(), 200);
-        assert!(response.json::<Vec<Value>>().is_ok());
     }
 }

@@ -3,18 +3,6 @@ use std::fmt::{Display, Formatter};
 use actix_web::ResponseError;
 use serde::{de::Error, Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Clone, Deserialize, Eq, PartialEq)]
-pub struct PostTimestamp {
-    pub rfid: String,
-    pub location: usize,
-}
-
-impl PostTimestamp {
-    pub fn new(rfid: String, location: usize) -> Self {
-        Self { rfid, location }
-    }
-}
-
 use chrono::NaiveDate;
 use serde::Deserializer;
 
@@ -30,7 +18,7 @@ pub struct RangeParams {
 pub struct TimestampResponse {
     pub success: bool,
     pub message: String,
-    pub data: Option<TimestampData>,
+    pub data: Option<Vec<TimeStamp>>,
 }
 
 impl Display for TimestampResponse {
@@ -41,25 +29,19 @@ impl Display for TimestampResponse {
 
 impl ResponseError for TimestampResponse {}
 
-#[derive(Debug, Deserialize, Serialize)]
-pub enum TimestampData {
-    Get(Vec<TimeStamp>),
-    Post(PostTimestamp),
-}
-
 impl TimestampResponse {
-    pub fn from_ts(ts: &PostTimestamp) -> Self {
+    pub fn from_ts(ts: &TimeStamp) -> Self {
         Self {
             success: true,
             message: "Timestamp successfully retrieved".to_string(),
-            data: Some(TimestampData::Post(ts.clone())),
+            data: Some(vec![ts.clone()]),
         }
     }
     pub fn from_db(ts: Vec<TimeStamp>) -> Self {
         Self {
             success: true,
             message: "Timestamps successfully retrieved".to_string(),
-            data: Some(TimestampData::Get(ts)),
+            data: Some(ts),
         }
     }
     pub fn from_error(msg: &str) -> Self {

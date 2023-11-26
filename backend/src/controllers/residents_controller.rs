@@ -38,7 +38,7 @@ pub async fn show(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>) -> impl
     if let Ok(res) = query(&db, Query::ShowResident(&rfid.into_inner().rfid)).await {
         match res {
             QueryResult::Resident(resident) => {
-                let response = ResidentResponse::from_resident(resident);
+                let response = ResidentResponse::from_resident(&resident);
                 Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
             }
             _ => {
@@ -102,7 +102,7 @@ pub async fn update(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>, resid
             // so we can accept a JSON with only the fields they wish to update
             match query(&db, Query::UpdateResident(&updated)).await {
                 Ok(QueryResult::Success) => {
-                    let updated = ResidentResponse::from_resident(updated);
+                    let updated = ResidentResponse::from_resident(&updated);
                     Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(updated))
                 }
                 _ => {
