@@ -70,3 +70,11 @@ export interface STimestamp {
     timestamp?:string;
 }
 
+
+export interface ServerResponse  {
+    success:boolean;
+    message?:string;
+    data?:{
+        get?:SResident[]|STimestamp[]|SLocation[];
+    }
+}

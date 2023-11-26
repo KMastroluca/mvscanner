@@ -27,15 +27,23 @@
  * ********************************************************************************
  */
 
-import { createResource } from 'solid-js';
+import { createResource, onCleanup, onMount } from 'solid-js';
 import './App.css'
 import { getResidentsOut, getResidentsIn } from './api/ResidentInOut';
 import { STable, STableAction} from './components/STable';
 import { createResident } from './api/CreateResident';
 import { createTimestamp } from './api/CreateTimestamp';
-
+import { initScanner, cleanupScanner } from './components/Scanner';
 function App() {
 
+
+  onMount(() => {
+    initScanner();
+  });
+
+  onCleanup(() => {
+    
+  });
 
 
 

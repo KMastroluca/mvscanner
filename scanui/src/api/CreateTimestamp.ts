@@ -1,4 +1,5 @@
 import {STimestamp} from "../types/Models";
+import { POST } from "./API";
 
 export const createTimestamp = async (newTimestamp:STimestamp) => {
 
@@ -10,19 +11,26 @@ export const createTimestamp = async (newTimestamp:STimestamp) => {
    // Format Timestamp to match backend
    let timestampPayload = {
       rfid:newTimestamp.rfid,
-      dest:newTimestamp.destinationId
+      location:newTimestamp.destinationId
    };
 
-   let timestampResponse = await fetch(api, {
-      method:"POST",
-      headers:{
-         accept:"application/json",
-         "Content-Type": "application/json"
-      },
-      body: JSON.stringify(timestampPayload),
-   });
+   let timestampResponse = await POST(api, timestampPayload);
 
-   let resp = await timestampResponse.json();
+   if (!timestampResponse) {
+      console.error("Error: No response from server");
+      return;
+   }
 
-   console.log(resp);
+   if (!timestampResponse.success) {
+      console.warn("Warning: Timestamp not created");
+      console.warn(timestampResponse.message);
+      return;
+   } else {
+      console.log("Timestamp Created");
+      if (timestampResponse.data) {
+         console.log(timestampResponse.data);
+      }
+   }
+   
+   
 };
