@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 
-use crate::models::timestamps::TimestampResponse;
+
 use crate::database::db::{query, Pool, Query, QueryResult};
 use crate::models::locations::{Location, LocationsResponse};
 use crate::models::residents::ResidentResponse;
