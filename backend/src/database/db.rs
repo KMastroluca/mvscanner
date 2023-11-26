@@ -1,9 +1,10 @@
+use crate::models::locations::Location;
 use crate::models::residents::Resident;
 use crate::models::timestamps::TimeStamp;
-use crate::models::{locations::Location, timestamps::PostTimestamp};
 use actix_web::{error, web};
 use chrono::NaiveDate;
 use rusqlite::{params, Result};
+use serde::{Deserialize, Serialize};
 pub type Pool = r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>;
 
 pub type Connection = r2d2::PooledConnection<r2d2_sqlite::SqliteConnectionManager>;
@@ -24,18 +25,19 @@ pub enum Query<'a> {
     ShowLocationTimestampsRange(usize, &'a NaiveDate, &'a NaiveDate),
     IndexTimestamps,
     ShowTimestamps(&'a NaiveDate, &'a NaiveDate),
-    StoreTimestamp(&'a PostTimestamp),
+    StoreTimestamp(&'a TimeStamp),
     Migrations,
     SeedTestData,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum QueryResult {
     Resident(Resident),
     Residents(Vec<Resident>),
     TimeStamps(Vec<TimeStamp>),
     Locations(Vec<Location>),
     Location(Location),
-    PostTimestamp(PostTimestamp),
+    PostTimestamp(TimeStamp),
     Success,
     Failure,
     NotFound,
@@ -428,12 +430,11 @@ fn index_timestamps(conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::err
     }
 
 /// POST: (Store) /api/timestamps/{timestamp}
-fn store_timestamp(
-    ts: &PostTimestamp,
-    conn: Connection,
-) -> Result<PostTimestamp, Box<dyn std::error::Error>> {
+#[rustfmt::skip]
+fn store_timestamp(ts: &TimeStamp, conn: Connection) -> Result<TimeStamp, Box<dyn std::error::Error>> {
     conn.execute_batch("BEGIN TRANSACTION;")?;
     let mut stmt = conn.prepare("SELECT * FROM residents WHERE rfid = ?1")?;
+    log::info!("Fetching resident with RFID: {}", ts.rfid);
     let mut resident = stmt.query_row(params![&ts.rfid], |row| {
         Ok(Resident::new(
             row.get(0)?,
@@ -461,7 +462,7 @@ fn store_timestamp(
     )?;
     let _ = stmt.insert(params![&ts.rfid, &ts.location])?;
     conn.execute_batch("COMMIT;")?;
-    let timestamp = PostTimestamp::new(ts.rfid.clone(), resident.current_location);
+    let timestamp = TimeStamp::new(ts.rfid.clone(), resident.current_location, None);
     Ok(timestamp)
 }
 

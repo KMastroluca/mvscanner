@@ -18,41 +18,36 @@ impl Display for Location {
 pub struct LocationsResponse {
     pub success: bool,
     pub message: String,
-    pub data: LocationData,
+    pub data: Option<Vec<Location>>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
-pub enum LocationData {
-    Index(Vec<Location>),
-    Show(Location),
-}
 impl LocationsResponse {
     pub fn from_success(message: &str) -> Self {
         Self {
             success: true,
             message: message.to_string(),
-            data: LocationData::Index(Vec::new()),
+            data: None,
         }
     }
     pub fn from_error(message: &str) -> Self {
         Self {
             success: false,
             message: message.to_string(),
-            data: LocationData::Index(Vec::new()),
+            data: None,
         }
     }
     pub fn from_locations(locations: Vec<Location>) -> Self {
         Self {
             success: true,
             message: "Locations successfully retrieved".to_string(),
-            data: LocationData::Index(locations),
+            data: Some(locations),
         }
     }
     pub fn from_location(location: Location) -> Self {
         Self {
             success: true,
             message: "Location successfully retrieved".to_string(),
-            data: LocationData::Show(location),
+            data: Some(vec![location]),
         }
     }
 }

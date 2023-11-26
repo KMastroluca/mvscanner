@@ -1,6 +1,6 @@
 use crate::{
     database::db::{query, Pool, Query, QueryResult},
-    models::timestamps::{PostTimestamp, RangeParams, TimestampResponse},
+    models::timestamps::{RangeParams, TimeStamp, TimestampResponse},
 };
 use actix_web::{
     get,
@@ -25,11 +25,12 @@ pub async fn index_timestamps(db: web::Data<Pool>) -> impl Responder {
 /// POST: /api/timestamps/{timestamp}
 #[rustfmt::skip]
 #[post("/api/timestamps")]
-pub async fn store_timestamp(db: web::Data<Pool>, ts: web::Json<PostTimestamp>) -> impl Responder {
+pub async fn store_timestamp(db: web::Data<Pool>, ts: web::Json<TimeStamp>) -> impl Responder {
     let ts = ts.into_inner();
     log::info!("Storing timestamp: {:?}", ts);
     if let Ok(QueryResult::PostTimestamp(timestamp)) = query(&db, Query::StoreTimestamp(&ts)).await
     {
+        log::info!("MADE IT HERE!!!!!");
         let res = TimestampResponse::from_ts(&timestamp);
         HttpResponse::Ok()
             .status(StatusCode::CREATED)

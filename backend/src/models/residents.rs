@@ -16,7 +16,7 @@ pub struct Resident {
 pub struct ResidentResponse {
     pub success: bool,
     pub message: String,
-    pub data: Option<ResidentData>,
+    pub data: Option<Vec<Resident>>,
 }
 impl ResponseError for ResidentResponse {}
 impl Display for ResidentResponse {
@@ -25,11 +25,11 @@ impl Display for ResidentResponse {
     }
 }
 impl ResidentResponse {
-    pub fn from_resident(resident: Resident) -> Self {
+    pub fn from_resident(resident: &Resident) -> Self {
         Self {
             success: true,
             message: "Resident successfully retrieved".to_string(),
-            data: Some(ResidentData::Show(resident)),
+            data: Some(vec![resident.clone()]),
         }
     }
     pub fn from_success(s: &str) -> Self {
@@ -43,7 +43,7 @@ impl ResidentResponse {
         Self {
             success: true,
             message: "Residents successfully retrieved".to_string(),
-            data: Some(ResidentData::Index(residents)),
+            data: Some(residents),
         }
     }
     pub fn from_error(msg: &str) -> Self {
@@ -53,14 +53,6 @@ impl ResidentResponse {
             data: None,
         }
     }
-}
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum ResidentData {
-    Index(Vec<Resident>),
-    Post(Resident),
-    Update(Resident),
-    Delete(Resident),
-    Show(Resident),
 }
 
 impl Resident {

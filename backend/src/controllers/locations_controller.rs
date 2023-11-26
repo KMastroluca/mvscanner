@@ -1,9 +1,9 @@
 use std::fmt::{Display, Formatter};
 
-use crate::controllers::timestamps_controller::TimestampResponse;
 use crate::database::db::{query, Pool, Query, QueryResult};
 use crate::models::locations::{Location, LocationsResponse};
 use crate::models::residents::ResidentResponse;
+use crate::models::timestamps::TimestampResponse;
 use actix_web::http::{header, StatusCode};
 use actix_web::{get, post, web, HttpResponse};
 use actix_web::{Responder, ResponseError};
