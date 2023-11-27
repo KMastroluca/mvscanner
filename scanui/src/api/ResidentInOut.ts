@@ -29,9 +29,10 @@
 
 
 import {STableData} from '../components/STable';
-import { SResident, STimestampResident } from "../types/Models"
+import { SLocation, SResident, STimestamp, STimestampResident } from "../types/Models"
 
 import _ from 'lodash';
+import { GET } from './API';
 
 export const getResidentsIn = async (): Promise<STableData> => {
    let addr = import.meta.env.VITE_BACKEND_ADDR;
@@ -116,13 +117,38 @@ export const getResidentsOut = async (): Promise<STableData> => {
    let addr = import.meta.env.VITE_BACKEND_ADDR;
    let port = import.meta.env.VITE_BACKEND_PORT;
 
-   let responseResidents = await fetch('http://' + addr + ':' + port + '/api/residents');
-   let residentsData = await responseResidents.json();
+   let residentsResponse = await GET('http://' + addr + ':' + port + '/api/residents');
+
+   if (!residentsResponse) {
+      console.error("Error: No response from server");
+      return {} as STableData;
+   }
+
+   if (!residentsResponse.success) {
+      console.warn("Warning: Residents not retrieved");
+      console.warn(residentsResponse.message);
+      return {} as STableData;
+   }
+
+   let residentsData:SResident[] = residentsResponse.data?.get as SResident[];
 
    console.log("Residents From DB:", residentsData);
+   
+   let timestampsResponse = await GET('http://' + addr + ':' + port + '/api/timestamps');
+   
+   if (!timestampsResponse) {
+      console.error("Error: No response from server");
+      return {} as STableData;
+   }
 
-   let responseTimestamps = await fetch('http://' + addr + ':' + port + '/api/timestamps');
-   let timestampsData = await responseTimestamps.json();
+   if (!timestampsResponse.success) {
+      console.warn("Warning: Timestamps not retrieved");
+      console.warn(timestampsResponse.message);
+      return {} as STableData;
+   }
+
+
+   let timestampsData:STimestamp[] = timestampsResponse.data as STimestamp[];
    
    console.log("Timestamps From DB: ", timestampsData);
 
@@ -138,8 +164,20 @@ export const getResidentsOut = async (): Promise<STableData> => {
          continue;
       }
 
-      let responseLocation = await fetch("http://" + addr + ":" + port + "/api/locations/" + timestamp.dest);
-      let locationData = await responseLocation.json();
+      let responseLocation = await GET('http://' + addr + ':' + port + '/api/locations/' + timestamp.dest);
+
+      if (!responseLocation) {
+         console.error("Error: No response from server");
+         return {} as STableData;
+      }
+
+      if (!responseLocation.success) {
+         console.warn("Warning: Location not retrieved");
+         console.warn(responseLocation.message);
+         return {} as STableData;
+      }
+
+      let locationData = responseLocation.data!.get as SLocation[];
    
       if (locationData === undefined && locationData.name === undefined) {
          continue;

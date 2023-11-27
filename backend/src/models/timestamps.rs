@@ -28,20 +28,35 @@ impl Display for TimestampResponse {
 }
 
 impl ResponseError for TimestampResponse {}
-
-impl TimestampResponse {
-    pub fn from_ts(ts: &TimeStamp) -> Self {
+impl From<rusqlite::Error> for TimestampResponse {
+    fn from(e: rusqlite::Error) -> Self {
+        Self::from_error(e.to_string().as_str())
+    }
+}
+impl From<TimeStamp> for TimestampResponse {
+    fn from(ts: TimeStamp) -> Self {
         Self {
             success: true,
             message: "Timestamp successfully retrieved".to_string(),
-            data: Some(vec![ts.clone()]),
+            data: Some(vec![ts]),
         }
     }
-    pub fn from_db(ts: Vec<TimeStamp>) -> Self {
+}
+impl From<Vec<TimeStamp>> for TimestampResponse {
+    fn from(ts: Vec<TimeStamp>) -> Self {
         Self {
             success: true,
             message: "Timestamps successfully retrieved".to_string(),
             data: Some(ts),
+        }
+    }
+}
+impl TimestampResponse {
+    pub fn new(rfid: String, location: usize) -> Self {
+        Self {
+            success: true,
+            message: "Timestamp successfully stored".to_string(),
+            data: Some(vec![TimeStamp::new(rfid, location, None)]),
         }
     }
     pub fn from_error(msg: &str) -> Self {
@@ -60,6 +75,28 @@ where
 {
     let date_str = String::deserialize(deserializer)?;
     NaiveDate::parse_from_str(&date_str, "%Y-%m-%d").map_err(serde::de::Error::custom)
+}
+
+impl Display for PostTimestamp {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "RFID: {}, Location: {}", self.rfid, self.location)
+    }
+}
+
+#[derive(Debug, Serialize, Clone, Deserialize, Eq, PartialEq)]
+pub struct PostTimestamp {
+    pub rfid: String,
+    pub location: usize,
+}
+
+impl From<PostTimestamp> for TimeStamp {
+    fn from(ts: PostTimestamp) -> Self {
+        Self {
+            rfid: ts.rfid,
+            location: ts.location,
+            time: None,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Clone, Deserialize, Eq, PartialEq)]
