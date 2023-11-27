@@ -69,7 +69,7 @@ function App() {
 
   return (
     <div class={"flex flex-col w-screen h-screen"}>
-      <ResidentIDModal open={true}/>
+      <ResidentIDModal open={true} rfid=''/>
       <div class={"flex flex-row w-full h-10 sticky top-0 z-10 bg-slate-400"}>
           
       </div>
