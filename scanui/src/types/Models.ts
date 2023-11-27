@@ -39,13 +39,14 @@ export interface STimestampResident {
     room:string;
     unit:number;
     timestampLeft:string;
-    destinationId:number;
+    location:number;
     destinationLabel:string; // The idea is this comes from the Timestamp destinationId, and is resolved to a location name
 }
 
 
 export interface SResident {
     [key:string]:string |number;
+    current_location:number;
     rfid:string;
     name:string;
     doc:string;
@@ -66,15 +67,13 @@ export interface SLocation {
 export interface STimestamp {
     [key:string]:string|number|undefined;
     rfid:string;
-    destinationId:number;
-    timestamp?:string;
+    location:number;
+    time?:string;
 }
 
 
 export interface ServerResponse  {
     success:boolean;
     message?:string;
-    data?:{
-        get?:SResident[]|STimestamp[]|SLocation[];
-    }
+    data?:SResident[]|STimestamp[]|SLocation[];
 }

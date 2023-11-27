@@ -38,77 +38,29 @@ export const getResidentsIn = async (): Promise<STableData> => {
    let addr = import.meta.env.VITE_BACKEND_ADDR;
    let port = import.meta.env.VITE_BACKEND_PORT;
 
-   let response = await fetch('http://' + addr + ':' + port + '/api/residents');
-   let data = await response.json();
+   let response = await GET('http://' + addr + ':' + port + '/api/residents');
+   
+   if (!response) {
+      console.error("Error: No response from server");
+      return {} as STableData;
+   }
+
+   if (!response.success) {
+      console.warn("Warning: Residents not retrieved");
+      console.warn(response.message);
+      return {} as STableData;
+   }
+
    return {
-      data:data,
+      data: response.data as SResident[],
    } as STableData;
 };
 
 
-export function getRoundTrips(rdata:STimestampResident[]):STimestampResident[][] {
-   const groupedStamps = _.groupBy(rdata, 'rfid');
-
-   let roundTrips:STimestampResident[][] = [];
-   Object.keys(groupedStamps).forEach((key) => {
-      let group = groupedStamps[key];
-      let roundTrip = [];
-      
-      for (let i = 0; i < group.length; i++) {
-         roundTrip.push(group[i]);
-         if (i > 0 && group[i].unit === group[i].destinationId) {
-            roundTrips.push(roundTrip);
-            roundTrip = [];
-         }
-      }
-   });
-
-   return roundTrips;
-}
 
 
-/**
- * 
- * Calculate resident timestamps that have returned.
- * @returns 
- */
-export function getReturnedResidents(rdata:STimestampResident[]):{[key:string]:STimestampResident[]} {
-   const lastReturnedResidents:{[key:string]:STimestampResident[]} = {};
-
-   rdata.forEach((stamp) => {
-      if (!lastReturnedResidents[stamp.rfid]) {
-         lastReturnedResidents[stamp.rfid] = [];
-      }
-      if (stamp.unit === stamp.destinationId) {
-         lastReturnedResidents[stamp.rfid].push(stamp);
-      }
-   });
-
-   return lastReturnedResidents;
-}
-
-/**
- * We also gotta calculate the priority residents, which are residents whom, as far as we can tell,
- * have left and not yet returned.
- */
-export function getPriorityOutResidents(rdata:STimestampResident[]):STimestampResident[] {
-   
-   console.log("Getting Priority Out Residents: Start RD: ", rdata);
 
 
-   const unreturnedResidents:{[key:string]: STimestampResident} = {};
-
-   rdata.forEach((stamp) => {
-      if (stamp.unit !== stamp.destinationId) {
-         unreturnedResidents[stamp.rfid] = stamp;
-      } else {
-         delete unreturnedResidents[stamp.rfid];
-      }
-   });
-
-   return Object.values(unreturnedResidents);
-
-};
 
 
 
@@ -130,7 +82,7 @@ export const getResidentsOut = async (): Promise<STableData> => {
       return {} as STableData;
    }
 
-   let residentsData:SResident[] = residentsResponse.data?.get as SResident[];
+   let residentsData:SResident[] = residentsResponse.data as SResident[];
 
    console.log("Residents From DB:", residentsData);
    
@@ -164,7 +116,7 @@ export const getResidentsOut = async (): Promise<STableData> => {
          continue;
       }
 
-      let responseLocation = await GET('http://' + addr + ':' + port + '/api/locations/' + timestamp.dest);
+      let responseLocation = await GET('http://' + addr + ':' + port + '/api/locations/' + timestamp.location);
 
       if (!responseLocation) {
          console.error("Error: No response from server");
@@ -177,9 +129,11 @@ export const getResidentsOut = async (): Promise<STableData> => {
          return {} as STableData;
       }
 
-      let locationData = responseLocation.data!.get as SLocation[];
+      let locationData = responseLocation.data as SLocation[];
+
+      console.log("Location Data: ", locationData);
    
-      if (locationData === undefined && locationData.name === undefined) {
+      if (locationData.at(0) === undefined && locationData.at(0)!.name === undefined) {
          continue;
       }
       
@@ -189,9 +143,9 @@ export const getResidentsOut = async (): Promise<STableData> => {
          doc: resident.doc,
          room: resident.room,
          unit: resident.unit,
-         timestampLeft: timestamp.time,
-         destinationId: timestamp.dest,
-         destinationLabel: locationData.name
+         timestampLeft: timestamp.time!,
+         location: timestamp.location,
+         destinationLabel: locationData.at(0)!.name
       }
       residentsOut.push(timestampResident);
    }
@@ -199,28 +153,44 @@ export const getResidentsOut = async (): Promise<STableData> => {
    
    console.log("Result Of Getting Residents Out: ", residentsOut);
 
-   /**
-    * Get the residents who are still out.
-    */  
-   let priorityOutResidents = getPriorityOutResidents([...residentsOut]);
+   let latestTimestamps = getLatestTimestamps(residentsOut);
+   let onlyAway = getOnlyAway(latestTimestamps);
+   console.log("Latest Timestamps: ", residentsOut);
 
-   /**
-    * Get the residents who have returned.
-    */
-   let residentStamps:STimestampResident[][] = getRoundTrips([...residentsOut]).reverse();
-      
-   console.log("Resident Stamps: ", residentStamps);
-   console.log("Priority Stamps: ", priorityOutResidents);
-
-   let rstamps:STimestampResident[] = [];
-
-   residentStamps.forEach((residentArr) => {
-      rstamps.push(...residentArr);
-   });
-
-   let returnObj = {data:rstamps, priorityData:priorityOutResidents};
+   let returnObj = {data:latestToOld(residentsOut), priorityData:onlyAway};
    return returnObj;
 
 }
 
 
+
+const latestToOld = (data:STimestampResident[]): STimestampResident[] => {
+   let sortedData = _.sortBy(data, (timestampResident:STimestampResident) => new Date(timestampResident.timestampLeft).getTime());
+   return sortedData;
+}
+
+const getLatestTimestamp = (data:STimestampResident[], rfid:string): STimestampResident|undefined  => {
+
+   let filteredData = data.filter((timestampResident:STimestampResident) => timestampResident.rfid === rfid);
+   let sortedData = _.sortBy(filteredData, (timestampResident:STimestampResident) => new Date(timestampResident.timestampLeft).getTime());
+   let latestTimestamp = sortedData.pop();
+
+   return latestTimestamp;
+}
+
+const getLatestTimestamps = (data:STimestampResident[]): STimestampResident[] => {
+   let rfidList = _.uniq(data.map((timestampResident:STimestampResident) => timestampResident.rfid));
+   let latestTimestamps:STimestampResident[] = [];
+   for (let rfid of rfidList) {
+      let latestTimestamp = getLatestTimestamp(data, rfid);
+      if (latestTimestamp !== undefined) {
+         latestTimestamps.push(latestTimestamp);
+      }
+   }
+   return latestTimestamps;
+}
+
+const getOnlyAway = (data:STimestampResident[]): STimestampResident[] => {
+   let filteredData = data.filter((timestampResident:STimestampResident) => timestampResident.destinationLabel === timestampResident.room);
+   return filteredData;
+}

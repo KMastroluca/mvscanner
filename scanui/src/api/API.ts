@@ -32,7 +32,7 @@ export const POST = async (url:string, payload:any):Promise<ServerResponse|undef
             accept: "application/json",
             "Content-Type": "application/json",
          },
-         body: JSON.stringify(payload),
+         body: JSON.stringify([payload]),
       });
 
       if (!response.ok) {

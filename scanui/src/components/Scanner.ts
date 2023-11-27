@@ -25,6 +25,8 @@ export const initScanner = () => {
       if (isNaN(window.facilityLocationId)) {
          alert("Invalid Facility Location ID");
          location.reload();
+      } else {
+         localStorage.setItem("facilityLocationId", window.facilityLocationId.toString());
       }
    } else {
       window.facilityLocationId = parseInt(localStorage.getItem("facilityLocationId")!, 10);

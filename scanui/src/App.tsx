@@ -34,6 +34,7 @@ import { STable, STableAction} from './components/STable';
 import { createResident } from './api/CreateResident';
 import { createTimestamp } from './api/CreateTimestamp';
 import { initScanner, cleanupScanner } from './components/Scanner';
+import { ResidentIDModal } from './components/ResidentIDModal';
 function App() {
 
 
@@ -46,13 +47,11 @@ function App() {
   });
 
 
-
-  console.log("[+] - Calling Create Timestamp");
-  // 
   createTimestamp({
-    rfid: "02938172839483728",
-    destinationId: 12,
+    rfid:"555555231555555",
+    location: 12,
   });
+
 
   const residentActions:STableAction[] = [
     {
@@ -70,6 +69,7 @@ function App() {
 
   return (
     <div class={"flex flex-col w-screen h-screen"}>
+      <ResidentIDModal open={true}/>
       <div class={"flex flex-row w-full h-10 sticky top-0 z-10 bg-slate-400"}>
           
       </div>
@@ -81,13 +81,13 @@ function App() {
 
 
         <div class={"flex w-[49em]"}>
-          {outResidentsData.loading ? (<div>Loading...</div>): (
+          {outResidentsData.loading ? (<></>): (
             <STable type='TimestampResident' data={outResidentsData()} />
           )}
         </div>
 
         <div class={"flex w-[30em]"}>
-          {inResidentsData.loading ? (<div>Loading...</div>): (
+          {inResidentsData.loading ? (<></>): (
             <STable type='Resident' data={inResidentsData()} actions={residentActions} />
           )}
         </div>
