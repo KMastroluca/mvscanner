@@ -33,6 +33,7 @@ import {Component, createEffect, createMemo, createSignal, For, JSXElement, onMo
 
 import '../styles/STable.css';
 import {TbArrowsSort, TbSettings2, TbEdit} from "solid-icons/tb";
+import { GetLocationById } from "../api/GetLocation";
 
 export interface STableProps {
     type: "Resident" | "Location" | "Timestamp" | "TimestampResident";
@@ -125,6 +126,12 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                     label:"POD - Housing:",
                     key:"pod",
                     sortable:false,
+                },
+                {
+                    label:"Current Location",
+                    key:"current_location",
+                    sortable:true,
+                    sortType:{type:"String"},
                 }
             ];
             setTableColumns(columns);
@@ -194,8 +201,8 @@ export const STable: Component<STableProps> = (props:STableProps) => {
         }
    
       
-         let stdat = props.data as STableData;
-
+        let stdat = props.data as STableData;
+        console.log(stdat);
 
         let tbldat:STableRowItem[] = [];
         // Load Table Regular Data From Props
@@ -555,6 +562,7 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                                     <td><div class={"cell-inner"}>{residentItem.name}</div></td>
                                     <td><div class={"cell-inner"}>{residentItem.doc}</div></td>
                                     <td><div class={"cell-inner"}>{residentItem.room}</div></td>
+                                    <td><div class={`cell-inner ${residentItem.current_location === residentItem.unit ? 'bg-green-400' : 'bg-red-400 text-white'}`}><GetLocationById id={residentItem.current_location} /></div></td>
                                     {props.actions ? (
                                     <td>
                                         <div class={"cell-inner"}>
@@ -625,13 +633,12 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                 {/* **** TIMESTAMP-RESIDENT TABLE LAYOUT *****************************************************************/}
                 {props.type === "TimestampResident" ? (
                   <>
-                    <For each={priorityTableData()} fallback={<></>} >
+                    <For each={priorityTableData()} fallback={<span></span>} >
                      {(item) => {
                         let timestampItem = item.item as STimestampResident;
-
                         return (
                            <tr class={"text-white"}>
-                              <td class={"bg-red-500"}>
+                              <td class={"bg-red-400"}>
                                  <div class={"cell-inner"}>
                                     <label class={"stable-checkbox"}>
                                        <input class={"stable-checkbox-input"}
@@ -643,19 +650,20 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                                     </label>   
                                  </div>
                               </td>
-                              <td class={"bg-red-500"}><div class={"cell-inner"}>{timestampItem.name}</div></td>
-                              <td class={"bg-red-500"}><div class={"cell-inner"}>{timestampItem.doc}</div></td>
-                              <td class={"bg-red-500"}><div class={"cell-inner"}>{timestampItem.room}</div></td>
-                              <td class={"bg-red-500"}><div class={"cell-inner"}>{timestampItem.timestampLeft}</div></td>
-                              <td class={"bg-red-500"}><div class={"cell-inner"}>{timestampItem.destinationLabel}</div></td>
+                              <td class={"bg-red-400"}><div class={"cell-inner"}>{timestampItem.name}</div></td>
+                              <td class={"bg-red-400"}><div class={"cell-inner"}>{timestampItem.doc}</div></td>
+                              <td class={"bg-red-400"}><div class={"cell-inner"}>{timestampItem.room}</div></td>
+                              <td class={"bg-red-400"}><div class={"cell-inner text-sm"}>{timestampItem.timestampLeft}</div></td>
+                              <td class={"bg-red-400"}><div class={"cell-inner"}>{timestampItem.destinationLabel}</div></td>
                            </tr>
                         );
                      }}
                     </For>
 
-                    <For each={tableData()} fallback={<p>No Items</p>}>
+                    <For each={tableData()} fallback={<></>}>
                         {(item) => {
                             const timestampItem = item.item as STimestampResident;
+                            console.log("Timestamp Item:", timestampItem);
                             return (
                                 <tr>
                                     <td>
@@ -672,7 +680,7 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                                     <td><div class={"cell-inner"}>{timestampItem.name}</div></td>
                                     <td><div class={"cell-inner"}>{timestampItem.doc}</div></td>
                                     <td><div class={"cell-inner"}>{timestampItem.room}</div></td>
-                                    <td><div class={"cell-inner"}>{timestampItem.timestampLeft}</div></td>
+                                    <td><div class={"cell-inner text-sm"}>{timestampItem.timestampLeft}</div></td>
                                     <td><div class={"cell-inner"}>{timestampItem.destinationLabel}</div></td>
                                     {props.actions ? ( 
                                     <td>
@@ -736,12 +744,6 @@ export const STable: Component<STableProps> = (props:STableProps) => {
 
               </tbody>
           </table>
-
-            <div class={"flex flex-row"}>
-                {tableSelectedItems().length > 0 ? (
-                    <span>{tableSelectedItems().length.toString()} Selected Rows</span>
-                ):false}
-            </div>
         </div>
     );
 

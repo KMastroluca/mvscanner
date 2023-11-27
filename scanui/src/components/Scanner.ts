@@ -1,3 +1,4 @@
+import { POST } from "../api/API";
 
 /**
  * Here we declare a window global which holds the scannedRFID string.
@@ -6,6 +7,7 @@ declare global {
    interface Window {
       facilityLocationId: number;
       scannedRFID: string;
+      lastScannedRFID: string;
       lastKeyPress: number;
       scanApiUrl:string;
    }
@@ -25,6 +27,8 @@ export const initScanner = () => {
       if (isNaN(window.facilityLocationId)) {
          alert("Invalid Facility Location ID");
          location.reload();
+      } else {
+         localStorage.setItem("facilityLocationId", window.facilityLocationId.toString());
       }
    } else {
       window.facilityLocationId = parseInt(localStorage.getItem("facilityLocationId")!, 10);
@@ -45,6 +49,7 @@ export const initScanner = () => {
             console.log("Scanned RFID: ", window.scannedRFID);
             handleScan(window.scannedRFID);
          }
+         window.lastScannedRFID = window.scannedRFID;
          window.scannedRFID = "";
       } else {
          window.scannedRFID = "";
@@ -89,6 +94,43 @@ export const handleScan = async (rfid:string) => {
       if (data.length === 0) {
          throw Error("[-] No Response After Scan!");
       }
+
+      if (data.success === false) {
+         throw Error(data.message);
+      }
+
+      if (data.data.at(0).location === 0) {
+         // Resident is leaving, prompt user for location
+         let dest = window.prompt("Enter Destination: ", "0");
+         if (dest === null) {
+            return;
+         }
+
+         if (isNaN(parseInt(dest, 10))) {
+            alert("Invalid Destination, Scan Again");
+            return;
+         }
+
+         let response = await POST(window.scanApiUrl, {location: parseInt(dest, 10), rfid: rfid});
+
+         if (!response) {
+            console.error("Error: No response from server");
+            return;
+         }
+
+         if (!response.success) {
+            console.warn("Warning: Timestamp not created");
+            console.warn(response.message);
+            return;
+         }
+
+         console.log("Timestamp Created: ", response.data);
+         
+      }
+
+
+
+
    } catch (error) {
       console.error("Error Fetching Resident Data After Scan: ", error);
       return;
