@@ -18,6 +18,7 @@ pub enum Query<'a> {
     ShowResidentTimestamps(String),
     ShowResidentTimestampsRange(&'a str, &'a NaiveDate, &'a NaiveDate),
     ShowLocationResidents(usize),
+    UpdateResidentLocation(&'a Resident),
     IndexLocations,
     ShowLocation(usize),
     StoreLocation(&'a Location),
@@ -101,6 +102,13 @@ pub async fn query(pool: &Pool, query: Query<'_>,) -> Result<QueryResult, Box<dy
                 Ok(QueryResult::TimeStamps(timestamps))
             } else {
                 Err(Box::new(rusqlite::Error::QueryReturnedNoRows))
+            }
+        }
+        Query::UpdateResidentLocation(resident) => {
+            if update_resident_location(resident, conn).is_ok() {
+            Ok(QueryResult::Success)
+            } else {
+            Err(Box::new(rusqlite::Error::InvalidQuery))
             }
         }
         Query::IndexLocations => {
@@ -430,44 +438,47 @@ fn index_timestamps(conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::err
     }
 
 #[rustfmt::skip]
+fn update_resident_location(resident: &Resident, conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
+    let mut stmt = conn.prepare("UPDATE residents SET current_location = ?1 WHERE rfid = ?2")?;
+    stmt.execute(params![&resident.current_location, &resident.rfid])?;
+  // let mut stmt = conn.prepare("SELECT * FROM residents WHERE rfid = ?1")?;
+  //   let mut res = stmt.query_row(params![&ts.rfid], |row| {
+  //       Ok(Resident::new(
+  //           row.get(0)?,
+  //           row.get(1)?,
+  //           row.get(2)?,
+  //           row.get(3)?,
+  //           row.get(4)?,
+  //           row.get(5)?,
+  //       ))
+  //   })?;
+  //   res.update_location(ts.location);
+  //
+  //   let mut update_stmt = conn.prepare(
+  //       "UPDATE residents SET name = ?2, doc = ?3, room = ?4, unit = ?5, current_location = ?6 WHERE rfid = ?1",
+  //   )?;
+  //   update_stmt.execute(params![
+  //       &res.rfid,
+  //       &res.name,
+  //       &res.doc,
+  //       &res.room,
+  //       &res.unit,
+  //       &res.current_location,
+  //   ])?;
+    Ok(())
+}
+
+#[rustfmt::skip]
 fn store_timestamp(ts: &TimeStamp, conn: Connection) -> Result<TimeStamp, Box<dyn std::error::Error>> {
-  conn.execute_batch("BEGIN TRANSACTION;")?;
-  let mut stmt = conn.prepare("SELECT * FROM residents WHERE rfid = ?1")?;
-    let mut res = stmt.query_row(params![&ts.rfid], |row| {
-        Ok(Resident::new(
-            row.get(0)?,
-            row.get(1)?,
-            row.get(2)?,
-            row.get(3)?,
-            row.get(4)?,
-            row.get(5)?,
-        ))
-    })?;
-    res.update_location(ts.location);
-
-    let mut update_stmt = conn.prepare(
-        "UPDATE residents SET name = ?2, doc = ?3, room = ?4, unit = ?5, current_location = ?6 WHERE rfid = ?1",
-    )?;
-    update_stmt.execute(params![
-        &res.rfid,
-        &res.name,
-        &res.doc,
-        &res.room,
-        &res.unit,
-        &res.current_location,
-    ])?;
-
-    // Insert the timestamp
+  //
+  //   // Insert the timestamp
     let mut stmt = conn.prepare(
         "INSERT INTO timestamps (rfid, location)
                   VALUES (?1, ?2)",
     )?;
     stmt.insert(params![&ts.rfid, &ts.location])?;
 
-    // Commit the transaction
-    conn.execute_batch("COMMIT;")?;
-
-    Ok(TimeStamp::new(ts.rfid.clone(), res.current_location, None))
+    Ok(TimeStamp::new(ts.rfid.clone(), ts.location, None))
 }
 
 fn index_locations(conn: Connection) -> Result<Vec<Location>, Box<dyn std::error::Error>> {

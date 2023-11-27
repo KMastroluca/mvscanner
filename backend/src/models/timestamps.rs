@@ -70,6 +70,28 @@ where
     NaiveDate::parse_from_str(&date_str, "%Y-%m-%d").map_err(serde::de::Error::custom)
 }
 
+impl Display for PostTimestamp {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "RFID: {}, Location: {}", self.rfid, self.location)
+    }
+}
+
+#[derive(Debug, Serialize, Clone, Deserialize, Eq, PartialEq)]
+pub struct PostTimestamp {
+    pub rfid: String,
+    pub location: usize,
+}
+
+impl From<PostTimestamp> for TimeStamp {
+    fn from(ts: PostTimestamp) -> Self {
+        Self {
+            rfid: ts.rfid,
+            location: ts.location,
+            time: None,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Clone, Deserialize, Eq, PartialEq)]
 pub struct TimeStamp {
     pub rfid: String,

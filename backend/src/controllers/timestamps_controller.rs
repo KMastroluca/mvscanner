@@ -1,6 +1,6 @@
 use crate::{
     database::db::{query, Pool, Query, QueryResult},
-    models::timestamps::{RangeParams, TimeStamp, TimestampResponse},
+    models::timestamps::{PostTimestamp, RangeParams, TimestampResponse},
 };
 use actix_web::{
     get,
@@ -25,18 +25,37 @@ pub async fn index_timestamps(db: web::Data<Pool>) -> impl Responder {
 /// POST: /api/timestamps/{timestamp}
 #[rustfmt::skip]
 #[post("/api/timestamps")]
-pub async fn store_timestamp(db: web::Data<Pool>, ts: web::Json<TimeStamp>) -> impl Responder {
+pub async fn store_timestamp(db: web::Data<Pool>, ts: web::Json<PostTimestamp>) -> impl Responder {
     let ts = ts.into_inner();
     log::info!("Storing timestamp: {:?}", ts);
-    if let Ok(QueryResult::PostTimestamp(timestamp)) = query(&db, Query::StoreTimestamp(&ts)).await {
-        let res: TimestampResponse = timestamp.into();
-        HttpResponse::Ok()
-            .status(StatusCode::CREATED)
-            .insert_header(ContentType::json())
-            .json(res)
+    if let Ok(mut res) = query(&db, Query::ShowResident(ts.clone().rfid.as_str())).await {
+        match res {
+            QueryResult::Resident(ref mut resident) => {
+            resident.update_location(ts.location);
+                if let Ok(QueryResult::Success) = query(&db, Query::UpdateResidentLocation(resident)).await {
+                    if let Ok(QueryResult::PostTimestamp(timestamp)) = query(&db, Query::StoreTimestamp(&ts.clone().into())).await {
+                        let res: TimestampResponse = timestamp.into();
+                        HttpResponse::Ok()
+                            .status(StatusCode::CREATED)
+                            .insert_header(ContentType::json())
+                            .json(res)
+                    } else {
+                        let error = TimestampResponse::from_error("Error storing timestamp");
+                        HttpResponse::from_error(error)
+                    }
+                } else {
+                    let error = TimestampResponse::from_error("Error updating resident location");
+                    HttpResponse::Ok().json(error)
+                }
+                    }
+            _ => {
+                let error = TimestampResponse::from_error("Error retrieving resident");
+                HttpResponse::Ok().json(error)
+            }
+        }
     } else {
-        let error = TimestampResponse::from_error("Error storing timestamp");
-        HttpResponse::from_error(error)
+        let repsonse = TimestampResponse::from_error("Please add resident to the system first");
+        HttpResponse::Ok().json(repsonse)
     }
 }
 
