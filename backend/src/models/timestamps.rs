@@ -52,6 +52,13 @@ impl From<Vec<TimeStamp>> for TimestampResponse {
     }
 }
 impl TimestampResponse {
+    pub fn new(rfid: String, location: usize) -> Self {
+        Self {
+            success: true,
+            message: "Timestamp successfully stored".to_string(),
+            data: Some(vec![TimeStamp::new(rfid, location, None)]),
+        }
+    }
     pub fn from_error(msg: &str) -> Self {
         Self {
             success: false,

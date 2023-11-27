@@ -38,7 +38,6 @@ pub enum QueryResult {
     TimeStamps(Vec<TimeStamp>),
     Locations(Vec<Location>),
     Location(Location),
-    PostTimestamp(TimeStamp),
     Success,
     Failure,
     NotFound,
@@ -140,8 +139,8 @@ pub async fn query(pool: &Pool, query: Query<'_>,) -> Result<QueryResult, Box<dy
             start, end, conn,
         )?)),
         Query::StoreTimestamp(ts) => {
-            if let Ok(timestamp) = store_timestamp(ts, conn) {
-                Ok(QueryResult::PostTimestamp(timestamp))
+            if  store_timestamp(ts, conn).is_ok() {
+                Ok(QueryResult::Success)
             } else {
                 Err(Box::new(rusqlite::Error::InvalidQuery))
             }
@@ -469,7 +468,7 @@ fn update_resident_location(resident: &Resident, conn: Connection) -> Result<(),
 }
 
 #[rustfmt::skip]
-fn store_timestamp(ts: &TimeStamp, conn: Connection) -> Result<TimeStamp, Box<dyn std::error::Error>> {
+fn store_timestamp(ts: &TimeStamp, conn: Connection) -> Result<(), Box<dyn std::error::Error>> {
   //
   //   // Insert the timestamp
     let mut stmt = conn.prepare(
@@ -478,7 +477,7 @@ fn store_timestamp(ts: &TimeStamp, conn: Connection) -> Result<TimeStamp, Box<dy
     )?;
     stmt.insert(params![&ts.rfid, &ts.location])?;
 
-    Ok(TimeStamp::new(ts.rfid.clone(), ts.location, None))
+    Ok(())
 }
 
 fn index_locations(conn: Connection) -> Result<Vec<Location>, Box<dyn std::error::Error>> {

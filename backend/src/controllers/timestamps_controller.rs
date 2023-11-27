@@ -33,8 +33,8 @@ pub async fn store_timestamp(db: web::Data<Pool>, ts: web::Json<PostTimestamp>) 
             QueryResult::Resident(ref mut resident) => {
             resident.update_location(ts.location);
                 if let Ok(QueryResult::Success) = query(&db, Query::UpdateResidentLocation(resident)).await {
-                    if let Ok(QueryResult::PostTimestamp(timestamp)) = query(&db, Query::StoreTimestamp(&ts.clone().into())).await {
-                        let res: TimestampResponse = timestamp.into();
+                    if let Ok(QueryResult::Success) = query(&db, Query::StoreTimestamp(&ts.clone().into())).await {
+                        let res: TimestampResponse = TimestampResponse::new(ts.rfid.clone(), resident.current_location);
                         HttpResponse::Ok()
                             .status(StatusCode::CREATED)
                             .insert_header(ContentType::json())
