@@ -5,7 +5,7 @@
   "license": "Proprietary",
   "type": "module",
   "scripts": {
-    "dev": "vite --host --mode development",
+    "dev": "vite --mode development --host",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },

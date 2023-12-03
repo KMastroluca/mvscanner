@@ -1,47 +1,48 @@
 import { ServerResponse } from "../types/Models";
 
 
+export class API {
 
-export const GET = async (url: string): Promise<ServerResponse | undefined> => {
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    });
+  public static url = import.meta.env.VITE_BACKEND_ADDRESS;
+  public static port = import.meta.env.VITE_BACKEND_PORT;
+  public static fullUrl = `http://${this.url}:${this.port}/api/`;
 
-    if (!response.ok) {
-      throw Error(response.statusText);
-    }
-
-    return await response.json();
-  } catch (err) {
-    console.error("GET ERROR:", err);
-    return undefined;
+  public static headers = {
+    accept: "application/json",
+    "Content-Type": "application/json",
   }
-};
 
 
-export const POST = async (url: string, payload: any): Promise<ServerResponse | undefined> => {
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw Error(response.statusText);
+  static async GET(uri: string): Promise<ServerResponse | undefined> {
+    try {
+      const response = await fetch(this.fullUrl + uri, {
+        method: "GET",
+        headers: this.headers,
+      });
+      if (!response.ok) {
+        throw Error(response.statusText);
+      }
+      return await response.json();
+    } catch (err) {
+      console.error("GET ERROR:", err);
+      return undefined;
     }
-
-    return await response.json();
-  } catch (err) {
-    console.error("POST ERROR:", err);
-    return undefined;
   }
-};
+
+  static async POST(uri: string, payload: any): Promise<ServerResponse | undefined> {
+    try {
+      const response = await fetch(this.fullUrl + uri, {
+        method: "POST",
+        headers: this.headers,
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw Error(response.statusText);
+      }
+      return await response.json();
+    } catch (err) {
+      console.error("POST ERROR:", err);
+      return undefined;
+    }
+  }
+}

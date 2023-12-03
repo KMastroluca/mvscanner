@@ -40,7 +40,7 @@ document.body.addEventListener('keydown', (event) => {
 });
 
 async function handleScan(rfid) {
-  const apiUrl = `http://localhost:8080/api/residents/${rfid}`;
+  const apiUrl = `http://172.16.20.42/api/residents/${rfid}`;
 
   try {
     const response = await fetch(apiUrl);
