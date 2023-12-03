@@ -50,7 +50,7 @@ export interface STableData {
 
 export interface STableAction {
     actionLabel:string;
-    actionFunction:() => void;
+    actionFunction:(props:any) => void;
 }
 
 export interface STableColumn {
@@ -571,14 +571,14 @@ export const STable: Component<STableProps> = (props:STableProps) => {
 
                                                     if (action.actionLabel === "Edit") { 
                                                         return (
-                                                            <button onClick={action.actionFunction}>
+                                                            <button onClick={() => action.actionFunction({rfid:residentItem.rfid})}>
                                                                 <TbEdit size={24} />
                                                             </button>
                                                         );
                                                     }
 
                                                     return (
-                                                    <button onClick={action.actionFunction}>
+                                                    <button onClick={() => action.actionFunction({})}>
                                                         {action.actionLabel}
                                                     </button>
                                                     );
