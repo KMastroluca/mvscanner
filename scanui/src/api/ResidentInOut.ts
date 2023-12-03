@@ -155,6 +155,10 @@ export const getResidentsOut = async (): Promise<STableData> => {
 
   let returnObj = { data: latestToOld(residentsOut), priorityData: onlyAway };
   return returnObj;
+   // Im reversing the array because the table is displaying the data from newest to oldest and 
+   // i guess latest to oldest is doing the opposite
+   let returnObj = {data:latestToOld(residentsOut).reverse(), priorityData:onlyAway};
+   return returnObj;
 
 }
 
