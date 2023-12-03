@@ -59,8 +59,8 @@ impl Location {
 
     pub fn get_env() -> Self {
         Self {
-            /// This reads the ENV VAR that will determine what location the particular instance
-            /// of the scannner/server is running in
+            // This reads the ENV VAR that will determine what location the particular instance
+            // of the scannner/server is running in
             id: std::env::var("LOCATION_ID")
                 .is_ok()
                 .then(|| {

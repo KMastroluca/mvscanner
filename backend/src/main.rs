@@ -50,11 +50,11 @@ async fn main() -> io::Result<()> {
     log::info!("starting Actix-Web HTTP server at http://localhost:8080");
     let json_config = JsonConfig::default().limit(4096);
     HttpServer::new(move || {
-        let cors = Cors::default()
+        let cors = Cors::permissive()
             .allow_any_origin()
-            .allowed_methods(vec!["GET", "POST", "PUT", "PATCH"])
-            .allowed_headers(vec![header::AUTHORIZATION, header::CONTENT_TYPE, header::ACCEPT])
-            .max_age(3600);
+            .allow_any_method()
+            .allow_any_method()
+            .block_on_origin_mismatch(false);
 
         App::new()
             .app_data(Data::new(pool.clone()))
@@ -78,8 +78,8 @@ async fn main() -> io::Result<()> {
             .wrap(middleware::Logger::default())
             .wrap(cors)
     })
-    .bind(("127.0.0.1", 8080))?
-    .workers(2)
+    .bind(("172.16.20.41", 8080))?
+    .workers(4)
     .run()
     .await
 }
