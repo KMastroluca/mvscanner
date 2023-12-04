@@ -43,6 +43,10 @@ import { GetResidentByRFID } from './api/GetResident';
 import toast, { Toaster } from 'solid-toast';
 import { updateResident } from './api/UpdateResident';
 
+
+
+import loadingAnim from './assets/loading.gif'; 
+
 export enum AppDisplayHousingUnit {
   ALL = 0,
   ALPHA = 1,
@@ -52,16 +56,6 @@ export enum AppDisplayHousingUnit {
   ECHO = 5
 }
 
-
-const testScanner = () => {
-
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      console.log("HIT ENTER");
-    }
-  });
-
-};
 
 function App() {
 
@@ -80,7 +74,6 @@ function App() {
 
   onMount(() => {
     initScanner({displayNewResidentModal, refetchData});
-    testScanner();
   });
 
   onCleanup(() => {
@@ -189,14 +182,14 @@ function App() {
         </div>
 
 
-        <div class={"flex w-[44rem]"}>
-          {outResidentsData.loading ? (<></>): (
+        <div class={"flex w-[44rem] justify-center items-center"}>
+          {outResidentsData.loading ? (<img src={loadingAnim} class={"w-10 h-10"} />): (
             <STable type='TimestampResident' data={outResidentsData()} />
           )}
         </div>
 
-        <div class={"flex w-[42rem]"}>
-          {inResidentsData.loading ? (<></>): (
+        <div class={"flex w-[42rem] justify-center items-center"}>
+          {inResidentsData.loading ? (<img src={loadingAnim} class={"w-10 h-10"} />): (
             <STable type='Resident' data={inResidentsData()} actions={residentActions} />
           )}
         </div>
@@ -204,8 +197,6 @@ function App() {
       </div>
     </div>
   );
-;
-
 }
 
 export default App

@@ -34,6 +34,8 @@ import {Component, createEffect, createMemo, createSignal, For, JSXElement, onMo
 import '../styles/STable.css';
 import {TbArrowsSort, TbSettings2, TbEdit} from "solid-icons/tb";
 import { GetLocationById } from "../api/GetLocation";
+import { Popover } from "@kobalte/core";
+import { time } from "console";
 
 export interface STableProps {
     type: "Resident" | "Location" | "Timestamp" | "TimestampResident";
@@ -492,7 +494,33 @@ export const STable: Component<STableProps> = (props:STableProps) => {
     });
 
 
+    type PopoverContentProps = {
+        item:STimestampResident|SResident;
+        cellContent:string;
+    };
+    const PopoverContent:Component<PopoverContentProps> = (props:PopoverContentProps) => {
+        
+        const [popoverOpen, setPopoverOpen] = createSignal(false);
+        
+        return (
+            <Popover.Root open={popoverOpen()} onOpenChange={setPopoverOpen}>
+                <Popover.Trigger onMouseEnter={() => setPopoverOpen(true)}
+                                 onMouseLeave={() => setPopoverOpen(false)}>
+                    {props.cellContent}
+                </Popover.Trigger>
+                <Popover.Portal>
+                    <Popover.Content>
+                        <Popover.Arrow />
+                        <Popover.Description>
+                            <div class={"w-40 h-40 bg-slate-100"}>
 
+                            </div>
+                        </Popover.Description>
+                    </Popover.Content>
+                </Popover.Portal>
+            </Popover.Root>
+        );
+    };
 
 
     return(
@@ -559,7 +587,9 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                                             </label>
                                         </div>
                                     </td>
-                                    <td><div class={"cell-inner"}>{residentItem.name}</div></td>
+                                    <td><div class={"cell-inner"}>
+                                        <PopoverContent item={residentItem} cellContent={residentItem.name} />
+                                    </div></td>
                                     <td><div class={"cell-inner"}>{residentItem.doc}</div></td>
                                     <td><div class={"cell-inner"}>{residentItem.room}</div></td>
                                     <td><div class={`cell-inner ${residentItem.current_location === residentItem.unit ? 'bg-green-400' : 'bg-red-400 text-white'}`}><GetLocationById id={residentItem.current_location} /></div></td>
@@ -650,7 +680,9 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                                     </label>   
                                  </div>
                               </td>
-                              <td class={"bg-red-400"}><div class={"cell-inner"}>{timestampItem.name}</div></td>
+                              <td class={"bg-red-400"}><div class={"cell-inner"}>
+                                <PopoverContent item={timestampItem} cellContent={timestampItem.name} />
+                              </div></td>
                               <td class={"bg-red-400"}><div class={"cell-inner"}>{timestampItem.doc}</div></td>
                               <td class={"bg-red-400"}><div class={"cell-inner"}>{timestampItem.room}</div></td>
                               <td class={"bg-red-400"}><div class={"cell-inner text-sm"}>{timestampItem.timestampLeft}</div></td>
@@ -677,7 +709,9 @@ export const STable: Component<STableProps> = (props:STableProps) => {
                                             </label>
                                         </div>
                                     </td>
-                                    <td><div class={"cell-inner"}>{timestampItem.name}</div></td>
+                                    <td><div class={"cell-inner"}>
+                                        <PopoverContent item={timestampItem} cellContent={timestampItem.name} />
+                                    </div></td>
                                     <td><div class={"cell-inner"}>{timestampItem.doc}</div></td>
                                     <td><div class={"cell-inner"}>{timestampItem.room}</div></td>
                                     <td><div class={"cell-inner text-sm"}>{timestampItem.timestampLeft}</div></td>
