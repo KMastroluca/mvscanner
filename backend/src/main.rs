@@ -17,6 +17,8 @@ async fn main() -> io::Result<()> {
     env_logger::init();
     let dbpath = dirs::data_local_dir().unwrap().join("mvcf_scan.db");
     let manager = SqliteConnectionManager::file(dbpath);
+    let ip = std::env::var("LOCAL_IP").unwrap_or("localhost".to_string());
+    log::info!("LOCAL IP: {}", ip);
     let pool = r2d2::Pool::builder()
         .build(manager)
         .expect("Not pointing to proper file");
@@ -78,7 +80,7 @@ async fn main() -> io::Result<()> {
             .wrap(middleware::Logger::default())
             .wrap(cors)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("172.16.20.42", 8080))?
     .workers(2)
     .run()
     .await

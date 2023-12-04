@@ -17,9 +17,11 @@ type ResidentIDModalValidationErrors = {
   lastNameError: string | null,
   docError: string | null,
   housingUnitError: string | null,
+  podError: string | null,
   roomError: string | null,
   bunkError: string | null,
 };
+
 interface ResidentEditModalProps {
   open: Accessor<boolean>;
   currentResident: Accessor<SResident | null>;
@@ -94,6 +96,7 @@ export const ResidentEditModal: Component<ResidentEditModalProps> = (props: Resi
     lastNameError: null,
     docError: null,
     housingUnitError: null,
+    podError: null,
     roomError: null,
     bunkError: null
   });
@@ -166,7 +169,7 @@ export const ResidentEditModal: Component<ResidentEditModalProps> = (props: Resi
     }
 
 
-    if (residentDOC() !== undefined && /^\d+$/.test(residentDOC()!) === false) {
+    if ((/^\d+$/.test(residentDOC()!) === false) && residentDOC() !== "") {
       errors = {
         ...errors,
         docError: "DOC # must contain only numbers!"
@@ -348,13 +351,14 @@ export const ResidentEditModal: Component<ResidentEditModalProps> = (props: Resi
                     <span class={"text-lg font-bold"}>
                       Pod:
                     </span>
+                    {residentValidationErrors().podError !== null ? <span class={"text-red-500"}>{residentValidationErrors().podError}</span> : false}
                     <select value={residentPod()} name={"editResidentPod"} class={"px-3 py-3 border-[1px]"} onChange={(e) => handleChangePod(e.target.value)}>
                       <option value={'A'}>A</option>
                       <option value={'B'}>B</option>
                       <option value={'C'}>C</option>
                     </select>
-                  </label>
-                </div>
+                  </label >
+                </div >
                 <div class={"flex gap-2 w-full"}>
                   <label class={"flex flex-col w-full"}>
                     <span class={"text-lg font-bold"}>Room:</span>
@@ -398,9 +402,9 @@ export const ResidentEditModal: Component<ResidentEditModalProps> = (props: Resi
               <button class={"flex flex-row w-full text-xl h-20 hover:bg-green-300 bg-green-200 items-center justify-center px-6"} onClick={() => handleResidentEdit()}>Edit Resident</button>
               <button class={"flex flex-row w-full text-xl h-20 hover:bg-red-300 bg-red-200 items-center justify-center px-6"} onClick={() => props.close()}>Close</button>
             </section>
-          </div >
-        </Portal >
-      </Show >
+          </div>
+        </Portal>
+      </Show>
     );
   }
 
