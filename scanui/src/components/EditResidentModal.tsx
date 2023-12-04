@@ -186,6 +186,35 @@ export const ResidentEditModal: Component<ResidentEditModalProps> = (props: Resi
     let housingUnits = [1, 6, 7, 14, 17];
     let a = residentHousingUnit();
 
+    const handleChangePod = (value: string) => {
+      setResidentPod(value);
+    };
+
+    const handleSubmitEditResident = () => {
+      if (residentValidationErrors().firstNameError !== null ||
+        residentValidationErrors().lastNameError !== null ||
+        residentValidationErrors().docError !== null ||
+        residentValidationErrors().housingUnitError !== null ||
+        residentValidationErrors().roomError !== null ||
+        residentValidationErrors().bunkError !== null) {
+        console.log("Form Is Invalid!");
+        alert("Form Was Invalid!");
+        return;
+      }
+
+      let newResident = {
+        id: props.currentResident()!.id,
+        rfid: props.currentResident()!.rfid,
+        name: residentFirstName() + " " + residentLastName(),
+        doc: residentDOC(),
+        unit: residentHousingUnit(),
+        room: residentHousingUnit()!.toString() + "-" + residentRoom().toString() + residentBunk(),
+        current_location: props.currentResident()!.current_location,
+      } as SResident;
+
+      props.editResident(newResident);
+    };
+
 
     if (residentHousingUnit() !== undefined && housingUnits.includes(residentHousingUnit()! as number) !== false) {
       errors = {
@@ -404,7 +433,7 @@ export const ResidentEditModal: Component<ResidentEditModalProps> = (props: Resi
             </section>
           </div>
         </Portal>
-      </Show>
+      </Show >
     );
   }
 
