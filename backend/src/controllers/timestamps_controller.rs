@@ -1,6 +1,7 @@
 use crate::{
     database::db::{query, Pool, Query, QueryResult},
-    models::timestamps::{PostTimestamp, RangeParams, ResidentTimestamp, Response, TimeStamp},
+    models::response::Response,
+    models::timestamps::{PostTimestamp, RangeParams, ResidentTimestamp, TimeStamp},
 };
 use actix_web::{
     get,
