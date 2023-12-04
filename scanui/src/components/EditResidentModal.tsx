@@ -1,7 +1,6 @@
-import { Accessor, Component, Show, createEffect, createMemo, createSignal } from "solid-js";
+import { Accessor, Component, Show, createEffect, createSignal } from "solid-js";
 import { Portal } from "solid-js/web";
 import { SResident } from "../types/Models";
-import { FaSolidArrowUpFromGroundWater } from "solid-icons/fa";
 
 
 export enum ResidentIDModalHousingUnit {
@@ -29,19 +28,20 @@ interface ResidentEditModalProps {
 }
 
 interface DeconstructedResidentRoom {
-   unitLetter: string;
+   podLetter: string|'A'|'B'|'C';
    roomNumber: number;
    bunk: "T"|"B";
 }
 
 const parseResidentRoom = (room:string) => {
+   console.log("ROOM", room);
    let splitRoom = room.split("-");
-   let unitLetter = splitRoom[0];
+   let podLetter = splitRoom[0];
    let roomNumberWithTB = splitRoom[1];
    let roomNumber = roomNumberWithTB.substring(0, roomNumberWithTB.length - 1);
    
    return {
-      unitLetter: unitLetter,
+      podLetter: podLetter,
       roomNumber: parseInt(roomNumber),
       bunk: roomNumberWithTB.charAt(roomNumberWithTB.length) as "T"|"B"
    } as DeconstructedResidentRoom;
@@ -57,7 +57,7 @@ export const ResidentEditModal:Component<ResidentEditModalProps> = (props:Reside
       residentRoomDecons = parseResidentRoom(props.currentResident()!.room);
    } else {
       residentRoomDecons = {
-         unitLetter: "",
+         podLetter: '',
          roomNumber: 0,
          bunk: "T"
       } as DeconstructedResidentRoom;
@@ -86,6 +86,7 @@ export const ResidentEditModal:Component<ResidentEditModalProps> = (props:Reside
    const [residentBunk, setResidentBunk] = createSignal<"T"|"B"|null>(residentRoomDecons.bunk);
    const [residentFirstName, setResidentFirstName] = createSignal<string|undefined>(firstName);
    const [residentLastName, setResidentLastName] = createSignal<string|undefined>(lastName);
+   const [residentPod, setResidentPod] = createSignal<string|undefined>();
    const [residentDOC, setResidentDOC] = createSignal<string|undefined>(props.currentResident()?.doc);
 
    const [residentValidationErrors, setResidentValidationErrors] = createSignal<ResidentIDModalValidationErrors>({
@@ -96,27 +97,6 @@ export const ResidentEditModal:Component<ResidentEditModalProps> = (props:Reside
       roomError: null,
       bunkError: null
    });
-
-   const housingUnitLetter = (housingUnit:number):string|"A"|"B"|"C"|"D"|"E"|undefined => {
-      console.log("HOUSING UNIT LETTER", housingUnit);
-      if (housingUnit == 1) {
-         return "A";
-      } else if (housingUnit == 6) {
-         return "B";
-      }
-      else if (housingUnit == 7) {
-         return "C";
-      }
-      else if (housingUnit == 14) {
-         return "D";
-      }
-      else if (housingUnit == 17) {
-         return "E";
-      }
-      else {
-         return undefined;
-      }
-   };
 
    const handleChangeHousingUnit = (e:any) => {
       setNewResidentHousingUnit(e.target.value);
@@ -144,7 +124,6 @@ export const ResidentEditModal:Component<ResidentEditModalProps> = (props:Reside
 
    const handleFormChange = createEffect((e:any) => {  
       console.log("FORM CHANGE");
-
       validateResident();
    }, [residentBunk, residentDOC, residentFirstName, residentLastName, residentRoom, residentHousingUnit]);
 
@@ -236,6 +215,35 @@ export const ResidentEditModal:Component<ResidentEditModalProps> = (props:Reside
       setResidentValidationErrors(errors as ResidentIDModalValidationErrors);
    };
 
+   const handleChangePod = (value:string) => {
+      setResidentPod(value);
+   };
+
+   const handleSubmitEditResident = () => {
+      if (residentValidationErrors().firstNameError !== null ||
+         residentValidationErrors().lastNameError !== null ||
+         residentValidationErrors().docError !== null ||
+         residentValidationErrors().housingUnitError !== null ||
+         residentValidationErrors().roomError !== null ||
+         residentValidationErrors().bunkError !== null) {
+            console.log("Form Is Invalid!");
+            alert("Form Was Invalid!");
+            return;
+         }
+      
+      let newResident = {
+         id: props.currentResident()!.id,
+         rfid: props.currentResident()!.rfid,
+         name: residentFirstName() + " " + residentLastName(),
+         doc: residentDOC(),
+         unit: residentHousingUnit(),
+         room: residentHousingUnit()!.toString() + "-" + residentRoom().toString() + residentBunk(),
+         current_location: props.currentResident()!.current_location,
+      } as SResident;
+
+      props.editResident(newResident);
+   };
+
 
    const handleResidentEdit = () => {
       
@@ -281,34 +289,38 @@ export const ResidentEditModal:Component<ResidentEditModalProps> = (props:Reside
                   <section class={"flex w-full h-fit"}>
                      <div class={"flex flex-col gap-2 w-full"}>
                         <label class={"text-lg font-bold"}>RFID:</label>
-                        <input value={props.currentResident()?.rfid} type={"text"} disabled class={"bg-neutral-200 border-[1px] py-3 px-3"} id={"newRFID"} name={"newRFID"} />
+                        <input value={props.currentResident()?.rfid} type={"text"} disabled class={"bg-neutral-200 border-[1px] py-3 px-3"} id={"editRFID"} name={"editRFID"} />
+                        
                      </div>
                   </section>
                   <section class={"flex w-full h-fit columns-2 gap-4"}>
                      <div class={"flex w-full"}>
                         <div class="flex flex-col gap-2 w-full">
                            <label for={"newResidentFirstName"} class={"text-lg font-bold"}>Resident First Name:</label>
-                           <input value={residentFirstName()} onChange={(e) => handleChangeFirstName(e.target.value)} class={"bg-white border-[1px] py-3 px-3"} type={"text"} id={"newResidentFirstName"} name={"newResidentFirstName"} placeholder="First Name" />
+                           <input value={residentFirstName()} onChange={(e) => handleChangeFirstName(e.target.value)} class={"bg-white border-[1px] py-3 px-3"} type={"text"} id={"editResidentFirstName"} name={"editResidentFirstName"} placeholder="First Name" />
+                           {residentValidationErrors().firstNameError !== null ? <span class={"text-red-500"}>{residentValidationErrors().firstNameError}</span> : false}
                         </div>
                      </div>
                      <div class={"flex w-full"}>
                         <div class="flex flex-col gap-2 w-full">
                            <label for={"newResidentLastName"} class={"text-lg font-bold"}>Resident Last Name:</label>
-                           <input value={residentLastName()} onChange={(e) => handleChangeLastName(e.target.value)} class={"bg-white border-[1px] py-3 px-3"} type={"text"} id={"newResidentLastName"} name={"newResidentLastName"} placeholder="Last Name" />
+                           <input value={residentLastName()} onChange={(e) => handleChangeLastName(e.target.value)} class={"bg-white border-[1px] py-3 px-3"} type={"text"} id={"editResidentLastName"} name={"editResidentLastName"} placeholder="Last Name" />
+                           {residentValidationErrors().lastNameError !== null ? <span class={"text-red-500"}>{residentValidationErrors().lastNameError}</span> : false}
                         </div>
                      </div>      
                   </section>
                   <section class={"flex w-full h-fit"}>
                      <div class={"flex flex-col gap-2 w-full"}>
                         <label class={"text-lg font-bold"}>DOC #:</label>
-                        <input value={residentDOC()} onChange={(e) => handleChangeDOC(e.target.value)} type={"text"} class={"bg-white border-[1px] py-3 px-3"} id={"newDOC"} name={"newDOC"} />
+                        <input value={residentDOC()} onChange={(e) => handleChangeDOC(e.target.value)} type={"text"} class={"bg-white border-[1px] py-3 px-3"} id={"editDOC"} name={"editDOC"} />
+                        {residentValidationErrors().docError !== null ? <span class={"text-red-500"}>{residentValidationErrors().docError}</span> : false}
                      </div>
                   </section>
                   <section class={"flex w-full h-fit gap-4 columns-3"}>
                         <div class={"flex gap-2 w-full"}>
                            <label class={"flex flex-col w-full"}>
                               <span class={"text-lg font-bold"}>Housing Unit:</span>
-                              <select value={residentHousingUnit() as number} onChange={(e) => handleChangeHousingUnit(e)} name={"newResidentUnit"} class={"px-3 py-3 border-[1px]"}>
+                              <select value={residentHousingUnit() as number} onChange={(e) => handleChangeHousingUnit(e)} name={"editResidentUnit"} class={"px-3 py-3 border-[1px]"}>
                                  <option value={ResidentIDModalHousingUnit.ALPHA}>ALPHA UNIT</option>
                                  <option value={ResidentIDModalHousingUnit.BRAVO}>BRAVO UNIT</option>
                                  <option value={ResidentIDModalHousingUnit.CHARLIE}>CHARLIE UNIT</option>
@@ -316,11 +328,24 @@ export const ResidentEditModal:Component<ResidentEditModalProps> = (props:Reside
                                  <option value={ResidentIDModalHousingUnit.ECHO}>ECHO UNIT</option>
                               </select>
                            </label>
+                           {residentValidationErrors().housingUnitError !== null ? <span class={"text-red-500"}>{residentValidationErrors().housingUnitError}</span> : false}
+                        </div>
+                        <div class={"flex gap-2 w-full"}>
+                           <label class={"flex flex-col w-full"}>
+                              <span class={"text-lg font-bold"}>
+                                 Pod:
+                              </span>
+                              <select value={residentPod()} name={"editResidentPod"} class={"px-3 py-3 border-[1px]"} onChange={(e) => handleChangePod(e.target.value)}>
+                                 <option value={'A'}>A</option>
+                                 <option value={'B'}>B</option>
+                                 <option value={'C'}>C</option>
+                              </select>
+                           </label>
                         </div>
                         <div class={"flex gap-2 w-full"}>
                            <label class={"flex flex-col w-full"}>
                               <span class={"text-lg font-bold"}>Room:</span>
-                              <select value={residentRoom()} name={"newResidentRoom"} class={"px-3 py-3 border-[1px]"} onChange={(e) => handleChangeRoom(e)}>
+                              <select value={residentRoom()} name={"editResidentRoom"} class={"px-3 py-3 border-[1px]"} onChange={(e) => handleChangeRoom(e)}>
                                  <option value={"1"}>1</option>
                                  <option value={"2"}>2</option>
                                  <option value={"3"}>3</option>
@@ -363,6 +388,7 @@ export const ResidentEditModal:Component<ResidentEditModalProps> = (props:Reside
                                  <option value={"40"}>40</option>   
                               </select>
                            </label>
+                           {residentValidationErrors().roomError !== null ? <span class={"text-red-500"}>{residentValidationErrors().roomError}</span> : false}
                         </div>
                         <div class={"flex gap-2 w-full"}>
                            <label class={"flex flex-col w-full"}>
