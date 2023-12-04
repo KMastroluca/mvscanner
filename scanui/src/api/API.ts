@@ -3,7 +3,7 @@ import { ServerResponse } from "../types/Models";
 
 export class API {
 
-  public static url = import.meta.env.VITE_BACKEND_ADDRESS;
+  public static url = import.meta.env.VITE_BACKEND_ADDR;
   public static port = import.meta.env.VITE_BACKEND_PORT;
   public static fullUrl = `http://${this.url}:${this.port}/api/`;
 
