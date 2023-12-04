@@ -22,6 +22,12 @@ export const createResident = async (newResident:SResident) => {
 
    let resp = await residentResponse.json();
 
-   console.log(resp);
+   if (resp.success === false) {
+      console.error("Error: Resident not created");
+      console.error(resp.message);
+      return;
+   } else {
+      console.log(resp.message);
+   }
 };
 

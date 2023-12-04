@@ -78,7 +78,7 @@ async fn main() -> io::Result<()> {
             .wrap(middleware::Logger::default())
             .wrap(cors)
     })
-    .bind(("172.16.20.42", 8080))?
+    .bind(("127.0.0.1", 8080))?
     .workers(2)
     .run()
     .await

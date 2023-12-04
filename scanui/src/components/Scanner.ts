@@ -1,20 +1,29 @@
 import { API } from "../api/API";
+import toast, {Toaster} from "solid-toast";
 
 /**
  * Here we declare a window global which holds the scannedRFID string.
  */
 declare global {
-  interface Window {
-    facilityLocationId: number;
-    scannedRFID: string;
-    lastScannedRFID: string;
-    lastKeyPress: number;
-    scanApiUrl: string;
-  }
+   interface Window {
+      facilityLocationId: number;
+      scannedRFID: string;
+      lastScannedRFID: string;
+      lastKeyPress: number;
+      scanApiUrl:string;
+      testScanMode:boolean;
+   }
 }
 
-export const initScanner = () => {
-  console.log("Attaching Scanner Event Listeners");
+window.testScanMode = true;
+
+interface ScannerProps {
+   displayNewResidentModal: (rfid:string) => void;
+   refetchData: () => void;
+}
+
+export const initScanner = (props:ScannerProps) => {
+   console.log("Attaching Scanner Event Listeners");
 
 
   /**
@@ -40,21 +49,22 @@ export const initScanner = () => {
   window.addEventListener("keydown", (event: KeyboardEvent) => {
     const currentTime = new Date().getTime();
 
-    if (/^\d$/.test(event.key)) {
-      window.scannedRFID += event.key;
-      window.lastKeyPress = currentTime;
-    } else if (event.key === "Enter") {
-      console.log("Enter Pressed");
-      if (window.scannedRFID.length === 17 && currentTime - window.lastKeyPress < 100) {
-        console.log("Scanned RFID: ", window.scannedRFID);
-        handleScan(window.scannedRFID);
-      }
-      window.lastScannedRFID = window.scannedRFID;
-      window.scannedRFID = "";
-    } else {
-      window.scannedRFID = "";
-    }
-  });
+      if (/^\d$/.test(event.key)) {
+         window.scannedRFID += event.key;
+         window.lastKeyPress = currentTime;   
+      } else if (event.key === "Enter") {
+         console.log("Enter Pressed");
+         if (window.scannedRFID.length === 17 && currentTime - window.lastKeyPress < 100) {
+            console.log("Scanned RFID: ", window.scannedRFID);
+            handleScan(window.scannedRFID, props);
+         } else if (window.testScanMode === true) {
+            console.log("Executing Test Scan");
+            handleScan("00000000000000000", props);
+         }
+         window.lastScannedRFID = window.scannedRFID;
+         window.scannedRFID = "";
+      } 
+   });
 }
 
 export const cleanupScanner = () => {
@@ -67,11 +77,13 @@ export const cleanupScanner = () => {
 };
 
 
-export const handleScan = async (rfid: string) => {
-  window.scanApiUrl = (API.fullUrl + "timestamps");
+export const handleScan = async (rfid:string, props:ScannerProps) => {
+   window.scanApiUrl = `http://localhost:8080/api/timestamps`;
 
 
   try {
+
+    const originalResidentResponse = await API.GET(`residents/${rfid}`);
 
     const response = await fetch(window.scanApiUrl, {
       method: "POST",
@@ -83,46 +95,111 @@ export const handleScan = async (rfid: string) => {
     });
 
 
-    if (!response.ok) {
-      throw Error(response.statusText);
-    }
-    const data = await response.json();
-    console.log("Scan Response: ", data);
-    if (data.length === 0) {
-      throw Error("[-] No Response After Scan!");
-    }
+      if (!response.ok) {
+         throw Error(response.statusText);
+      }
 
-    if (data.success === false) {
-      throw Error(data.message);
-    }
+
+      const data = await response.json();
+      console.log("Scan Response: ", data);
+
+
+
+
+
+      if (data.success === false) {
+         // If the scan was not successful in this case, that means the resident is not in the database
+         // Prompt the user to add the resident to the database
+         let addResident = window.confirm("Resident Not Found, Add Resident?");
+         if (addResident) {
+            props.displayNewResidentModal(rfid);
+         }
+         return;
+      }
 
     if (data.data.at(0).location === 0) {
       // Resident is leaving, prompt user for location
-      let dest = window.prompt("Enter Destination: ", "0");
+      let dest = window.prompt("Enter Destination: ", "1");
       if (dest === null) {
+        toast.error("Invalid Destination, Scan Again");
         return;
       }
 
       if (isNaN(parseInt(dest, 10))) {
-        alert("Invalid Destination, Scan Again");
+        toast.error("Invalid Destination, Scan Again");
         return;
       }
+
+      
+
+
+      let residentResp = await API.GET(`residents/${rfid}`);
+      if (!residentResp) {
+        toast.error("Error: No response from server when fetching resident");
+        return;
+      }
+      if (!residentResp.success) {
+        toast.error(residentResp.message);
+        return;
+      }
+
+
+      let currentlocationResp = await API.GET(`locations/${residentResp!.data!.at(0)!.current_location}`);
+      if (!currentlocationResp) {
+        toast.error("Error: No response from server when fetching current location");
+        return;
+      }
+      if (!currentlocationResp.success) {
+        toast.error(currentlocationResp.message);
+        return;
+      }
+
 
       let response = await API.POST("timestamps", { location: parseInt(dest, 10), rfid: rfid });
 
       if (!response) {
-        console.error("Error: No response from server");
+        toast.error("Error: No response from server");
         return;
       }
 
       if (!response.success) {
-        console.warn("Warning: Timestamp not created");
-        console.warn(response.message);
+        toast("Warning: Timestamp not created");
+        toast(response.message);
+        return;
+      }
+
+      let locationResp = await API.GET(`locations/${dest}`);
+      if (!locationResp) {
+        toast("Error: No response from server when fetching location");
+        return;
+      }
+      if (!locationResp.success) {
+        toast.error("Warning: Location not found, scan again");
+        toast.error(locationResp.message);
+
         return;
       }
 
       console.log("Timestamp Created: ", response.data);
 
+      props.refetchData();
+
+      console.log("Resident: ", residentResp.data);
+
+
+      toast.success(`Resident ${originalResidentResponse?.data!.at(0)?.doc} Leaving Pod for ${locationResp!.data!.at(0)!.name}`);
+    } else {
+      console.log("Resident Arriving at: ", data.data);
+      let arrivingLocation = await API.GET(`locations/${window.facilityLocationId}`);
+      if (!arrivingLocation) {
+        toast.error("Error: No response from server when fetching location");
+        return;
+      }
+      if (!arrivingLocation.success) {
+        toast.error(arrivingLocation.message);
+      }
+      toast.success(`Resident ${originalResidentResponse!.data!.at(0)!.doc} Arriving at ${arrivingLocation!.data!.at(0)!.name}`);
+      props.refetchData();
     }
 
 
