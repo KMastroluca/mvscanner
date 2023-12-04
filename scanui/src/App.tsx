@@ -43,9 +43,7 @@ import { GetResidentByRFID } from './api/GetResident';
 import toast, { Toaster } from 'solid-toast';
 import { updateResident } from './api/UpdateResident';
 
-
-
-import loadingAnim from './assets/loading.gif'; 
+import loadingAnim from './assets/loading.gif';
 
 export enum AppDisplayHousingUnit {
   ALL = 0,
