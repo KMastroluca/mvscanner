@@ -14,6 +14,11 @@ export const GetResidentByRFID = async (rfid:string):Promise<SResident|null> => 
       return null;
    }
 
-   return data.data;
+   if (data.data.length === 0) {
+      console.warn("GetResidentByRFID: unable to find resident with RFID: " + rfid);   
+      return null;
+   }
+
+   return data.data.at(0);
    
 };

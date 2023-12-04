@@ -39,6 +39,7 @@ export const ResidentIDModal: Component<ResidentIDModalProps> = (props: Resident
    const [newResidentFirstName, setNewResidentFirstName] = createSignal<string>("");
    const [newResidentLastName, setNewResidentLastName] = createSignal<string>("");
    const [newResidentDOC, setNewResidentDOC] = createSignal<string>("");
+   const [newResidentPod, setNewResidentPod] = createSignal<string>("");
 
    const [newResidentValidationErrors, setNewResidentValidationErrors] = createSignal<ResidentIDModalValidationErrors>({
       firstNameError: null,
@@ -60,7 +61,7 @@ export const ResidentIDModal: Component<ResidentIDModalProps> = (props: Resident
    };
 
   const handleChangePod = (e: any) => {
-    setNewResidentpod(e.target.value);
+    setNewResidentPod(e.target.value);
   }
 
 
@@ -297,6 +298,18 @@ export const ResidentIDModal: Component<ResidentIDModalProps> = (props: Resident
                         </div>
                         <div class={"flex gap-2 w-full"}>
                            <label class={"flex flex-col w-full"}>
+                              <span class={"text-lg font-bold"}>
+                                 Pod:
+                              </span>
+                              <select value={newResidentPod()} name={"newResidentPod"} class={"px-3 py-3 border-[1px]"} onChange={(e) => handleChangePod(e.target.value)}>
+                                 <option value={'A'}>A</option>
+                                 <option value={'B'}>B</option>
+                                 <option value={'C'}>C</option>
+                              </select>
+                           </label>
+                        </div>                       
+                        <div class={"flex gap-2 w-full"}>
+                           <label class={"flex flex-col w-full"}>
                               <span class={"text-lg font-bold"}>Room:</span>
                               <select value={newResidentRoom()} name={"newResidentRoom"} class={"px-3 py-3 border-[1px]"} onChange={(e) => handleChangeRoom(e)}>
                                  <option value={"1"}>1</option>
@@ -346,7 +359,7 @@ export const ResidentIDModal: Component<ResidentIDModalProps> = (props: Resident
                         <div class={"flex gap-2 w-full"}>
                            <label class={"flex flex-col w-full"}>
                               <span class={"text-lg font-bold"}>Bunk:</span>
-                              <select value={newResidentBunk() as string} onChange={(e) => handleChangeBunk(e)} name={"newResidentUnit"} class={"px-3 py-3 border-[1px]"}>
+                              <select value={newResidentBunk()?.toUpperCase() as string} onChange={(e) => handleChangeBunk(e)} name={"newResidentUnit"} class={"px-3 py-3 border-[1px]"}>
                                  <option value={"T"}>TOP</option>
                                  <option value={"B"}>BOTTOM</option>
                               </select>

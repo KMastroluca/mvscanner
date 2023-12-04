@@ -40,6 +40,8 @@ import { TbCaretRight, TbCaretDown } from 'solid-icons/tb';
 import { SResident } from './types/Models';
 import { ResidentEditModal } from './components/EditResidentModal';
 import { GetResidentByRFID } from './api/GetResident';
+import toast, { Toaster } from 'solid-toast';
+import { updateResident } from './api/UpdateResident';
 
 export enum AppDisplayHousingUnit {
   ALL = 0,
@@ -77,15 +79,13 @@ function App() {
   };
 
   onMount(() => {
-    initScanner({displayNewResidentModal});
+    initScanner({displayNewResidentModal, refetchData});
     testScanner();
   });
 
   onCleanup(() => {
     cleanupScanner();
   });
-
-
 
   const residentActions:STableAction[] = [
     {
@@ -112,12 +112,16 @@ function App() {
     createResident(newResident);
   };
 
+  const refetchData = () => {
+    refetchInResidents();
+    refetchOutResidents();
+  };
 
   const [outResidentsData, {refetch:refetchOutResidents}] = createResource(getResidentsOut,  {initialValue:    {data:[], priorityData:[]} });
   const [inResidentsData, {refetch:refetchInResidents}] = createResource(getResidentsIn,    {initialValue:    {data:[]} });
 
   const handleEditResident = async (rfid:string) => {
-    
+    toast('Loading Resident Data...', {duration: 1000});
 
     let residentReference:SResident|null = await GetResidentByRFID(rfid);
 
@@ -133,8 +137,13 @@ function App() {
   };
 
   const handleEditResidentDone = (resident:SResident) => {
-    console.log("EDIT RESIDENT DONE");
-    console.log(resident);
+  
+    // Make API call to update resident
+    let result = updateResident(resident.rfid, resident);
+    console.log("RESULT: ", result);
+
+
+
     // Refetch the data
     refetchOutResidents();
     refetchInResidents();
@@ -142,6 +151,17 @@ function App() {
 
   return (
     <div class={"flex flex-col w-screen h-screen"}>
+
+      <Toaster position='bottom-right' gutter={8} containerClassName='' toastOptions={{
+        className: '',
+        duration: 5000,
+        style: {
+          background: '#363636',
+          color: '#fff',
+        },
+      }}/>
+
+
       {appNewResidentModalRFID() ? (
         <ResidentIDModal close={handleCloseNewResidentModal} open={appNewResidentModalOpen} create={handleCreateNewResident} rfid={appNewResidentModalRFID()}/>
       ) : false}
