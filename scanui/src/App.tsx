@@ -42,11 +42,12 @@ import { GetResidentByRFID } from './api/GetResident';
 import toast, { Toaster } from 'solid-toast';
 import { updateResident } from './api/UpdateResident';
 
-import loadingAnim from './assets/loading.gif';
 import { GetAllLocations } from './api/GetLocation';
 
 import DatePicker, { PickerValue, utils } from '@rnwonder/solid-date-picker';
 import { BiSolidRightArrowCircle } from 'solid-icons/bi';
+
+import loadingAnim from './assets/loading.gif';
 
 export enum AppDisplayHousingUnit {
   ALL = 0,
@@ -281,14 +282,14 @@ function App() {
 
 
 
-        <div class={"flex w-[44rem] justify-center"}>
-          {outResidentsData.loading ? (<div class={"flex justify-center items-center"}><img src={loadingAnim} class={"w-10 h-10"} /></div>) : (
+        <div class={"flex w-[44rem] justify-center items-center"}>
+          {outResidentsData.loading ? (<img src={loadingAnim} class={"w-10 h-10"} />) : (
             <STable type='TimestampResident' data={outResidentsData()} />
           )}
         </div>
 
-        <div class={"flex w-[42rem] justify-center"}>
-          {inResidentsData.loading ? (<div class={"flex justify-center items-center"}><img src={loadingAnim} class={"w-10 h-10"} /></div>) : (
+        <div class={"flex w-[42rem] justify-center items-center"}>
+          {inResidentsData.loading ? (<img src={loadingAnim} class={"w-10 h-10"} />) : (
             <STable type='Resident' data={inResidentsData()} actions={residentActions} />
           )}
         </div>
