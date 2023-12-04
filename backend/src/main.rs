@@ -5,7 +5,6 @@ use actix_web::{
     App, HttpServer,
 };
 use r2d2_sqlite::SqliteConnectionManager;
-use reqwest::header;
 use scan_mvcf::{
     controllers::{locations_controller, residents_controller, timestamps_controller},
     database::db::{query, Query},
@@ -50,10 +49,11 @@ async fn main() -> io::Result<()> {
     log::info!("starting Actix-Web HTTP server at http://localhost:8080");
     let json_config = JsonConfig::default().limit(4096);
     HttpServer::new(move || {
-        let cors = Cors::default()
+        let cors = Cors::permissive()
             .allow_any_origin()
-            .allowed_methods(vec!["GET", "POST", "PUT", "PATCH"])
-            .allowed_headers(vec![header::AUTHORIZATION, header::CONTENT_TYPE, header::ACCEPT])
+            .allow_any_header()
+            .allow_any_method()
+            .block_on_origin_mismatch(false)
             .max_age(3600);
 
         App::new()
@@ -78,7 +78,7 @@ async fn main() -> io::Result<()> {
             .wrap(middleware::Logger::default())
             .wrap(cors)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("172.16.20.42", 8080))?
     .workers(2)
     .run()
     .await

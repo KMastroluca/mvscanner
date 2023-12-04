@@ -28,32 +28,30 @@
  */
 
 
-import {STableData} from '../components/STable';
+import { STableData } from '../components/STable';
 import { SLocation, SResident, STimestamp, STimestampResident } from "../types/Models"
 
 import _ from 'lodash';
-import { GET } from './API';
+import { API } from './API';
 
 export const getResidentsIn = async (): Promise<STableData> => {
-   let addr = import.meta.env.VITE_BACKEND_ADDR;
-   let port = import.meta.env.VITE_BACKEND_PORT;
 
-   let response = await GET('http://' + addr + ':' + port + '/api/residents');
-   
-   if (!response) {
-      console.error("Error: No response from server");
-      return {} as STableData;
-   }
+  let response = await API.GET('residents');
 
-   if (!response.success) {
-      console.warn("Warning: Residents not retrieved");
-      console.warn(response.message);
-      return {} as STableData;
-   }
+  if (!response) {
+    console.error("Error: No response from server");
+    return {} as STableData;
+  }
 
-   return {
-      data: response.data as SResident[],
-   } as STableData;
+  if (!response.success) {
+    console.warn("Warning: Residents not retrieved");
+    console.warn(response.message);
+    return {} as STableData;
+  }
+
+  return {
+    data: response.data as SResident[],
+  } as STableData;
 };
 
 
@@ -65,132 +63,130 @@ export const getResidentsIn = async (): Promise<STableData> => {
 
 
 export const getResidentsOut = async (): Promise<STableData> => {
-   console.log("Executed GetResidentsOut");
-   let addr = import.meta.env.VITE_BACKEND_ADDR;
-   let port = import.meta.env.VITE_BACKEND_PORT;
+  console.log("Executed GetResidentsOut");
 
-   let residentsResponse = await GET('http://' + addr + ':' + port + '/api/residents');
+  let residentsResponse = await API.GET('residents');
 
-   if (!residentsResponse) {
+  if (!residentsResponse) {
+    console.error("Error: No response from server");
+    return {} as STableData;
+  }
+
+  if (!residentsResponse.success) {
+    console.warn("Warning: Residents not retrieved");
+    console.warn(residentsResponse.message);
+    return {} as STableData;
+  }
+
+  let residentsData: SResident[] = residentsResponse.data as SResident[];
+
+  console.log("Residents From DB:", residentsData);
+
+  let timestampsResponse = await API.GET('timestamps');
+
+  if (!timestampsResponse) {
+    console.error("Error: No response from server");
+    return {} as STableData;
+  }
+
+  if (!timestampsResponse.success) {
+    console.warn("Warning: Timestamps not retrieved");
+    console.warn(timestampsResponse.message);
+    return {} as STableData;
+  }
+
+
+  let timestampsData: STimestamp[] = timestampsResponse.data as STimestamp[];
+
+  console.log("Timestamps From DB: ", timestampsData);
+
+  let residentsOut: STimestampResident[] = [];
+  for (let timestamp of timestampsData) {
+
+    if (timestamp.date === null) {
+      continue;
+    }
+    let resident = residentsData.find((resident: SResident) => resident.rfid === timestamp.rfid);
+
+    if (resident === undefined) {
+      continue;
+    }
+
+    let responseLocation = await API.GET('locations/' + timestamp.location);
+
+    if (!responseLocation) {
       console.error("Error: No response from server");
       return {} as STableData;
-   }
+    }
 
-   if (!residentsResponse.success) {
-      console.warn("Warning: Residents not retrieved");
-      console.warn(residentsResponse.message);
+    if (!responseLocation.success) {
+      console.warn("Warning: Location not retrieved");
+      console.warn(responseLocation.message);
       return {} as STableData;
-   }
+    }
 
-   let residentsData:SResident[] = residentsResponse.data as SResident[];
+    let locationData = responseLocation.data as SLocation[];
 
-   console.log("Residents From DB:", residentsData);
-   
-   let timestampsResponse = await GET('http://' + addr + ':' + port + '/api/timestamps');
-   
-   if (!timestampsResponse) {
-      console.error("Error: No response from server");
-      return {} as STableData;
-   }
+    console.log("Location Data: ", locationData);
 
-   if (!timestampsResponse.success) {
-      console.warn("Warning: Timestamps not retrieved");
-      console.warn(timestampsResponse.message);
-      return {} as STableData;
-   }
+    if (locationData.at(0) === undefined && locationData.at(0)!.name === undefined) {
+      continue;
+    }
+
+    let timestampResident: STimestampResident = {
+      rfid: resident.rfid,
+      name: resident.name,
+      doc: resident.doc,
+      room: resident.room,
+      unit: resident.unit,
+      timestampLeft: timestamp.time!,
+      location: timestamp.location,
+      destinationLabel: locationData.at(0)!.name
+    }
+    residentsOut.push(timestampResident);
+  }
 
 
-   let timestampsData:STimestamp[] = timestampsResponse.data as STimestamp[];
-   
-   console.log("Timestamps From DB: ", timestampsData);
+  console.log("Result Of Getting Residents Out: ", residentsOut);
 
-   let residentsOut:STimestampResident[] = [];
-   for (let timestamp of timestampsData) {
-  
-      if (timestamp.date === null) {
-         continue;
-      }
-      let resident = residentsData.find((resident:SResident) => resident.rfid === timestamp.rfid);
-   
-      if (resident === undefined) {
-         continue;
-      }
+  let latestTimestamps = getLatestTimestamps(residentsOut);
+  let onlyAway = getOnlyAway(latestTimestamps);
+  console.log("Latest Timestamps: ", residentsOut);
 
-      let responseLocation = await GET('http://' + addr + ':' + port + '/api/locations/' + timestamp.location);
-
-      if (!responseLocation) {
-         console.error("Error: No response from server");
-         return {} as STableData;
-      }
-
-      if (!responseLocation.success) {
-         console.warn("Warning: Location not retrieved");
-         console.warn(responseLocation.message);
-         return {} as STableData;
-      }
-
-      let locationData = responseLocation.data as SLocation[];
-
-      console.log("Location Data: ", locationData);
-   
-      if (locationData.at(0) === undefined && locationData.at(0)!.name === undefined) {
-         continue;
-      }
-      
-      let timestampResident:STimestampResident = {
-         rfid: resident.rfid,
-         name: resident.name,
-         doc: resident.doc,
-         room: resident.room,
-         unit: resident.unit,
-         timestampLeft: timestamp.time!,
-         location: timestamp.location,
-         destinationLabel: locationData.at(0)!.name
-      }
-      residentsOut.push(timestampResident);
-   }
-
-   
-   console.log("Result Of Getting Residents Out: ", residentsOut);
-
-   let latestTimestamps = getLatestTimestamps(residentsOut);
-   let onlyAway = getOnlyAway(latestTimestamps);
-   console.log("Latest Timestamps: ", residentsOut);
-
-   let returnObj = {data:latestToOld(residentsOut), priorityData:onlyAway};
-   return returnObj;
+  let returnObj = { data: latestToOld(residentsOut), priorityData: onlyAway };
+  return returnObj;
 
 }
 
 
 
-const latestToOld = (data:STimestampResident[]): STimestampResident[] => {
-   let sortedData = _.sortBy(data, (timestampResident:STimestampResident) => new Date(timestampResident.timestampLeft).getTime());
-   return sortedData;
+const latestToOld = (data: STimestampResident[]): STimestampResident[] => {
+  let sortedData = _.sortBy(data, (timestampResident: STimestampResident) => new Date(timestampResident.timestampLeft).getTime());
+  return sortedData;
 }
 
-const getLatestTimestamp = (data:STimestampResident[], rfid:string): STimestampResident|undefined  => {
+const getLatestTimestamp = (data: STimestampResident[], rfid: string): STimestampResident | undefined => {
 
-   let filteredData = data.filter((timestampResident:STimestampResident) => timestampResident.rfid === rfid);
-   let sortedData = _.sortBy(filteredData, (timestampResident:STimestampResident) => new Date(timestampResident.timestampLeft).getTime());
-   let latestTimestamp = sortedData.pop();
+  let filteredData = data.filter((timestampResident: STimestampResident) => timestampResident.rfid === rfid);
+  let sortedData = _.sortBy(filteredData, (timestampResident: STimestampResident) => new Date(timestampResident.timestampLeft).getTime());
+  let latestTimestamp = sortedData.pop();
 
-   return latestTimestamp;
+  return latestTimestamp;
 }
 
-const getLatestTimestamps = (data:STimestampResident[]): STimestampResident[] => {
-   let rfidList = _.uniq(data.map((timestampResident:STimestampResident) => timestampResident.rfid));
-   let latestTimestamps:STimestampResident[] = [];
-   for (let rfid of rfidList) {
-      let latestTimestamp = getLatestTimestamp(data, rfid);
-      if (latestTimestamp !== undefined) {
-         latestTimestamps.push(latestTimestamp);
-      }
-   }
-   return latestTimestamps;
+const getLatestTimestamps = (data: STimestampResident[]): STimestampResident[] => {
+  let rfidList = _.uniq(data.map((timestampResident: STimestampResident) => timestampResident.rfid));
+  let latestTimestamps: STimestampResident[] = [];
+  for (let rfid of rfidList) {
+    let latestTimestamp = getLatestTimestamp(data, rfid);
+    if (latestTimestamp !== undefined) {
+      latestTimestamps.push(latestTimestamp);
+    }
+  }
+  return latestTimestamps;
 }
 
-const getOnlyAway = (data:STimestampResident[]): STimestampResident[] => {
-   let filteredData = data.filter((timestampResident:STimestampResident) => timestampResident.destinationLabel === timestampResident.room);
-   return filteredData;
+const getOnlyAway = (data: STimestampResident[]): STimestampResident[] => {
+  let filteredData = data.filter((timestampResident: STimestampResident) => timestampResident.destinationLabel === timestampResident.room);
+  return filteredData;
 }

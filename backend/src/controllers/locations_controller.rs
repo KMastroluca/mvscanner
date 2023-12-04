@@ -1,10 +1,9 @@
 use std::fmt::{Display, Formatter};
 
-
 use crate::database::db::{query, Pool, Query, QueryResult};
-use crate::models::locations::{Location, LocationsResponse};
-use crate::models::residents::ResidentResponse;
-use crate::models::timestamps::TimestampResponse;
+use crate::models::locations::Location;
+use crate::models::residents::Resident;
+use crate::models::timestamps::{Response, TimeStamp};
 use actix_web::http::{header, StatusCode};
 use actix_web::{get, post, web, HttpResponse};
 use actix_web::{Responder, ResponseError};
@@ -57,11 +56,11 @@ pub async fn index(db: web::Data<Pool>) -> impl Responder {
     if let Ok(res) = query(&db, Query::IndexLocations).await {
         match res {
         QueryResult::Locations(locations) => {
-                let response = LocationsResponse::from_locations(locations);
+                let response: Response<Location> = Response::from(locations);
             Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
             } 
         _ => {
-    let response = LocationsResponse::from_error("Error retrieving locations");
+    let response: Response<String> = Response::from_error("Error retrieving locations");
             Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
     } 
         }
@@ -75,7 +74,7 @@ pub async fn index(db: web::Data<Pool>) -> impl Responder {
 pub async fn store(db: web::Data<Pool>, loc: web::Json<Location>) -> Result<HttpResponse, LocationsError> {
     log::info!("POST: locations controller");
     if let Ok(QueryResult::Success) = query(&db, Query::StoreLocation(&loc.into_inner())).await {
-        let response = LocationsResponse::from_success("Location successfully added");
+        let response: Response<String> = Response::from_error("Location successfully added");
         Ok(HttpResponse::Ok().status(StatusCode::CREATED).insert_header(header::ContentType::json()).json(response))
     } else {
         Err(LocationsError("Unable to add location".to_string()))
@@ -87,7 +86,7 @@ pub async fn store(db: web::Data<Pool>, loc: web::Json<Location>) -> Result<Http
 pub async fn show(db: web::Data<Pool>, id: web::Path<Id>) -> Result<HttpResponse, LocationsError> {
     log::info!("GET: locations controller with id: {}", id.location_id);
     if let Ok(QueryResult::Location(loc)) = query(&db, Query::ShowLocation(id.location_id)).await {
-        let loc = LocationsResponse::from_location(loc);
+        let loc: Response<Location> = Response::from(loc);
         Ok(HttpResponse::Ok()
             .insert_header(header::ContentType::json())
             .json(loc))
@@ -103,7 +102,7 @@ pub async fn show_location_timestamps_range(db: web::Data<Pool>, id: web::Path<L
     let loc_range = id.into_inner();
     log::info!("GET: Locations controller timestamps with range for ID");
     if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestampsRange(loc_range.location_id, &loc_range.start_date, &loc_range.end_date)).await {
-        let response: TimestampResponse = ts.into();
+        let response: Response<TimeStamp> = ts.into();
         Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
     } else {
         Err(LocationsError("Unable to retrieve timestamps".to_string()))
@@ -117,7 +116,7 @@ pub async fn show_location_timestamps(db: web::Data<Pool>, id: web::Path<Id>) ->
     let id = id.into_inner().location_id;
     log::info!("GET: Locations controller timestamps for ID");
     if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestamps(id)).await {
-        let response: TimestampResponse = ts.into();
+        let response: Response<TimeStamp> = ts.into();
         Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
     } else {
         Err(LocationsError("Unable to retrieve timestamps".to_string()))
@@ -131,7 +130,7 @@ pub async fn show_location_residents(db: web::Data<Pool>, id: web::Path<Id>) -> 
     let id = id.into_inner().location_id;
     log::info!("GET: Locations controller residents for ID");
     if let Ok(QueryResult::Residents(res)) = query(&db, Query::ShowLocationResidents(id)).await {
-        let response: ResidentResponse = res.into();
+        let response: Response<Resident> = res.into();
         Ok(HttpResponse::Ok()
             .insert_header(header::ContentType::json())
             .json(response))
