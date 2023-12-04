@@ -1,29 +1,29 @@
 import { API } from "../api/API";
-import toast, {Toaster} from "solid-toast";
+import toast, { Toaster } from "solid-toast";
 
 /**
  * Here we declare a window global which holds the scannedRFID string.
  */
 declare global {
-   interface Window {
-      facilityLocationId: number;
-      scannedRFID: string;
-      lastScannedRFID: string;
-      lastKeyPress: number;
-      scanApiUrl:string;
-      testScanMode:boolean;
-   }
+  interface Window {
+    facilityLocationId: number;
+    scannedRFID: string;
+    lastScannedRFID: string;
+    lastKeyPress: number;
+    scanApiUrl: string;
+    testScanMode: boolean;
+  }
 }
 
 window.testScanMode = true;
 
 interface ScannerProps {
-   displayNewResidentModal: (rfid:string) => void;
-   refetchData: () => void;
+  displayNewResidentModal: (rfid: string) => void;
+  refetchData: () => void;
 }
 
-export const initScanner = (props:ScannerProps) => {
-   console.log("Attaching Scanner Event Listeners");
+export const initScanner = (props: ScannerProps) => {
+  console.log("Attaching Scanner Event Listeners");
 
 
   /**
@@ -49,22 +49,22 @@ export const initScanner = (props:ScannerProps) => {
   window.addEventListener("keydown", (event: KeyboardEvent) => {
     const currentTime = new Date().getTime();
 
-      if (/^\d$/.test(event.key)) {
-         window.scannedRFID += event.key;
-         window.lastKeyPress = currentTime;   
-      } else if (event.key === "Enter") {
-         console.log("Enter Pressed");
-         if (window.scannedRFID.length === 17 && currentTime - window.lastKeyPress < 100) {
-            console.log("Scanned RFID: ", window.scannedRFID);
-            handleScan(window.scannedRFID, props);
-         } else if (window.testScanMode === true) {
-            console.log("Executing Test Scan");
-            handleScan("00000000000000000", props);
-         }
-         window.lastScannedRFID = window.scannedRFID;
-         window.scannedRFID = "";
-      } 
-   });
+    if (/^\d$/.test(event.key)) {
+      window.scannedRFID += event.key;
+      window.lastKeyPress = currentTime;
+    } else if (event.key === "Enter") {
+      console.log("Enter Pressed");
+      if (window.scannedRFID.length === 17 && currentTime - window.lastKeyPress < 100) {
+        console.log("Scanned RFID: ", window.scannedRFID);
+        handleScan(window.scannedRFID, props);
+      } else if (window.testScanMode === true) {
+        console.log("Executing Test Scan");
+        handleScan("00000000000000000", props);
+      }
+      window.lastScannedRFID = window.scannedRFID;
+      window.scannedRFID = "";
+    }
+  });
 }
 
 export const cleanupScanner = () => {
@@ -77,8 +77,8 @@ export const cleanupScanner = () => {
 };
 
 
-export const handleScan = async (rfid:string, props:ScannerProps) => {
-   window.scanApiUrl = `http://localhost:8080/api/timestamps`;
+export const handleScan = async (rfid: string, props: ScannerProps) => {
+  window.scanApiUrl = `http://172.16.20.42:8080/api/timestamps`;
 
 
   try {
@@ -95,27 +95,27 @@ export const handleScan = async (rfid:string, props:ScannerProps) => {
     });
 
 
-      if (!response.ok) {
-         throw Error(response.statusText);
+    if (!response.ok) {
+      throw Error(response.statusText);
+    }
+
+
+    const data = await response.json();
+    console.log("Scan Response: ", data);
+
+
+
+
+
+    if (data.success === false) {
+      // If the scan was not successful in this case, that means the resident is not in the database
+      // Prompt the user to add the resident to the database
+      let addResident = window.confirm("Resident Not Found, Add Resident?");
+      if (addResident) {
+        props.displayNewResidentModal(rfid);
       }
-
-
-      const data = await response.json();
-      console.log("Scan Response: ", data);
-
-
-
-
-
-      if (data.success === false) {
-         // If the scan was not successful in this case, that means the resident is not in the database
-         // Prompt the user to add the resident to the database
-         let addResident = window.confirm("Resident Not Found, Add Resident?");
-         if (addResident) {
-            props.displayNewResidentModal(rfid);
-         }
-         return;
-      }
+      return;
+    }
 
     if (data.data.at(0).location === 0) {
       // Resident is leaving, prompt user for location
@@ -130,7 +130,7 @@ export const handleScan = async (rfid:string, props:ScannerProps) => {
         return;
       }
 
-      
+
 
 
       let residentResp = await API.GET(`residents/${rfid}`);
