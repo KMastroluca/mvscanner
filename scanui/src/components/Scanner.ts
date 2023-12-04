@@ -96,10 +96,8 @@ export const handleScan = async (rfid: string, props: ScannerProps) => {
 
 
     if (!response.ok) {
-      toast.error(response.statusText);
       throw Error(response.statusText);
     }
-
 
 
     const data = await response.json();
@@ -131,7 +129,6 @@ export const handleScan = async (rfid: string, props: ScannerProps) => {
         toast.error("Invalid Destination, Scan Again");
         return;
       }
-
 
 
       let residentResp = await API.GET(`residents/${rfid}`);

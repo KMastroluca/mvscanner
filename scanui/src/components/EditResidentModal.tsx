@@ -88,7 +88,11 @@ export const ResidentEditModal: Component<ResidentEditModalProps> = (props: Resi
   const [residentBunk, setResidentBunk] = createSignal<"T" | "B" | null>(residentRoomDecons.bunk);
   const [residentFirstName, setResidentFirstName] = createSignal<string | undefined>(firstName);
   const [residentLastName, setResidentLastName] = createSignal<string | undefined>(lastName);
+<<<<<<< HEAD
   const [residentPod, setResidentPod] = createSignal<string | undefined>(residentRoomDecons.podLetter);
+=======
+  const [residentPod, setResidentPod] = createSignal<string | undefined>();
+>>>>>>> b7f30e9 (fix: ip changes for local dev)
   const [residentDOC, setResidentDOC] = createSignal<string | undefined>(props.currentResident()?.doc);
 
   const [residentValidationErrors, setResidentValidationErrors] = createSignal<ResidentIDModalValidationErrors>({
@@ -183,64 +187,10 @@ export const ResidentEditModal: Component<ResidentEditModalProps> = (props: Resi
       };
     }
 
-    let housingUnits = [1, 6, 7, 14, 17];
-    let a = residentHousingUnit();
-
-    const handleChangePod = (value: string) => {
-      setResidentPod(value);
-    };
-
-    const handleSubmitEditResident = () => {
-      if (residentValidationErrors().firstNameError !== null ||
-        residentValidationErrors().lastNameError !== null ||
-        residentValidationErrors().docError !== null ||
-        residentValidationErrors().housingUnitError !== null ||
-        residentValidationErrors().roomError !== null ||
-        residentValidationErrors().bunkError !== null) {
-        console.log("Form Is Invalid!");
-        alert("Form Was Invalid!");
-        return;
-      }
-
-      let newResident = {
-        id: props.currentResident()!.id,
-        rfid: props.currentResident()!.rfid,
-        name: residentFirstName() + " " + residentLastName(),
-        doc: residentDOC(),
-        unit: residentHousingUnit(),
-        room: residentHousingUnit()!.toString() + "-" + residentRoom().toString() + residentBunk(),
-        current_location: props.currentResident()!.current_location,
-      } as SResident;
-
-      props.editResident(newResident);
-    };
-
-
-    if (residentHousingUnit() !== undefined && housingUnits.includes(residentHousingUnit()! as number) !== false) {
-      errors = {
-        ...errors,
-        housingUnitError: "Housing Unit is invalid! " + residentHousingUnit()?.toString()
-      };
-    }
-
-    if (residentRoom() < 0) {
-      errors = {
-        ...errors,
-        roomError: "Room is required"
-      };
-    }
-
     if (residentBunk() === null) {
       errors = {
         ...errors,
         bunkError: "Bunk is required"
-      };
-    }
-
-    if (residentBunk() !== "T" && residentBunk() !== "B") {
-      errors = {
-        ...errors,
-        bunkError: "Bunk is invalid!"
       };
     }
 
@@ -285,7 +235,7 @@ export const ResidentEditModal: Component<ResidentEditModalProps> = (props: Resi
       residentValidationErrors().lastNameError !== null ||
       residentValidationErrors().docError !== null ||
       residentValidationErrors().housingUnitError !== null ||
-      residentValidationErrors().roomError !== null ||
+      residentValidationErrors().podError !== null ||
       residentValidationErrors().bunkError !== null) {
       console.log("Form Is Invalid!");
       alert("Form Was Invalid!");
@@ -353,24 +303,11 @@ export const ResidentEditModal: Component<ResidentEditModalProps> = (props: Resi
                   <label class={"flex flex-col w-full"}>
                     <span class={"text-lg font-bold"}>Housing Unit:</span>
                     <select value={residentHousingUnit() as number} onChange={(e) => handleChangeHousingUnit(e)} name={"editResidentUnit"} class={"px-3 py-3 border-[1px]"}>
-                      <option value={1}>ALPHA UNIT</option>
-                      <option value={6}>BRAVO UNIT</option>
-                      <option value={7}>CHARLIE UNIT</option>
-                      <option value={14}>DELTA UNIT</option>
-                      <option value={16}>ECHO UNIT</option>
-                    </select >
-                  </label >
-                  {residentValidationErrors().housingUnitError !== null ? <span class={"text-red-500"}>{residentValidationErrors().housingUnitError}</span> : false}
-                </div >
-                <div class={"flex gap-2 w-full"}>
-                  <label class={"flex flex-col w-full"}>
-                    <span class={"text-lg font-bold"}>
-                      Pod:
-                    </span>
-                    <select value={residentPod() !== undefined ? residentPod() : 'A'} name={"editResidentPod"} class={"px-3 py-3 border-[1px]"} onChange={(e) => handleChangePod(e.target.value)}>
-                      <option value={'A'}>A</option>
-                      <option value={'B'}>B</option>
-                      <option value={'C'}>C</option>
+                      <option value={ResidentIDModalHousingUnit.ALPHA}>ALPHA UNIT</option>
+                      <option value={ResidentIDModalHousingUnit.BRAVO}>BRAVO UNIT</option>
+                      <option value={ResidentIDModalHousingUnit.CHARLIE}>CHARLIE UNIT</option>
+                      <option value={ResidentIDModalHousingUnit.DELTA}>DELTA UNIT</option>
+                      <option value={ResidentIDModalHousingUnit.ECHO}>ECHO UNIT</option>
                     </select>
                   </label>
                   {residentValidationErrors().housingUnitError !== null ? <span class={"text-red-500"}>{residentValidationErrors().housingUnitError}</span> : false}
@@ -386,8 +323,8 @@ export const ResidentEditModal: Component<ResidentEditModalProps> = (props: Resi
                       <option value={'B'}>B</option>
                       <option value={'C'}>C</option>
                     </select>
-                  </label >
-                </div >
+                  </label>
+                </div>
                 <div class={"flex gap-2 w-full"}>
                   <label class={"flex flex-col w-full"}>
                     <span class={"text-lg font-bold"}>Room:</span>
@@ -425,15 +362,15 @@ export const ResidentEditModal: Component<ResidentEditModalProps> = (props: Resi
                     </select>
                   </label>
                 </div>
-              </section >
-            </section >
+              </section>
+            </section>
             <section class="mt-10">
               <button class={"flex flex-row w-full text-xl h-20 hover:bg-green-300 bg-green-200 items-center justify-center px-6"} onClick={() => handleResidentEdit()}>Edit Resident</button>
               <button class={"flex flex-row w-full text-xl h-20 hover:bg-red-300 bg-red-200 items-center justify-center px-6"} onClick={() => props.close()}>Close</button>
             </section>
           </div>
         </Portal>
-      </Show >
+      </Show>
     );
   }
 
