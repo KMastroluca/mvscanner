@@ -1,5 +1,6 @@
 use crate::models::residents::{ErrorType, PathParams, Resident, ResidentsError, Rfid};
-use crate::models::timestamps::{Response, TimeStamp};
+use crate::models::response::Response;
+use crate::models::timestamps::TimeStamp;
 use crate::{
     database::db::{query, Pool, Query, QueryResult},
     models::residents::UpdateResident,
