@@ -86,9 +86,9 @@ export const ResidentEditModal:Component<ResidentEditModalProps> = (props:Reside
    const [residentBunk, setResidentBunk] = createSignal<"T"|"B"|null>(residentRoomDecons.bunk);
    const [residentFirstName, setResidentFirstName] = createSignal<string|undefined>(firstName);
    const [residentLastName, setResidentLastName] = createSignal<string|undefined>(lastName);
-   const [residentPod, setResidentPod] = createSignal<string|undefined>();
+   const [residentPod, setResidentPod] = createSignal<string|undefined>(residentRoomDecons.podLetter);
    const [residentDOC, setResidentDOC] = createSignal<string|undefined>(props.currentResident()?.doc);
-
+   
    const [residentValidationErrors, setResidentValidationErrors] = createSignal<ResidentIDModalValidationErrors>({
       firstNameError: null,
       lastNameError: null,
@@ -321,11 +321,11 @@ export const ResidentEditModal:Component<ResidentEditModalProps> = (props:Reside
                            <label class={"flex flex-col w-full"}>
                               <span class={"text-lg font-bold"}>Housing Unit:</span>
                               <select value={residentHousingUnit() as number} onChange={(e) => handleChangeHousingUnit(e)} name={"editResidentUnit"} class={"px-3 py-3 border-[1px]"}>
-                                 <option value={ResidentIDModalHousingUnit.ALPHA}>ALPHA UNIT</option>
-                                 <option value={ResidentIDModalHousingUnit.BRAVO}>BRAVO UNIT</option>
-                                 <option value={ResidentIDModalHousingUnit.CHARLIE}>CHARLIE UNIT</option>
-                                 <option value={ResidentIDModalHousingUnit.DELTA}>DELTA UNIT</option>
-                                 <option value={ResidentIDModalHousingUnit.ECHO}>ECHO UNIT</option>
+                                 <option value={1}>ALPHA UNIT</option>
+                                 <option value={6}>BRAVO UNIT</option>
+                                 <option value={7}>CHARLIE UNIT</option>
+                                 <option value={14}>DELTA UNIT</option>
+                                 <option value={16}>ECHO UNIT</option>
                               </select>
                            </label>
                            {residentValidationErrors().housingUnitError !== null ? <span class={"text-red-500"}>{residentValidationErrors().housingUnitError}</span> : false}
@@ -335,7 +335,7 @@ export const ResidentEditModal:Component<ResidentEditModalProps> = (props:Reside
                               <span class={"text-lg font-bold"}>
                                  Pod:
                               </span>
-                              <select value={residentPod()} name={"editResidentPod"} class={"px-3 py-3 border-[1px]"} onChange={(e) => handleChangePod(e.target.value)}>
+                              <select value={residentPod() !== undefined ? residentPod() : 'A'} name={"editResidentPod"} class={"px-3 py-3 border-[1px]"} onChange={(e) => handleChangePod(e.target.value)}>
                                  <option value={'A'}>A</option>
                                  <option value={'B'}>B</option>
                                  <option value={'C'}>C</option>
