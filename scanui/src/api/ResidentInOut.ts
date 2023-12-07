@@ -149,17 +149,10 @@ export const getResidentsOut = async (): Promise<STableData> => {
   let onlyAway = getOnlyAway(latestTimestamps);
   console.log("Latest Timestamps: ", residentsOut);
 
-<<<<<<< HEAD
   // Im reversing the array because the table is displaying the data from newest to oldest and 
   // i guess latest to oldest is doing the opposite
   let returnObj = { data: latestToOld(residentsOut).reverse(), priorityData: onlyAway };
   return returnObj;
-=======
-   // Im reversing the array because the table is displaying the data from newest to oldest and 
-   // i guess latest to oldest is doing the opposite
-   let returnObj = {data:latestToOld(residentsOut).reverse(), priorityData:onlyAway};
-   return returnObj;
->>>>>>> a85f551 (Added Notifications When Scanning And Refresh As Well As The Edit Windows)
 
 }
 
@@ -192,7 +185,6 @@ const getLatestTimestamps = (data: STimestampResident[]): STimestampResident[] =
 }
 
 const getOnlyAway = (data: STimestampResident[]): STimestampResident[] => {
-  let filteredData = data.filter((timestampResident: STimestampResident) => timestampResident.unit !== timestampResident.c);
-
+  let filteredData = data.filter((timestampResident: STimestampResident) => timestampResident.unit !== timestampResident.location);
   return filteredData;
 }
