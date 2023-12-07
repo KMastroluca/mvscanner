@@ -30,7 +30,7 @@
 import { For, createEffect, createResource, createSignal, onCleanup, onMount } from 'solid-js';
 import './App.css'
 import { getResidentsOut, getResidentsIn } from './api/ResidentInOut';
-import { STable, STableAction} from './components/STable';
+import { STable, STableAction } from './components/STable';
 import { createResident } from './api/CreateResident';
 import { createTimestamp } from './api/CreateTimestamp';
 import { initScanner, cleanupScanner } from './components/Scanner';
@@ -57,7 +57,6 @@ export enum AppDisplayHousingUnit {
   ECHO = 5
 }
 
-
 function App() {
 
 
@@ -65,8 +64,7 @@ function App() {
   const [appNewResidentModalOpen, setAppNewResidentModalOpen] = createSignal(false);
   const [appNewResidentModalRFID, setAppNewResidentModalRFID] = createSignal('');
   const [appEditResidentModalOpen, setAppEditResidentModalOpen] = createSignal(false);
-  const [appEditResident, setAppEditResident] = createSignal<SResident|null>(null);
-
+  const [appEditResident, setAppEditResident] = createSignal<SResident | null>(null);
 
   // Okay, we need to grab a list of all the locations and then display them in a dropdown menu.
   // ******************************************************************************************
@@ -164,10 +162,10 @@ function App() {
     cleanupScanner();
   });
 
-  const residentActions:STableAction[] = [
+  const residentActions: STableAction[] = [
     {
       actionLabel: 'Edit',
-      actionFunction: (props:{rfid:string}) => {
+      actionFunction: (props: { rfid: string }) => {
         console.log("Execute Edit Action/Pull Up Edit Modal");
         handleEditResident(props.rfid);
       }
@@ -185,7 +183,7 @@ function App() {
     setAppEditResident(null);
   };
 
-  const handleCreateNewResident = (newResident:SResident) => {
+  const handleCreateNewResident = (newResident: SResident) => {
     createResident(newResident);
   };
 
@@ -194,13 +192,13 @@ function App() {
     refetchOutResidents();
   };
 
-  const [outResidentsData, {refetch:refetchOutResidents}] = createResource(getResidentsOut,  {initialValue:    {data:[], priorityData:[]} });
-  const [inResidentsData, {refetch:refetchInResidents}] = createResource(getResidentsIn,    {initialValue:    {data:[]} });
+  const [outResidentsData, { refetch: refetchOutResidents }] = createResource(getResidentsOut, { initialValue: { data: [], priorityData: [] } });
+  const [inResidentsData, { refetch: refetchInResidents }] = createResource(getResidentsIn, { initialValue: { data: [] } });
 
-  const handleEditResident = async (rfid:string) => {
-    toast('Loading Resident Data...', {duration: 1000});
+  const handleEditResident = async (rfid: string) => {
+    toast('Loading Resident Data...', { duration: 1000 });
 
-    let residentReference:SResident|null = await GetResidentByRFID(rfid);
+    let residentReference: SResident | null = await GetResidentByRFID(rfid);
 
     if (residentReference === null) {
       console.error("Unable to find resident with RFID: " + rfid);
@@ -210,11 +208,11 @@ function App() {
     setAppEditResident(residentReference);
     console.log("EDIT RESIDENT FOUND RFID: " + rfid, residentReference);
     setAppEditResidentModalOpen(true);
-    
+
   };
 
-  const handleEditResidentDone = (resident:SResident) => {
-  
+  const handleEditResidentDone = (resident: SResident) => {
+
     // Make API call to update resident
     let result = updateResident(resident.rfid, resident);
     console.log("RESULT: ", result);
@@ -236,15 +234,15 @@ function App() {
           background: '#363636',
           color: '#fff',
         },
-      }}/>
+      }} />
 
 
       {appNewResidentModalRFID() ? (
-        <ResidentIDModal close={handleCloseNewResidentModal} open={appNewResidentModalOpen} create={handleCreateNewResident} rfid={appNewResidentModalRFID()}/>
+        <ResidentIDModal close={handleCloseNewResidentModal} open={appNewResidentModalOpen} create={handleCreateNewResident} rfid={appNewResidentModalRFID()} />
       ) : false}
-      
+
       {appEditResidentModalOpen() ? (
-        <ResidentEditModal close={handleCloseEditResidentModal} open={appEditResidentModalOpen} currentResident={appEditResident} editResident={handleEditResidentDone}/>
+        <ResidentEditModal close={handleCloseEditResidentModal} open={appEditResidentModalOpen} currentResident={appEditResident} editResident={handleEditResidentDone} />
       ) : false}
 
       <div class={"flex flex-row w-full h-12 sticky top-0 z-10 px-10 py-2"}>
@@ -280,6 +278,7 @@ function App() {
         </div>
       </div>
       <div class={"flex flex-row justify-end gap-x-2 px-2 py-3"}>
+
 
 
         <div class={"flex w-[44rem] justify-center"}>

@@ -124,6 +124,33 @@ pub async fn show_location_timestamps(db: web::Data<Pool>, id: web::Path<Id>) ->
     }
 }
 
+// show timestamps from today for a location
+#[rustfmt::skip]
+#[get("/api/locations/{location_id}/timestamps/unique")]
+pub async fn show_location_timestamps_unique(db: web::Data<Pool>, id: web::Path<Id>) -> impl Responder {
+    let id = id.into_inner().location_id;
+    log::info!("GET: Unique Timestamps for Location ID#{}", id);
+    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestampsUnique(id)).await {
+        let response: Response<TimeStamp> = ts.into();
+        Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
+    } else {
+        Err(LocationsError("Unable to retrieve timestamps".to_string()))
+    }
+}
+
+// show timestamps from today for a location
+#[rustfmt::skip]
+#[get("/api/locations/{location_id}/residents/timestamps")]
+pub async fn show_location_residents_timestamps(db: web::Data<Pool>, id: web::Path<Id>) -> impl Responder {
+    let id = id.into_inner().location_id;
+    log::info!("GET: Unique Timestamps for residents living at Location ID#{}", id);
+    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationResidentTimestamps(id)).await {
+        let response: Response<TimeStamp> = ts.into();
+        Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
+    } else {
+        Err(LocationsError("Unable to retrieve timestamps".to_string()))
+    }
+}
 // show all residents for a given location
 #[rustfmt::skip]
 #[get("/api/locations/{location_id}/residents")]
