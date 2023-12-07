@@ -189,6 +189,6 @@ const getLatestTimestamps = (data: STimestampResident[]): STimestampResident[] =
 }
 
 const getOnlyAway = (data: STimestampResident[]): STimestampResident[] => {
-  let filteredData = data.filter((timestampResident: STimestampResident) => timestampResident.destinationLabel === timestampResident.room);
+  let filteredData = data.filter((timestampResident: STimestampResident) => timestampResident.unit !== timestampResident.c);
   return filteredData;
 }

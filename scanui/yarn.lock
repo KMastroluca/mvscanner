@@ -412,7 +412,6 @@
   resolved "https://registry.yarnpkg.com/@esbuild/win32-x64/-/win32-x64-0.18.20.tgz#786c5f41f043b07afb1af37683d7c33668858f6d"
   integrity sha512-kTdfRcSiDfQca/y9QIkng02avJ+NCaQvrMejlsB3RRv5sE9rRoeBPISaZpKxHELzRxZyLvNts1P27W3wV+8geQ==
 
-<<<<<<< HEAD
 "@floating-ui/core@^1.4.2":
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/@floating-ui/core/-/core-1.5.1.tgz#62707d7ec585d0929f882321a1b1f4ea9c680da5"
@@ -433,8 +432,6 @@
   resolved "https://registry.yarnpkg.com/@floating-ui/utils/-/utils-0.1.6.tgz#22958c042e10b67463997bd6ea7115fe28cbcaf9"
   integrity sha512-OfX7E2oUDYxtBvsuS4e/jSn4Q9Qb6DzgeYtsAdkPZ47znpoNsMgZw0+tVijiv3uGNR6dgNlty6r9rzIzHjtd/A==
 
-=======
->>>>>>> cac4060 (Added Notifications When Scanning And Refresh As Well As The Edit Windows)
 "@fontsource/lato@^5.0.17":
   version "5.0.17"
   resolved "https://registry.npmjs.org/@fontsource/lato/-/lato-5.0.17.tgz"
@@ -582,6 +579,11 @@
   dependencies:
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
+
+"@rnwonder/solid-date-picker@^0.8.0":
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/@rnwonder/solid-date-picker/-/solid-date-picker-0.8.0.tgz#e57900739bc620b12c962f7a278a82c4108431c9"
+  integrity sha512-cEnROqDA9/2Ykg0k6L1ZWcbU+wM8Hsnnc25ojia0em5/uuC0FbTZ6oMcDBCbVvvEwafhU2Xv9lTchcrqUtDP0A==
 
 "@solid-primitives/event-listener@^2.2.14", "@solid-primitives/event-listener@^2.3.0":
   version "2.3.0"
