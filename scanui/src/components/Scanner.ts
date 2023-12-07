@@ -117,7 +117,7 @@ export const handleScan = async (rfid: string, props: ScannerProps) => {
       return;
     }
 
-    if (data.data.at(0).location === 0) {
+    if (data.data.at(0).resident.current_location === 0) {
       // Resident is leaving, prompt user for location
       let dest = window.prompt("Enter Destination: ", "1");
       if (dest === null) {
@@ -187,7 +187,7 @@ export const handleScan = async (rfid: string, props: ScannerProps) => {
       console.log("Resident: ", residentResp.data);
 
 
-      toast.success(`Resident ${originalResidentResponse?.data!.at(0)?.doc} Leaving Pod for ${locationResp!.data!.at(0)!.name}`);
+      toast.success(`Resident ${originalResidentResponse?.data!.at(0)?.name} Leaving Pod for ${locationResp!.data!.at(0)!.name}`);
     } else {
       console.log("Resident Arriving at: ", data.data);
       let arrivingLocation = await API.GET(`locations/${window.facilityLocationId}`);
@@ -198,7 +198,7 @@ export const handleScan = async (rfid: string, props: ScannerProps) => {
       if (!arrivingLocation.success) {
         toast.error(arrivingLocation.message);
       }
-      toast.success(`Resident ${originalResidentResponse!.data!.at(0)!.doc} Arriving at ${arrivingLocation!.data!.at(0)!.name}`);
+      toast.success(`Resident ${originalResidentResponse!.data!.at(0)!.name} Arriving at ${arrivingLocation!.data!.at(0)!.name}`);
       props.refetchData();
     }
 

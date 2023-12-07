@@ -19,12 +19,15 @@ pub enum Query<'a> {
     ShowResidentTimestampsRange(&'a str, &'a NaiveDate, &'a NaiveDate),
     ShowLocationResidents(usize),
     UpdateResidentLocation(&'a Resident),
+    ShowLocationTimestampsUnique(usize),
+    ShowLocationResidentTimestamps(usize),
     IndexLocations,
     ShowLocation(usize),
     StoreLocation(&'a Location),
     ShowLocationTimestamps(usize),
     ShowLocationTimestampsRange(usize, &'a NaiveDate, &'a NaiveDate),
     IndexTimestamps,
+    IndexTimestampsUnique,
     ShowTimestamps(&'a NaiveDate, &'a NaiveDate),
     StoreTimestamp(&'a TimeStamp),
     Migrations,
@@ -135,9 +138,12 @@ pub async fn query(pool: &Pool, query: Query<'_>,) -> Result<QueryResult, Box<dy
             show_timestamps_location(id, conn)?,
         )),
         Query::IndexTimestamps => Ok(QueryResult::TimeStamps(index_timestamps(conn)?)),
+        Query::IndexTimestampsUnique => Ok(QueryResult::TimeStamps(index_timestamps_unique(conn)?)),
+        Query::ShowLocationTimestampsUnique(id) => Ok(QueryResult::TimeStamps(show_location_timestamps_unique(id, conn)?)),
         Query::ShowTimestamps(start, end) => Ok(QueryResult::TimeStamps(show_timestamps_range(
             start, end, conn,
         )?)),
+        Query::ShowLocationResidentTimestamps(loc) => Ok(QueryResult::TimeStamps(show_location_resident_timestamps(loc, conn)?)),
         Query::StoreTimestamp(ts) => {
             if  store_timestamp(ts, conn).is_ok() {
                 Ok(QueryResult::Success)
@@ -371,14 +377,79 @@ fn show_resident_timestamps_range(rfid: &str, start: &NaiveDate, end: &NaiveDate
 
 // +++++========================+++++==========================================++++++
 /// ----------------------------- TIMESTAMPS ---------------------------------///
-
-/// GET: (Index) /api/timestamps/
+//
+// GET: (Index) /api/timestamps
 #[rustfmt::skip]
 fn index_timestamps(conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
     let mut stmt = conn.prepare("SELECT * FROM timestamps WHERE DATE(ts) = DATE('now')")?;
     let timestamps = stmt.query_map([], |row| {
         Ok(TimeStamp::new(row.get(1)?, row.get(2)?, row.get(3)?))
     })?;
+    Ok(timestamps
+        .filter(|ts| ts.as_ref().is_ok())
+        .map(|x| x.unwrap())
+        .collect::<Vec<TimeStamp>>())
+}
+
+/// GET: (Index) /api/timestamps/unique
+#[rustfmt::skip]
+fn index_timestamps_unique(conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
+    let mut stmt = conn.prepare("
+        SELECT t1.*
+        FROM timestamps t1
+        LEFT JOIN timestamps t2
+        ON t1.rfid = t2.rfid AND t1.ts < t2.ts
+        WHERE t2.rfid IS NULL
+        AND DATE(t1.ts) = DATE('now')
+    ")?;
+    let timestamps = stmt.query_map([], |row| {
+        Ok(TimeStamp::new(row.get(1)?, row.get(2)?, row.get(3)?))
+    })?;
+    Ok(timestamps
+        .filter(|ts| ts.as_ref().is_ok())
+        .map(|x| x.unwrap())
+        .collect::<Vec<TimeStamp>>())
+}
+
+/// GET: (Index) /api/timestamps/unique
+#[rustfmt::skip]
+fn show_location_timestamps_unique(id: usize, conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
+    let mut stmt = conn.prepare("
+        SELECT t1.*
+        FROM timestamps t1
+        LEFT JOIN timestamps t2
+        ON t1.rfid = t2.rfid AND t1.ts < t2.ts
+        WHERE t2.rfid IS NULL
+        AND t1.location = ?1
+        AND DATE(t1.ts) = DATE('now')
+    ")?;
+    let timestamps = stmt.query_map([&id], |row| {
+        Ok(TimeStamp::new(row.get(1)?, row.get(2)?, row.get(3)?))
+    })?;
+    Ok(timestamps
+        .filter(|ts| ts.as_ref().is_ok())
+        .map(|x| x.unwrap())
+        .collect::<Vec<TimeStamp>>())
+}
+
+/// GET: (Index) /api/locations/{id}/residents/timestamps UNIQUE
+#[rustfmt::skip]
+fn show_location_resident_timestamps(id: usize, conn: Connection) -> Result<Vec<TimeStamp>, Box<dyn std::error::Error>> {
+    let mut stmt = conn.prepare("
+        SELECT t1.*
+        FROM timestamps t1
+        LEFT JOIN timestamps t2 ON t1.rfid = t2.rfid AND t1.ts < t2.ts
+        JOIN residents r ON t1.rfid = r.rfid
+        WHERE t2.rfid IS NULL
+        AND t1.location = ?1
+        AND r.unit = ?1
+        AND DATE(t1.ts) = DATE('now')
+    ")?;
+
+    let timestamps = stmt.query_map([&id], |row| {
+        Ok(TimeStamp::new(row.get(1)?, row.get(2)?, row.get(3)?))
+    })?;
+
     Ok(timestamps
         .filter(|ts| ts.as_ref().is_ok())
         .map(|x| x.unwrap())

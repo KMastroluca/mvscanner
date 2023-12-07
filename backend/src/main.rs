@@ -48,7 +48,7 @@ async fn main() -> io::Result<()> {
             }
         }
     }
-    log::info!("starting Actix-Web HTTP server at http://localhost:8080");
+    log::info!("starting Actix-Web HTTP server at http://{}", ip);
     let json_config = JsonConfig::default().limit(4096);
     HttpServer::new(move || {
         let cors = Cors::permissive()
@@ -65,7 +65,9 @@ async fn main() -> io::Result<()> {
             .service(locations_controller::show)
             .service(locations_controller::show_location_timestamps)
             .service(locations_controller::show_location_timestamps_range)
+            .service(locations_controller::show_location_timestamps_unique)
             .service(locations_controller::show_location_residents)
+            .service(locations_controller::show_location_residents_timestamps)
             .service(locations_controller::store)
             .service(residents_controller::index)
             .service(residents_controller::show)
@@ -75,12 +77,13 @@ async fn main() -> io::Result<()> {
             .service(residents_controller::destroy)
             .service(residents_controller::update)
             .service(timestamps_controller::index_timestamps)
+            .service(timestamps_controller::index_timestamps_unique)
             .service(timestamps_controller::show_range)
             .service(timestamps_controller::store_timestamp)
             .wrap(middleware::Logger::default())
             .wrap(cors)
     })
-    .bind(("172.16.20.42", 8080))?
+    .bind((ip, 8080))?
     .workers(2)
     .run()
     .await

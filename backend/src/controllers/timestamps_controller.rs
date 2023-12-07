@@ -23,6 +23,20 @@ pub async fn index_timestamps(db: web::Data<Pool>) -> impl Responder {
     }
 }
 
+/// GET: /api/timestamps/unique  DEFAULT: Today
+#[get("/api/timestamps/unique")]
+pub async fn index_timestamps_unique(db: web::Data<Pool>) -> impl Responder {
+    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::IndexTimestamps).await {
+        let response: Response<TimeStamp> = ts.into();
+        HttpResponse::Ok()
+            .content_type(ContentType::json())
+            .json(response)
+    } else {
+        let error: Response<String> = Response::from_error("Error Retrieving timestamps");
+        HttpResponse::Ok().json(error)
+    }
+}
+
 /// POST: /api/timestamps/{timestamp}
 #[rustfmt::skip]
 #[post("/api/timestamps")]
