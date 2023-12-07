@@ -58,10 +58,6 @@ export const getResidentsIn = async (): Promise<STableData> => {
 
 
 
-
-
-
-
 export const getResidentsOut = async (): Promise<STableData> => {
   console.log("Executed GetResidentsOut");
 
@@ -82,7 +78,7 @@ export const getResidentsOut = async (): Promise<STableData> => {
 
   console.log("Residents From DB:", residentsData);
 
-  let timestampsResponse = await API.GET('timestamps');
+  let timestampsResponse = await API.GET('timestamps/unique');
 
   if (!timestampsResponse) {
     console.error("Error: No response from server");
@@ -153,10 +149,10 @@ export const getResidentsOut = async (): Promise<STableData> => {
   let onlyAway = getOnlyAway(latestTimestamps);
   console.log("Latest Timestamps: ", residentsOut);
 
-   // Im reversing the array because the table is displaying the data from newest to oldest and 
-   // i guess latest to oldest is doing the opposite
-   let returnObj = {data:latestToOld(residentsOut).reverse(), priorityData:onlyAway};
-   return returnObj;
+  // Im reversing the array because the table is displaying the data from newest to oldest and 
+  // i guess latest to oldest is doing the opposite
+  let returnObj = { data: latestToOld(residentsOut).reverse(), priorityData: onlyAway };
+  return returnObj;
 
 }
 
@@ -189,6 +185,6 @@ const getLatestTimestamps = (data: STimestampResident[]): STimestampResident[] =
 }
 
 const getOnlyAway = (data: STimestampResident[]): STimestampResident[] => {
-  let filteredData = data.filter((timestampResident: STimestampResident) => timestampResident.destinationLabel === timestampResident.room);
+  let filteredData = data.filter((timestampResident: STimestampResident) => timestampResident.unit !== timestampResident.location);
   return filteredData;
 }

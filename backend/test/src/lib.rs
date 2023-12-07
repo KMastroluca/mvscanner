@@ -1,31 +1,29 @@
-use reqwest::blocking::Response;
-use serde_json::Value;
-use std::collections::HashMap;
-const BASE_URL: &str = "http://localhost:8080/api";
-
-fn make_request(
-    endpoint: &str,
-    method: reqwest::Method,
-    body: Option<HashMap<&str, &str>>,
-) -> Response {
-    let client = reqwest::blocking::Client::new();
-    let url = format!("{}/{}", BASE_URL, endpoint);
-    let request_builder = match method {
-        reqwest::Method::GET => client.get(&url),
-        reqwest::Method::POST => client.post(&url).json(&body.unwrap()),
-        reqwest::Method::PATCH => client.patch(&url).json(&body.unwrap()),
-        reqwest::Method::DELETE => client.delete(&url),
-        _ => panic!("Unsupported HTTP method"),
-    };
-
-    request_builder.send().expect("Failed to execute request")
-}
-
 #[cfg(test)]
 pub mod tests {
-    use serde_json::json;
 
-    use super::*;
+    use reqwest::blocking::Response;
+    use serde_json::{json, Value};
+    use std::collections::HashMap;
+
+    const BASE_URL: &str = "http://localhost:8080/api";
+    fn make_request(
+        endpoint: &str,
+        method: reqwest::Method,
+        body: Option<HashMap<&str, &str>>,
+    ) -> Response {
+        let client = reqwest::blocking::Client::new();
+        let url = format!("{}/{}", BASE_URL, endpoint);
+        let request_builder = match method {
+            reqwest::Method::GET => client.get(&url),
+            reqwest::Method::POST => client.post(&url).json(&body.unwrap()),
+            reqwest::Method::PATCH => client.patch(&url).json(&body.unwrap()),
+            reqwest::Method::DELETE => client.delete(&url),
+            _ => panic!("Unsupported HTTP method"),
+        };
+
+        request_builder.send().expect("Failed to execute request")
+    }
+
     #[test]
     fn test_residents_index() {
         let response = make_request("residents", reqwest::Method::GET, None);
@@ -121,9 +119,16 @@ pub mod tests {
     }
 
     #[test]
-    fn test_timestamps() {
+    fn test_timestamps_index() {
         // TestTimestampsController
         let response = make_request("timestamps", reqwest::Method::GET, None);
+        assert_eq!(response.status().as_u16(), 200);
+    }
+
+    #[test]
+    fn test_timestamps_index_unique() {
+        // TestTimestampsController
+        let response = make_request("timestamps/unique", reqwest::Method::GET, None);
         assert_eq!(response.status().as_u16(), 200);
     }
 
