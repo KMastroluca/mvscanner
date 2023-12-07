@@ -95,9 +95,11 @@ export const handleScan = async (rfid: string, props: ScannerProps) => {
     });
 
 
-    if (!response.ok) {
-      throw Error(response.statusText);
-    }
+      if (!response.ok) {
+         toast.error(response.statusText);
+         throw Error(response.statusText);
+      }
+
 
 
     const data = await response.json();

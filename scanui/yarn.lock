@@ -506,6 +506,11 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@rnwonder/solid-date-picker@^0.8.0":
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/@rnwonder/solid-date-picker/-/solid-date-picker-0.8.0.tgz#e57900739bc620b12c962f7a278a82c4108431c9"
+  integrity sha512-cEnROqDA9/2Ykg0k6L1ZWcbU+wM8Hsnnc25ojia0em5/uuC0FbTZ6oMcDBCbVvvEwafhU2Xv9lTchcrqUtDP0A==
+
 "@solid-primitives/event-listener@^2.2.14", "@solid-primitives/event-listener@^2.3.0":
   version "2.3.0"
   resolved "https://registry.npmjs.org/@solid-primitives/event-listener/-/event-listener-2.3.0.tgz"
