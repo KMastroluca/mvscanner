@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 
-use crate::database::db::{query, Pool, Query, QueryResult};
+use crate::database::db::{db_query, Pool, Query, QueryResult};
 use crate::models::locations::Location;
 use crate::models::residents::Resident;
 use crate::models::response::Response;
@@ -54,7 +54,7 @@ impl std::fmt::Display for LocationsError {
 #[get("/api/locations")]
 pub async fn index(db: web::Data<Pool>) -> impl Responder {
     log::info!("GET: locations controller");
-    if let Ok(res) = query(&db, Query::IndexLocations).await {
+    if let Ok(res) = db_query(&db, Query::IndexLocations).await {
         match res {
         QueryResult::Locations(locations) => {
                 let response: Response<Location> = Response::from(locations);
@@ -74,7 +74,7 @@ pub async fn index(db: web::Data<Pool>) -> impl Responder {
 #[post("/api/locations")]
 pub async fn store(db: web::Data<Pool>, loc: web::Json<Location>) -> Result<HttpResponse, LocationsError> {
     log::info!("POST: locations controller");
-    if let Ok(QueryResult::Success) = query(&db, Query::StoreLocation(&loc.into_inner())).await {
+    if let Ok(QueryResult::Success) = db_query(&db, Query::StoreLocation(&loc.into_inner())).await {
         let response: Response<String> = Response::from_error("Location successfully added");
         Ok(HttpResponse::Ok().status(StatusCode::CREATED).insert_header(header::ContentType::json()).json(response))
     } else {
@@ -86,7 +86,8 @@ pub async fn store(db: web::Data<Pool>, loc: web::Json<Location>) -> Result<Http
 #[get("/api/locations/{location_id}")]
 pub async fn show(db: web::Data<Pool>, id: web::Path<Id>) -> Result<HttpResponse, LocationsError> {
     log::info!("GET: locations controller with id: {}", id.location_id);
-    if let Ok(QueryResult::Location(loc)) = query(&db, Query::ShowLocation(id.location_id)).await {
+    if let Ok(QueryResult::Location(loc)) = db_query(&db, Query::ShowLocation(id.location_id)).await
+    {
         let loc: Response<Location> = Response::from(loc);
         Ok(HttpResponse::Ok()
             .insert_header(header::ContentType::json())
@@ -102,7 +103,7 @@ pub async fn show(db: web::Data<Pool>, id: web::Path<Id>) -> Result<HttpResponse
 pub async fn show_location_timestamps_range(db: web::Data<Pool>, id: web::Path<LocationRange>) -> Result<HttpResponse, LocationsError> {
     let loc_range = id.into_inner();
     log::info!("GET: Locations controller timestamps with range for ID");
-    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestampsRange(loc_range.location_id, &loc_range.start_date, &loc_range.end_date)).await {
+    if let Ok(QueryResult::TimeStamps(ts)) = db_query(&db, Query::ShowLocationTimestampsRange(loc_range.location_id, &loc_range.start_date, &loc_range.end_date)).await {
         let response: Response<TimeStamp> = ts.into();
         Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
     } else {
@@ -116,7 +117,7 @@ pub async fn show_location_timestamps_range(db: web::Data<Pool>, id: web::Path<L
 pub async fn show_location_timestamps(db: web::Data<Pool>, id: web::Path<Id>) -> impl Responder {
     let id = id.into_inner().location_id;
     log::info!("GET: Locations controller timestamps for ID");
-    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestamps(id)).await {
+    if let Ok(QueryResult::TimeStamps(ts)) = db_query(&db, Query::ShowLocationTimestamps(id)).await {
         let response: Response<TimeStamp> = ts.into();
         Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
     } else {
@@ -130,7 +131,7 @@ pub async fn show_location_timestamps(db: web::Data<Pool>, id: web::Path<Id>) ->
 pub async fn show_location_timestamps_unique(db: web::Data<Pool>, id: web::Path<Id>) -> impl Responder {
     let id = id.into_inner().location_id;
     log::info!("GET: Unique Timestamps for Location ID#{}", id);
-    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationTimestampsUnique(id)).await {
+    if let Ok(QueryResult::TimeStamps(ts)) = db_query(&db, Query::ShowLocationTimestampsUnique(id)).await {
         let response: Response<TimeStamp> = ts.into();
         Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
     } else {
@@ -144,7 +145,7 @@ pub async fn show_location_timestamps_unique(db: web::Data<Pool>, id: web::Path<
 pub async fn show_location_residents_timestamps(db: web::Data<Pool>, id: web::Path<Id>) -> impl Responder {
     let id = id.into_inner().location_id;
     log::info!("GET: Unique Timestamps for residents living at Location ID#{}", id);
-    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowLocationResidentTimestamps(id)).await {
+    if let Ok(QueryResult::TimeStamps(ts)) = db_query(&db, Query::ShowLocationResidentTimestamps(id)).await {
         let response: Response<TimeStamp> = ts.into();
         Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
     } else {
@@ -157,7 +158,7 @@ pub async fn show_location_residents_timestamps(db: web::Data<Pool>, id: web::Pa
 pub async fn show_location_residents(db: web::Data<Pool>, id: web::Path<Id>) -> Result<HttpResponse, LocationsError> {
     let id = id.into_inner().location_id;
     log::info!("GET: Locations controller residents for ID");
-    if let Ok(QueryResult::Residents(res)) = query(&db, Query::ShowLocationResidents(id)).await {
+    if let Ok(QueryResult::Residents(res)) = db_query(&db, Query::ShowLocationResidents(id)).await {
         let response: Response<Resident> = res.into();
         Ok(HttpResponse::Ok()
             .insert_header(header::ContentType::json())

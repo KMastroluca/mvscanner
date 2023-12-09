@@ -88,11 +88,7 @@ export const ResidentEditModal: Component<ResidentEditModalProps> = (props: Resi
   const [residentBunk, setResidentBunk] = createSignal<"T" | "B" | null>(residentRoomDecons.bunk);
   const [residentFirstName, setResidentFirstName] = createSignal<string | undefined>(firstName);
   const [residentLastName, setResidentLastName] = createSignal<string | undefined>(lastName);
-<<<<<<< HEAD
   const [residentPod, setResidentPod] = createSignal<string | undefined>(residentRoomDecons.podLetter);
-=======
-  const [residentPod, setResidentPod] = createSignal<string | undefined>();
->>>>>>> b7f30e9 (fix: ip changes for local dev)
   const [residentDOC, setResidentDOC] = createSignal<string | undefined>(props.currentResident()?.doc);
 
   const [residentValidationErrors, setResidentValidationErrors] = createSignal<ResidentIDModalValidationErrors>({

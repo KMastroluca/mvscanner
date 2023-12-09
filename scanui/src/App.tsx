@@ -42,12 +42,11 @@ import { GetResidentByRFID } from './api/GetResident';
 import toast, { Toaster } from 'solid-toast';
 import { updateResident } from './api/UpdateResident';
 
+import loadingAnim from './assets/loading.gif';
 import { GetAllLocations } from './api/GetLocation';
 
 import DatePicker, { PickerValue, utils } from '@rnwonder/solid-date-picker';
 import { BiSolidRightArrowCircle } from 'solid-icons/bi';
-
-import loadingAnim from './assets/loading.gif';
 
 export enum AppDisplayHousingUnit {
   ALL = 0,
@@ -154,12 +153,9 @@ function App() {
 
   onMount(() => {
     initScanner({ displayNewResidentModal, refetchData });
-<<<<<<< HEAD
 
     // Load the facility locations
     loadFacilityLocations();
-=======
->>>>>>> b7f30e9 (fix: ip changes for local dev)
   });
 
   onCleanup(() => {
@@ -283,31 +279,16 @@ function App() {
       </div>
       <div class={"flex flex-row justify-end gap-x-2 px-2 py-3"}>
 
-<<<<<<< HEAD
-=======
-        <div class={"flex flex-col w-[5rem] bg-slate-300 border-2"}>
-          <nav class={"flex w-full text-xl uppercase"}>
-            <ul class={"w-full"}>
-              <li><a class={`flex items-center hover:bg-neutral-200 border-b-[1px] justify-between w-full px-3 py-4 ${appDisplayHousingUnit() === AppDisplayHousingUnit.ALL ? 'bg-neutral-200' : 'bg-white'}`} href="#">ALL {appDisplayHousingUnit() === AppDisplayHousingUnit.ALL ? <TbCaretRight /> : <TbCaretDown />}</a></li>
-              <li><a class={`flex items-center hover:bg-neutral-200 border-b-[1px] justify-between w-full px-3 py-4 ${appDisplayHousingUnit() === AppDisplayHousingUnit.ALPHA ? 'bg-neutral-200' : 'bg-white'}`} href="#">A {appDisplayHousingUnit() === AppDisplayHousingUnit.ALPHA ? <TbCaretRight /> : <TbCaretDown />}</a></li>
-              <li><a class={`flex items-center hover:bg-neutral-200 border-b-[1px] justify-between w-full px-3 py-4 ${appDisplayHousingUnit() === AppDisplayHousingUnit.BRAVO ? 'bg-neutral-200' : 'bg-white'}`} href="#">B {appDisplayHousingUnit() === AppDisplayHousingUnit.BRAVO ? <TbCaretRight /> : <TbCaretDown />}</a></li>
-              <li><a class={`flex items-center hover:bg-neutral-200 border-b-[1px] justify-between w-full px-3 py-4 ${appDisplayHousingUnit() === AppDisplayHousingUnit.CHARLIE ? 'bg-neutral-200' : 'bg-white'}`} href="#">C {appDisplayHousingUnit() === AppDisplayHousingUnit.CHARLIE ? <TbCaretRight /> : <TbCaretDown />}</a></li>
-              <li><a class={`flex items-center hover:bg-neutral-200 border-b-[1px] justify-between w-full px-3 py-4 ${appDisplayHousingUnit() === AppDisplayHousingUnit.DELTA ? 'bg-neutral-200' : 'bg-white'}`} href="#">D {appDisplayHousingUnit() === AppDisplayHousingUnit.DELTA ? <TbCaretRight /> : <TbCaretDown />}</a></li>
-              <li><a class={`flex items-center hover:bg-neutral-200 border-b-[1px] justify-between w-full px-3 py-4 ${appDisplayHousingUnit() === AppDisplayHousingUnit.ECHO ? 'bg-neutral-200' : 'bg-white'}`} href="#">E {appDisplayHousingUnit() === AppDisplayHousingUnit.ECHO ? <TbCaretRight /> : <TbCaretDown />}</a></li>
-            </ul>
-          </nav>
-        </div>
->>>>>>> b7f30e9 (fix: ip changes for local dev)
 
 
-        <div class={"flex w-[44rem] justify-center items-center"}>
-          {outResidentsData.loading ? (<img src={loadingAnim} class={"w-10 h-10"} />) : (
+        <div class={"flex w-[44rem] justify-center"}>
+          {outResidentsData.loading ? (<div class={"flex justify-center items-center"}><img src={loadingAnim} class={"w-10 h-10"} /></div>) : (
             <STable type='TimestampResident' data={outResidentsData()} />
           )}
         </div>
 
-        <div class={"flex w-[42rem] justify-center items-center"}>
-          {inResidentsData.loading ? (<img src={loadingAnim} class={"w-10 h-10"} />) : (
+        <div class={"flex w-[42rem] justify-center"}>
+          {inResidentsData.loading ? (<div class={"flex justify-center items-center"}><img src={loadingAnim} class={"w-10 h-10"} /></div>) : (
             <STable type='Resident' data={inResidentsData()} actions={residentActions} />
           )}
         </div>

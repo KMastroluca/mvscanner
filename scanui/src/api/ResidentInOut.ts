@@ -78,7 +78,7 @@ export const getResidentsOut = async (): Promise<STableData> => {
 
   console.log("Residents From DB:", residentsData);
 
-  let timestampsResponse = await API.GET('timestamps/unique');
+  let timestampsResponse = await API.GET('timestamps?unique=true');
 
   if (!timestampsResponse) {
     console.error("Error: No response from server");

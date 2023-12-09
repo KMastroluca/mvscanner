@@ -1,5 +1,5 @@
 use crate::{
-    database::db::{query, Pool, Query, QueryResult},
+    database::db::{db_query, Pool, Query, QueryResult},
     models::response::Response,
     models::timestamps::{PostTimestamp, RangeParams, ResidentTimestamp, TimeStamp},
 };
@@ -8,25 +8,27 @@ use actix_web::{
     http::{header::ContentType, StatusCode},
     post, web, HttpResponse, Responder,
 };
+use serde::Deserialize;
 
-/// GET: /api/timestamps  DEFAULT: Today
-#[get("/api/timestamps")]
-pub async fn index_timestamps(db: web::Data<Pool>) -> impl Responder {
-    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::IndexTimestamps).await {
-        let response: Response<TimeStamp> = ts.into();
-        HttpResponse::Ok()
-            .content_type(ContentType::json())
-            .json(response)
-    } else {
-        let error: Response<String> = Response::from_error("Error Retrieving timestamps");
-        HttpResponse::Ok().json(error)
-    }
+#[derive(Debug, Deserialize)]
+pub struct FilterOpts {
+    unique: Option<bool>,
 }
 
-/// GET: /api/timestamps/unique  DEFAULT: Today
-#[get("/api/timestamps/unique")]
-pub async fn index_timestamps_unique(db: web::Data<Pool>) -> impl Responder {
-    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::IndexTimestamps).await {
+/// GET: /api/timestamps?unique=true/false  DEFAULT: Today
+#[get("/api/timestamps")]
+pub async fn index_timestamps(db: web::Data<Pool>, uni: web::Query<FilterOpts>) -> impl Responder {
+    if let Some(true) = uni.into_inner().unique {
+        if let Ok(QueryResult::TimeStamps(ts)) = db_query(&db, Query::IndexTimestampsUnique).await {
+            let response: Response<TimeStamp> = ts.into();
+            HttpResponse::Ok()
+                .content_type(ContentType::json())
+                .json(response)
+        } else {
+            let error: Response<String> = Response::from_error("Error Retrieving timestamps");
+            HttpResponse::Ok().json(error)
+        }
+    } else if let Ok(QueryResult::TimeStamps(ts)) = db_query(&db, Query::IndexTimestamps).await {
         let response: Response<TimeStamp> = ts.into();
         HttpResponse::Ok()
             .content_type(ContentType::json())
@@ -43,12 +45,12 @@ pub async fn index_timestamps_unique(db: web::Data<Pool>) -> impl Responder {
 pub async fn store_timestamp(db: web::Data<Pool>, ts: web::Json<PostTimestamp>) -> impl Responder {
     let ts = ts.into_inner();
     log::info!("Storing timestamp: {:?}", ts);
-    if let Ok(mut res) = query(&db, Query::ShowResident(ts.clone().rfid.as_str())).await {
+    if let Ok(mut res) = db_query(&db, Query::ShowResident(ts.clone().rfid.as_str())).await {
         match res {
             QueryResult::Resident(ref mut resident) => {
             resident.update_location(ts.location);
-                if let Ok(QueryResult::Success) = query(&db, Query::UpdateResidentLocation(resident)).await {
-                    if let Ok(QueryResult::Success) = query(&db, Query::StoreTimestamp(&ts.clone().into())).await {
+                if let Ok(QueryResult::Success) = db_query(&db, Query::UpdateResidentLocation(resident)).await {
+                    if let Ok(QueryResult::Success) = db_query(&db, Query::StoreTimestamp(&ts.clone().into())).await {
                         let res: Response<ResidentTimestamp> = Response::from(ResidentTimestamp {
                             resident: resident.clone(), timestamp:TimeStamp::new(ts.rfid.clone(), resident.current_location, None)});
                         HttpResponse::Ok()
@@ -80,7 +82,7 @@ pub async fn store_timestamp(db: web::Data<Pool>, ts: web::Json<PostTimestamp>) 
 #[rustfmt::skip]
 pub async fn show_range(db: web::Data<Pool>, range: web::Path<RangeParams>) -> impl Responder {
     let range = &range.into_inner();
-    if let Ok(QueryResult::TimeStamps(ts)) = query(&db, Query::ShowTimestamps(&range.start_date, &range.end_date)).await {
+    if let Ok(QueryResult::TimeStamps(ts)) = db_query(&db, Query::ShowTimestamps(&range.start_date, &range.end_date)).await {
         let response: Response<TimeStamp> = ts.into(); 
         HttpResponse::Ok()
             .insert_header(ContentType::json())
