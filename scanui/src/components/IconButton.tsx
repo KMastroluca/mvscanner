@@ -27,44 +27,30 @@
  * ********************************************************************************
  */
 
-import {Component, JSXElement} from "solid-js";
-import {CustomIcon, IconTree} from "solid-icons";
+import { Component } from "solid-js";
+import { CustomIcon } from "solid-icons";
 
-type IconEndType = {
-    position:"End"
-};
-
-type IconStartType ={
-    position:"Start"
-};
-
-type IconOnlyType = {
-  position:"Only"
-};
-
-export type IconButtonType = IconEndType|IconStartType|IconOnlyType;
-
-export interface IconButtonProps {
-    icon:IconTree;
-    children:JSXElement;
-    size?:number;
-    iconPosition:IconButtonType;
-    color?:string;
-    onClick: (e:MouseEvent) => void;
-}
+// IconButtonType imported but never used
+import { IconButtonProps } from "../types/componentTypes";
 
 export const IconButton: Component<IconButtonProps> = (props) => {
-
-    return (
-        <button onClick={props.onClick}>
-            {props.iconPosition.position === "Start" ? (<CustomIcon class={props.color}
-                                                                     src={props.icon}
-                                                                     size={props.size} />) : false }
-            {props.iconPosition.position === "Only" ? (<CustomIcon class={props.color} src={props.icon} size={props.size}  />) : props.children}
-            {props.iconPosition.position === "End" ? (<CustomIcon class={props.color}
-                                                        src={props.icon}
-                                                        size={props.size} />) : false}
-        </button>
-    );
-
-}
+  return (
+    <button onClick={props.onClick}>
+      {props.iconPosition.position === "Start" ? (
+        <CustomIcon class={props.color} src={props.icon} size={props.size} />
+      ) : (
+        false
+      )}
+      {props.iconPosition.position === "Only" ? (
+        <CustomIcon class={props.color} src={props.icon} size={props.size} />
+      ) : (
+        props.children
+      )}
+      {props.iconPosition.position === "End" ? (
+        <CustomIcon class={props.color} src={props.icon} size={props.size} />
+      ) : (
+        false
+      )}
+    </button>
+  );
+};

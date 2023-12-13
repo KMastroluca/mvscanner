@@ -1,4 +1,4 @@
-import { SResident } from "../types/Models";
+import { SResident } from "../types/models";
 
 
 export const GetResidentByRFID = async (rfid:string):Promise<SResident|null> => {

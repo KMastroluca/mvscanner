@@ -1,6 +1,6 @@
 import { Component, JSXElement, createSignal } from "solid-js";
 import { API } from "./API";
-import { SLocation } from "../types/Models";
+import { SLocation } from "../types/models";
 import toast from "solid-toast";
 
 

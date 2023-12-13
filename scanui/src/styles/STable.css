@@ -31,73 +31,61 @@
 @tailwind utilities;
 
 @layer components {
+  .stable-wrapper {
+    @apply relative overflow-x-hidden overflow-y-auto scrollbar-thin scrollbar-track-slate-100 scrollbar-thumb-slate-300 max-h-[90vh] bg-neutral-100 shadow-[inset_0_-3px_4px_0_#E1E1E1] border-[1px] rounded-ss-xl;
+  }
 
+  table {
+    @apply table-auto w-full border-collapse bg-white;
+  }
 
-    .stable-wrapper {
-        @apply relative overflow-x-hidden overflow-y-auto scrollbar-thin scrollbar-track-slate-100 scrollbar-thumb-slate-300 max-h-[90vh] bg-neutral-100 shadow-[inset_0_-3px_4px_0_#E1E1E1] border-[1px] rounded-ss-xl;
-    }
+  thead {
+    @apply sticky top-0 bg-white z-10;
+  }
 
-    table {
-        @apply table-auto w-full border-collapse bg-white;
-    }
+  thead tr {
+    @apply sticky top-0;
+  }
 
-    thead {
-        @apply sticky top-0 bg-white z-10;
-    }
+  thead tr th {
+    @apply sticky top-0;
+  }
 
-    thead tr {
-        @apply sticky top-0;
-    }
+  tbody tr:hover {
+    @apply bg-neutral-200;
+  }
 
-    thead tr th {
-        @apply sticky top-0;
-    }
+  .cell-inner {
+    @apply flex items-center px-4 justify-start text-start h-16 border-r-[1px];
+    box-shadow: 0 1px 0 0 #e1e1e1; /* Border bottom */
+  }
 
+  tbody tr:nth-child(even) {
+    @apply bg-neutral-100;
+  }
 
-    tbody tr:hover {
-        @apply bg-neutral-200;
-    }
+  tbody tr:nth-child(even):hover {
+    @apply bg-neutral-200;
+  }
 
-    .cell-inner {
-        @apply flex items-center px-4 justify-start text-start h-16 border-r-[1px];
-        box-shadow: 0 1px 0 0 #E1E1E1; /* Border bottom */
-    }
+  /* Custom Checkbox */
+  .stable-checkbox {
+    @apply block relative cursor-pointer select-none rounded-lg h-[24px] w-[24px] border-2 bg-white;
+    /* box-shadow: inset 1px 1px #E1E1E1; */
+  }
 
-    tbody tr:nth-child(even) {
-        @apply bg-neutral-100;
-    }
-
-    tbody tr:nth-child(even):hover {
-        @apply bg-neutral-200;
-    }
-
-
-
-
-    /* Custom Checkbox */
-    .stable-checkbox {
-        @apply block relative cursor-pointer select-none rounded-lg h-[24px] w-[24px] border-2 bg-white;
-        box-shadow: inset 1px 1px #E1E1E1;
-    }
-
-    .stable-checkbox input:checked ~ .stable-checkbox-checkmark {
-        @apply absolute top-0 right-0 h-[22px] w-[22px];
-        background-image: url("../assets/icons/checkbox.svg");
-        background-position-x: center;
-        background-position-y: center;
-    }
-
-
-
-
+  .stable-checkbox input:checked ~ .stable-checkbox-checkmark {
+    @apply absolute top-0 right-0 h-[22px] w-[22px];
+    background-image: url("../assets/icons/checkbox.svg");
+    background-position-x: center;
+    background-position-y: center;
+  }
 }
 
-
-
-input[type = "checkbox"] {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-    height:0;
-    width: 0;
+input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
 }
