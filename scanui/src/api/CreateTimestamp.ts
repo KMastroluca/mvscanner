@@ -1,4 +1,4 @@
-import { STimestamp } from "../types/Models";
+import { STimestamp } from "../types/models";
 import { API } from "./API";
 
 export const createTimestamp = async (newTimestamp: STimestamp) => {

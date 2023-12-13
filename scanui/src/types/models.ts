@@ -27,7 +27,7 @@
  * ********************************************************************************
  */
 
-/**  
+/**
  * This is the model for data returned about
  * a resident and their location. As seen by the server.
  * */
@@ -43,7 +43,6 @@ export interface STimestampResident {
   destinationLabel: string; // The idea is this comes from the Timestamp destinationId, and is resolved to a location name
 }
 
-
 export interface SResident {
   [key: string]: string | number;
   current_location: number;
@@ -54,15 +53,11 @@ export interface SResident {
   unit: number; // Unit ID
 }
 
-
-
 export interface SLocation {
   [key: string]: string | number;
   id: number;
   name: string;
 }
-
-
 
 export interface STimestamp {
   [key: string]: string | number | undefined;
@@ -70,7 +65,6 @@ export interface STimestamp {
   location: number;
   time?: string;
 }
-
 
 export interface ServerResponse {
   success: boolean;

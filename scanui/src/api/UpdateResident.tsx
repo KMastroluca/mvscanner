@@ -1,5 +1,5 @@
 import toast from "solid-toast";
-import { SResident } from "../types/Models";
+import { SResident } from "../types/models";
 import { API } from "./API";
 
 
