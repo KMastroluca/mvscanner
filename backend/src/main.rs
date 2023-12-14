@@ -7,7 +7,7 @@ use actix_web::{
 use r2d2_sqlite::SqliteConnectionManager;
 use scan_mvcf::{
     controllers::{locations_controller, residents_controller, timestamps_controller},
-    database::db::{query, Query},
+    database::db::{db_query, Query},
 };
 use std::io;
 
@@ -25,9 +25,9 @@ async fn main() -> io::Result<()> {
     if let Some(args) = std::env::args().nth(1) {
         match args.as_str() {
             "--test-seed" => {
-                if query(&pool, Query::Migrations).await.is_ok() {
+                if db_query(&pool, Query::Migrations).await.is_ok() {
                     log::info!("database migrations complete");
-                    if query(&pool, Query::SeedTestData).await.is_ok() {
+                    if db_query(&pool, Query::SeedTestData).await.is_ok() {
                         log::info!("database seeded with test data");
                     } else {
                         log::info!("database seed failed");
@@ -37,7 +37,7 @@ async fn main() -> io::Result<()> {
                 }
             }
             "--migrate" => {
-                if query(&pool, Query::Migrations).await.is_ok() {
+                if db_query(&pool, Query::Migrations).await.is_ok() {
                     log::info!("database migrations complete");
                 } else {
                     log::info!("database migrations failed");
@@ -77,7 +77,6 @@ async fn main() -> io::Result<()> {
             .service(residents_controller::destroy)
             .service(residents_controller::update)
             .service(timestamps_controller::index_timestamps)
-            .service(timestamps_controller::index_timestamps_unique)
             .service(timestamps_controller::show_range)
             .service(timestamps_controller::store_timestamp)
             .wrap(middleware::Logger::default())

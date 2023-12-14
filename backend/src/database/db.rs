@@ -54,7 +54,7 @@ pub enum QueryResult {
 // Location: None,
 // timestamps: Vec::new(),
 #[rustfmt::skip]
-pub async fn query(pool: &Pool, query: Query<'_>,) -> Result<QueryResult, Box<dyn std::error::Error>> {
+pub async fn db_query(pool: &Pool, query: Query<'_>,) -> Result<QueryResult, Box<dyn std::error::Error>> {
     let pool = pool.clone();
     let conn = web::block(move || pool.get())
         .await?

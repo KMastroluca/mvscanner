@@ -2,7 +2,7 @@ use crate::models::residents::{ErrorType, PathParams, Resident, ResidentsError, 
 use crate::models::response::Response;
 use crate::models::timestamps::TimeStamp;
 use crate::{
-    database::db::{query, Pool, Query, QueryResult},
+    database::db::{db_query, Pool, Query, QueryResult},
     models::residents::UpdateResident,
 };
 use actix_web::Responder;
@@ -14,7 +14,7 @@ use actix_web::{
 
 #[get("/api/residents")]
 pub async fn index(db: web::Data<Pool>) -> impl Responder {
-    if let Ok(res) = query(&db, Query::IndexResidents).await {
+    if let Ok(res) = db_query(&db, Query::IndexResidents).await {
         match res {
             QueryResult::Residents(residents) => {
                 let response: Response<Resident> = residents.into();
@@ -34,7 +34,7 @@ pub async fn index(db: web::Data<Pool>) -> impl Responder {
 #[rustfmt::skip]
 #[get("/api/residents/{rfid}")]
 pub async fn show(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>) -> impl Responder {
-    if let Ok(res) = query(&db, Query::ShowResident(&rfid.into_inner().rfid)).await {
+    if let Ok(res) = db_query(&db, Query::ShowResident(&rfid.into_inner().rfid)).await {
         match res {
             QueryResult::Resident(resident) => {
                 let response: Response<Resident> = resident.into();
@@ -53,7 +53,7 @@ pub async fn show(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>) -> impl
 #[rustfmt::skip]
 #[post("/api/residents")]
 pub async fn store(db: web::Data<Pool>, resident: web::Json<Resident>) -> impl Responder {
-    if let Ok(res) = query(&db, Query::StoreResident(&resident.into_inner())).await {
+    if let Ok(res) = db_query(&db, Query::StoreResident(&resident.into_inner())).await {
         match res {
             QueryResult::Success => {
                 let response: Response<Resident> = Response::from_success("Resident successfully added");
@@ -73,7 +73,7 @@ pub async fn store(db: web::Data<Pool>, resident: web::Json<Resident>) -> impl R
 #[rustfmt::skip]
 #[delete("/api/residents/{rfid}")]
 pub async fn destroy(db: web::Data<Pool>, rfid: web::Path<String>,) -> impl Responder {
-    if let Ok(res) = query(&db, Query::DestroyResident(rfid.into_inner())).await {
+    if let Ok(res) = db_query(&db, Query::DestroyResident(rfid.into_inner())).await {
         match res {
             QueryResult::Success => {
                 let response: Response<String> = Response::from_success("Resident successfully deleted");
@@ -93,13 +93,13 @@ pub async fn destroy(db: web::Data<Pool>, rfid: web::Path<String>,) -> impl Resp
 #[rustfmt::skip]
 #[patch("/api/residents/{rfid}")]
 pub async fn update(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>, resident: web::Json<UpdateResident>) -> impl Responder {
-    match query(&db, Query::ShowResident(&rfid.into_inner().rfid)).await {
+    match db_query(&db, Query::ShowResident(&rfid.into_inner().rfid)).await {
         Ok(QueryResult::Resident(res)) => {
             log::info!("fetched resident for updating: {:?}", res);
             let updated = resident.into_inner().apply_to(res.clone());
             // We have to get the full resident from DB before we can update it
             // so we can accept a JSON with only the fields they wish to update
-            match query(&db, Query::UpdateResident(&updated)).await {
+            match db_query(&db, Query::UpdateResident(&updated)).await {
                 Ok(QueryResult::Success) => {
                     let updated_res: Response<Resident> = updated.into();
                     Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(updated_res))
@@ -117,7 +117,7 @@ pub async fn update(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>, resid
 #[rustfmt::skip]
 #[get("/api/residents/{rfid}/timestamps")]
 pub async fn show_resident_timestamps(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>) -> impl Responder {
-    if let Ok(ts) = query(&db, Query::ShowResidentTimestamps(rfid.rfid.clone())).await {
+    if let Ok(ts) = db_query(&db, Query::ShowResidentTimestamps(rfid.rfid.clone())).await {
         match ts {
             QueryResult::TimeStamps(ts) => {
                 let response: Response<TimeStamp> = ts.into();
@@ -141,7 +141,7 @@ pub async fn show_resident_timestamps_range(db: web::Data<Pool>, rfid: actix_web
     let start = id.start_date;
     let end = id.end_date;
 
-    if let Ok(ts) = query(&db, Query::ShowResidentTimestampsRange(&rfid, &start, &end)).await {
+    if let Ok(ts) = db_query(&db, Query::ShowResidentTimestampsRange(&rfid, &start, &end)).await {
         match ts {
             QueryResult::TimeStamps(ts) => {
                 let response: Response<TimeStamp> = ts.into();

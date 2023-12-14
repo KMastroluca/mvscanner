@@ -45,7 +45,7 @@ import { updateResident } from './api/UpdateResident';
 import loadingAnim from './assets/loading.gif';
 import { GetAllLocations } from './api/GetLocation';
 
-import DatePicker, {PickerValue, utils} from '@rnwonder/solid-date-picker';
+import DatePicker, { PickerValue, utils } from '@rnwonder/solid-date-picker';
 import { BiSolidRightArrowCircle } from 'solid-icons/bi';
 
 export enum AppDisplayHousingUnit {
@@ -69,7 +69,7 @@ function App() {
   // Okay, we need to grab a list of all the locations and then display them in a dropdown menu.
   // ******************************************************************************************
   const [facilityLocations, setFacilityLocations] = createSignal<SLocation[]>([]);
-  const [selectedLocation, setSelectedLocation] = createSignal<SLocation|null>(null);
+  const [selectedLocation, setSelectedLocation] = createSignal<SLocation | null>(null);
 
   createEffect(() => {
     console.log("Attempting to set default location.")
@@ -90,7 +90,7 @@ function App() {
     }
   };
 
-  const resolveLocationNameForMenu = (location:SLocation):string => {
+  const resolveLocationNameForMenu = (location: SLocation): string => {
     if (location.name === "SIGNED_OUT") {
       return "FACILITY WIDE";
     }
@@ -101,7 +101,7 @@ function App() {
     return name.toUpperCase();
   };
 
-  const getCountOfResidentsInLocation = (location:SLocation):number => {
+  const getCountOfResidentsInLocation = (location: SLocation): number => {
     let count = 0;
     for (let i = 0; i < inResidentsData().data.length; i++) {
       let resident = inResidentsData().data.at(i);
@@ -116,7 +116,7 @@ function App() {
   }
 
 
-  const handleSelectLocation = (location:SLocation) => {
+  const handleSelectLocation = (location: SLocation) => {
     console.log("SELECTED LOCATION: ", location);
     setSelectedLocation(location);
   };
@@ -142,17 +142,17 @@ function App() {
     day: new Date(+ new Date() + 86400000).getDate(),
   };
 
-  const [dateRange, setDateRange] = createSignal<PickerValue>({value:{startDateObject:defaultDateRangeFrom, endDateObject:defaultDateRangeTo}, label: 'From -> To'});
+  const [dateRange, setDateRange] = createSignal<PickerValue>({ value: { startDateObject: defaultDateRangeFrom, endDateObject: defaultDateRangeTo }, label: 'From -> To' });
 
 
-  const displayNewResidentModal = (rfid:string) => {
+  const displayNewResidentModal = (rfid: string) => {
     console.log("DISPLAY NEW RESIDENT MODAL RN");
     setAppNewResidentModalOpen(true);
     setAppNewResidentModalRFID(rfid);
   };
 
   onMount(() => {
-    initScanner({displayNewResidentModal, refetchData});
+    initScanner({ displayNewResidentModal, refetchData });
 
     // Load the facility locations
     loadFacilityLocations();
@@ -263,17 +263,17 @@ function App() {
                     count = getCountOfResidentsInLocation(location);
                   }
                   return (
-                    <option value={location.id} class={`text-lg ${location.id === 0 ? 'font-bold': false}`} onClick={() => handleSelectLocation(location)}>{locationName} ({count})</option>
+                    <option value={location.id} class={`text-lg ${location.id === 0 ? 'font-bold' : false}`} onClick={() => handleSelectLocation(location)}>{locationName} ({count})</option>
                   );
                 }}
               </For>
             </select>
           </div>
           <div class={"flex justify-center items-center text-center"}>
-            <label class={"text-md font-bold"}>Search Range <br/> [{utils().convertDateObjectToDate(dateRange().value.startDateObject!).toLocaleDateString()} -- {utils().convertDateObjectToDate(dateRange().value.endDateObject!).toLocaleDateString()}]</label>
+            <label class={"text-md font-bold"}>Search Range <br /> [{utils().convertDateObjectToDate(dateRange().value.startDateObject!).toLocaleDateString()} -- {utils().convertDateObjectToDate(dateRange().value.endDateObject!).toLocaleDateString()}]</label>
           </div>
           <div class={"flex flex-row justify-center items-center h-12"}>
-            <DatePicker type="range" value={dateRange}  setValue={setDateRange} maxDate={utils().getToday()} minDate={utils().convertDateToDateObject(new Date(new Date().getDate()+1))}  inputClass={"text-sm h-10 border-[3px] border-neutral-400 rounded"} inputWrapperWidth={"8rem"} />
+            <DatePicker type="range" value={dateRange} setValue={setDateRange} maxDate={utils().getToday()} minDate={utils().convertDateToDateObject(new Date(new Date().getDate() + 1))} inputClass={"text-sm h-10 border-[3px] border-neutral-400 rounded"} inputWrapperWidth={"8rem"} />
           </div>
         </div>
       </div>
@@ -282,13 +282,13 @@ function App() {
 
 
         <div class={"flex w-[44rem] justify-center"}>
-          {outResidentsData.loading ? (<div class={"flex justify-center items-center"}><img src={loadingAnim} class={"w-10 h-10"} /></div>): (
+          {outResidentsData.loading ? (<div class={"flex justify-center items-center"}><img src={loadingAnim} class={"w-10 h-10"} /></div>) : (
             <STable type='TimestampResident' data={outResidentsData()} />
           )}
         </div>
 
         <div class={"flex w-[42rem] justify-center"}>
-          {inResidentsData.loading ? (<div class={"flex justify-center items-center"}><img src={loadingAnim} class={"w-10 h-10"} /></div>): (
+          {inResidentsData.loading ? (<div class={"flex justify-center items-center"}><img src={loadingAnim} class={"w-10 h-10"} /></div>) : (
             <STable type='Resident' data={inResidentsData()} actions={residentActions} />
           )}
         </div>
