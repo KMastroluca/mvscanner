@@ -5,7 +5,8 @@
     "rfid": "123455623562354",
     "room": "B-2t",
     "unit": 8,
-    "current_location": 8
+    "current_location": 8,
+    "level": 4
   },
   {
     "name": "Jane Smith",
@@ -13,7 +14,8 @@
     "rfid": "987654321098765",
     "room": "A-3t",
     "unit": 6,
-    "current_location": 11
+    "current_location": 11,
+    "level": 4
   },
   {
     "name": "Bob Johnson",
@@ -21,7 +23,8 @@
     "rfid": "555555111555555",
     "room": "D-4t",
     "unit": 6,
-    "current_location": 11
+    "current_location": 11,
+    "level": 4
   },
   {
     "name": "Michael Johnson",
@@ -29,7 +32,8 @@
     "rfid": "555555666555555",
     "room": "D-9b",
     "unit": 6,
-    "current_location": 8
+    "current_location": 8,
+    "level": 4
   },
   {
     "name": "Sarah Davis",
@@ -37,7 +41,8 @@
     "rfid": "222222333222222",
     "room": "D-1b",
     "unit": 9,
-    "current_location": 11
+    "current_location": 11,
+    "level": 4
   },
   {
     "name": "Kevin Smith",
@@ -45,7 +50,8 @@
     "rfid": "777777888777777",
     "room": "B-8t",
     "unit": 9,
-    "current_location": 8
+    "current_location": 8,
+    "level": 4
   },
   {
     "name": "Linda White",
@@ -53,7 +59,8 @@
     "rfid": "36155470817688836",
     "room": "B-3b",
     "unit": 8,
-    "current_location": 8
+    "current_location": 8,
+    "level": 4
   },
   {
     "name": "James Lee",
@@ -61,7 +68,8 @@
     "rfid": "666666000666666",
     "room": "A-1b",
     "unit": 11,
-    "current_location": 11
+    "current_location": 11,
+    "level": 4
   },
   {
     "name": "Emily Anderson",
@@ -69,7 +77,8 @@
     "rfid": "444444777444444",
     "room": "E-1b",
     "unit": 8,
-    "current_location": 9
+    "current_location": 9,
+    "level": 4
   },
   {
     "name": "Robert Wilson",
@@ -77,7 +86,8 @@
     "rfid": "999999999999999",
     "room": "D-1b",
     "unit": 6,
-    "current_location": 6
+    "current_location": 6,
+    "level": 4
   },
   {
     "name": "Olivia Martinez",
@@ -85,7 +95,8 @@
     "rfid": "333333333333333",
     "room": "C-1b",
     "unit": 12,
-    "current_location": 12
+    "current_location": 12,
+    "level": 4
   },
   {
     "name": "Daniel Thomas",
@@ -93,7 +104,8 @@
     "rfid": "111111111111111",
     "room": "C-5t",
     "unit": 9,
-    "current_location": 9
+    "current_location": 9,
+    "level": 4
   },
   {
     "name": "Sophia Taylor",
@@ -101,7 +113,8 @@
     "rfid": "7982377777777777",
     "room": "C-5b",
     "unit": 6,
-    "current_location": 9
+    "current_location": 9,
+    "level": 4
   },
   {
     "name": "William Brown",
@@ -109,7 +122,8 @@
     "rfid": "666688866666666",
     "room": "C-5t",
     "unit": 4,
-    "current_location": 4
+    "current_location": 4,
+    "level": 4
   },
   {
     "name": "Ava Jackson",
@@ -117,7 +131,8 @@
     "rfid": "555555231555555",
     "room": "A-4t",
     "unit": 4,
-    "current_location": 4
+    "current_location": 4,
+    "level": 4
   },
   {
     "name": "Matthew Moore",
@@ -125,6 +140,7 @@
     "rfid": "333333339993333",
     "room": "D-3b",
     "unit": 6,
-    "current_location": 4
+    "current_location": 4,
+    "level": 4
   }
 ]

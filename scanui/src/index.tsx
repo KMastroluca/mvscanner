@@ -28,18 +28,17 @@
  */
 
 /* @refresh reload */
-import { render } from 'solid-js/web'
-
+import { render } from "solid-js/web";
 
 // Import Fonts
-import '@fontsource/lato';
-import '@fontsource/raleway';
+import "@fontsource/lato";
+import "@fontsource/raleway";
 
 // Import Index Styles
-import './index.css'
+import "./index.css";
 
-import App from './App'
+import App from "./App";
 
-const root = document.getElementById('root')
+const root = document.getElementById("root");
 
-render(() => <App />, root!)
+render(() => <App />, root!);

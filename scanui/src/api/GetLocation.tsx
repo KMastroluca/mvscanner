@@ -3,32 +3,31 @@ import { API } from "./API";
 import { SLocation } from "../types/Models";
 import toast from "solid-toast";
 
-
 interface GetLocationProps {
   id: number;
 }
 
-export const GetLocationById: Component<GetLocationProps> = (props: GetLocationProps): JSXElement => {
+export const GetLocationById: Component<GetLocationProps> = (
+  props: GetLocationProps,
+): JSXElement => {
+  let [locationName, setLocationName] = createSignal<
+    string | number | undefined
+  >("");
 
+  API.GET(`locations/${props.id}`)
+    .then((response) => {
+      if (response && response!.success && response!.data) {
+        setLocationName(response!.data!.at(0)!.name);
+      } else {
+        setLocationName("Error");
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+    });
 
-  let [locationName, setLocationName] = createSignal<string | number | undefined>("");
-
-
-  API.GET(`locations/${props.id}`).then((response) => {
-    if (response && response!.success && response!.data) {
-      setLocationName(response!.data!.at(0)!.name);
-    } else {
-      setLocationName("Error");
-    }
-  }).catch((err) => {
-    console.error(err);
-  });
-
-  return (<>{locationName()}</>);
-
-
+  return <>{locationName()}</>;
 };
-
 
 export const GetAllLocations = async (): Promise<SLocation[]> => {
   let locResp = API.GET(`locations`).catch((err) => {
@@ -40,7 +39,7 @@ export const GetAllLocations = async (): Promise<SLocation[]> => {
     let locData = await locResp;
     if (!locData) {
       toast.error("Error Getting List Of Locations.");
-      return []; 
+      return [];
     }
     if (locData.success && locData.data) {
       console.log("Got Array Of All Locations: ", locData.data);
@@ -51,7 +50,7 @@ export const GetAllLocations = async (): Promise<SLocation[]> => {
     }
   } else {
     toast.error("Error Getting List Of Locations. ");
-    console.error("Error Getting List Of Locations.", locResp)
+    console.error("Error Getting List Of Locations.", locResp);
     return [];
   }
 };

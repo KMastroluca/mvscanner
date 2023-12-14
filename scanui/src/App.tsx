@@ -4,49 +4,56 @@
  * {App.tsx}
  * {App.tsx}
  *
- * This software is protected by copyright laws and international copyright treaties, as 
+ * This software is protected by copyright laws and international copyright treaties, as
  * well as other intellectual property laws and treaties. The software is licensed, not sold.
- *  
+ *
  * However, you are not permitted to use the software as is, or distribute it without
- * obtaining a license from the authors. Unauthorized use of the software may result in 
- * severe civil and criminal penalties, and will be prosecuted to the maximum extent 
+ * obtaining a license from the authors. Unauthorized use of the software may result in
+ * severe civil and criminal penalties, and will be prosecuted to the maximum extent
  * possible under law.
  *
- * THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+ * THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
  * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- *  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN 
- *  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
- *  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+ *  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ *  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ *  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *  SOFTWARE.
- *  
- * In no case shall the authors or copyright holders be liable for any claim, damages or 
- * other liability arising from, out of or in connection with the softwareor the use or 
+ *
+ * In no case shall the authors or copyright holders be liable for any claim, damages or
+ * other liability arising from, out of or in connection with the softwareor the use or
  * other dealings in the software.
  * ********************************************************************************
  */
 
-import { For, createEffect, createResource, createSignal, onCleanup, onMount } from 'solid-js';
-import './App.css'
-import { getResidentsOut, getResidentsIn } from './api/ResidentInOut';
-import { STable, STableAction } from './components/STable';
-import { createResident } from './api/CreateResident';
-import { createTimestamp } from './api/CreateTimestamp';
-import { initScanner, cleanupScanner } from './components/Scanner';
-import { ResidentIDModal } from './components/ResidentIDModal';
+import {
+  For,
+  createEffect,
+  createResource,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
+import "./App.css";
+import { getResidentsOut, getResidentsIn } from "./api/ResidentInOut";
+import { STable, STableAction } from "./components/STable";
+import { createResident } from "./api/CreateResident";
+import { createTimestamp } from "./api/CreateTimestamp";
+import { initScanner, cleanupScanner } from "./components/Scanner";
+import { ResidentIDModal } from "./components/ResidentIDModal";
 
-import { SLocation, SResident } from './types/Models';
-import { ResidentEditModal } from './components/EditResidentModal';
-import { GetResidentByRFID } from './api/GetResident';
-import toast, { Toaster } from 'solid-toast';
-import { updateResident } from './api/UpdateResident';
+import { SLocation, SResident } from "./types/Models";
+import { ResidentEditModal } from "./components/EditResidentModal";
+import { GetResidentByRFID } from "./api/GetResident";
+import toast, { Toaster } from "solid-toast";
+import { updateResident } from "./api/UpdateResident";
 
-import loadingAnim from './assets/loading.gif';
-import { GetAllLocations } from './api/GetLocation';
+import loadingAnim from "./assets/loading.gif";
+import { GetAllLocations } from "./api/GetLocation";
 
-import DatePicker, { PickerValue, utils } from '@rnwonder/solid-date-picker';
-import { BiSolidRightArrowCircle } from 'solid-icons/bi';
+import DatePicker, { PickerValue, utils } from "@rnwonder/solid-date-picker";
+import { BiSolidRightArrowCircle } from "solid-icons/bi";
 
 export enum AppDisplayHousingUnit {
   ALL = 0,
@@ -54,36 +61,46 @@ export enum AppDisplayHousingUnit {
   BRAVO = 2,
   CHARLIE = 3,
   DELTA = 4,
-  ECHO = 5
+  ECHO = 5,
 }
 
 function App() {
-
-
-  const [appDisplayHousingUnit, setAppDisplayHousingUnit] = createSignal(AppDisplayHousingUnit.ALL);
-  const [appNewResidentModalOpen, setAppNewResidentModalOpen] = createSignal(false);
-  const [appNewResidentModalRFID, setAppNewResidentModalRFID] = createSignal('');
-  const [appEditResidentModalOpen, setAppEditResidentModalOpen] = createSignal(false);
-  const [appEditResident, setAppEditResident] = createSignal<SResident | null>(null);
+  const [appDisplayHousingUnit, setAppDisplayHousingUnit] = createSignal(
+    AppDisplayHousingUnit.ALL,
+  );
+  const [appNewResidentModalOpen, setAppNewResidentModalOpen] =
+    createSignal(false);
+  const [appNewResidentModalRFID, setAppNewResidentModalRFID] =
+    createSignal("");
+  const [appEditResidentModalOpen, setAppEditResidentModalOpen] =
+    createSignal(false);
+  const [appEditResident, setAppEditResident] = createSignal<SResident | null>(
+    null,
+  );
 
   // Okay, we need to grab a list of all the locations and then display them in a dropdown menu.
   // ******************************************************************************************
-  const [facilityLocations, setFacilityLocations] = createSignal<SLocation[]>([]);
-  const [selectedLocation, setSelectedLocation] = createSignal<SLocation | null>(null);
+  const [facilityLocations, setFacilityLocations] = createSignal<SLocation[]>(
+    [],
+  );
+  const [selectedLocation, setSelectedLocation] =
+    createSignal<SLocation | null>(null);
 
   createEffect(() => {
-    console.log("Attempting to set default location.")
+    console.log("Attempting to set default location.");
     if (facilityLocations().length > 0) {
       console.log("Setting default location.");
       setDefaultSelectedLocation();
       return;
     }
-    console.log("Unable to set default location.")
+    console.log("Unable to set default location.");
   }, [facilityLocations]);
 
   const setDefaultSelectedLocation = () => {
     if (window.facilityLocationId) {
-      let loc = facilityLocations().find((loc) => loc.id === window.facilityLocationId);
+      let loc = facilityLocations().find(
+        (loc) => loc.id === window.facilityLocationId,
+      );
       if (loc) {
         setSelectedLocation(loc);
       }
@@ -113,8 +130,7 @@ function App() {
       }
     }
     return count;
-  }
-
+  };
 
   const handleSelectLocation = (location: SLocation) => {
     console.log("SELECTED LOCATION: ", location);
@@ -129,7 +145,6 @@ function App() {
   // Lets handle range selection. This allows us to select a timeframe to display timestamps for.
   // ******************************************************************************************
 
-
   const defaultDateRangeFrom = {
     year: new Date().getFullYear(),
     month: new Date().getMonth(),
@@ -137,13 +152,18 @@ function App() {
   };
 
   const defaultDateRangeTo = {
-    year: new Date(+ new Date() + 86400000).getFullYear(),
-    month: new Date(+ new Date() + 86400000).getMonth(),
-    day: new Date(+ new Date() + 86400000).getDate(),
+    year: new Date(+new Date() + 86400000).getFullYear(),
+    month: new Date(+new Date() + 86400000).getMonth(),
+    day: new Date(+new Date() + 86400000).getDate(),
   };
 
-  const [dateRange, setDateRange] = createSignal<PickerValue>({ value: { startDateObject: defaultDateRangeFrom, endDateObject: defaultDateRangeTo }, label: 'From -> To' });
-
+  const [dateRange, setDateRange] = createSignal<PickerValue>({
+    value: {
+      startDateObject: defaultDateRangeFrom,
+      endDateObject: defaultDateRangeTo,
+    },
+    label: "From -> To",
+  });
 
   const displayNewResidentModal = (rfid: string) => {
     console.log("DISPLAY NEW RESIDENT MODAL RN");
@@ -164,18 +184,17 @@ function App() {
 
   const residentActions: STableAction[] = [
     {
-      actionLabel: 'Edit',
+      actionLabel: "Edit",
       actionFunction: (props: { rfid: string }) => {
         console.log("Execute Edit Action/Pull Up Edit Modal");
         handleEditResident(props.rfid);
-      }
-    }
-
+      },
+    },
   ];
 
   const handleCloseNewResidentModal = () => {
     setAppNewResidentModalOpen(false);
-    setAppNewResidentModalRFID('');
+    setAppNewResidentModalRFID("");
   };
 
   const handleCloseEditResidentModal = () => {
@@ -192,11 +211,17 @@ function App() {
     refetchOutResidents();
   };
 
-  const [outResidentsData, { refetch: refetchOutResidents }] = createResource(getResidentsOut, { initialValue: { data: [], priorityData: [] } });
-  const [inResidentsData, { refetch: refetchInResidents }] = createResource(getResidentsIn, { initialValue: { data: [] } });
+  const [outResidentsData, { refetch: refetchOutResidents }] = createResource(
+    getResidentsOut,
+    { initialValue: { data: [], priorityData: [] } },
+  );
+  const [inResidentsData, { refetch: refetchInResidents }] = createResource(
+    getResidentsIn,
+    { initialValue: { data: [] } },
+  );
 
   const handleEditResident = async (rfid: string) => {
-    toast('Loading Resident Data...', { duration: 1000 });
+    toast("Loading Resident Data...", { duration: 1000 });
 
     let residentReference: SResident | null = await GetResidentByRFID(rfid);
 
@@ -208,16 +233,12 @@ function App() {
     setAppEditResident(residentReference);
     console.log("EDIT RESIDENT FOUND RFID: " + rfid, residentReference);
     setAppEditResidentModalOpen(true);
-
   };
 
   const handleEditResidentDone = (resident: SResident) => {
-
     // Make API call to update resident
     let result = updateResident(resident.rfid, resident);
     console.log("RESULT: ", result);
-
-
 
     // Refetch the data
     refetchOutResidents();
@@ -226,32 +247,57 @@ function App() {
 
   return (
     <div class={"flex flex-col w-screen h-screen"}>
-
-      <Toaster position='bottom-right' gutter={8} containerClassName='' toastOptions={{
-        className: '',
-        duration: 5000,
-        style: {
-          background: '#363636',
-          color: '#fff',
-        },
-      }} />
-
+      <Toaster
+        position="bottom-right"
+        gutter={8}
+        containerClassName=""
+        toastOptions={{
+          className: "",
+          duration: 5000,
+          style: {
+            background: "#363636",
+            color: "#fff",
+          },
+        }}
+      />
 
       {appNewResidentModalRFID() ? (
-        <ResidentIDModal close={handleCloseNewResidentModal} open={appNewResidentModalOpen} create={handleCreateNewResident} rfid={appNewResidentModalRFID()} />
-      ) : false}
+        <ResidentIDModal
+          close={handleCloseNewResidentModal}
+          open={appNewResidentModalOpen}
+          create={handleCreateNewResident}
+          rfid={appNewResidentModalRFID()}
+        />
+      ) : (
+        false
+      )}
 
       {appEditResidentModalOpen() ? (
-        <ResidentEditModal close={handleCloseEditResidentModal} open={appEditResidentModalOpen} currentResident={appEditResident} editResident={handleEditResidentDone} />
-      ) : false}
+        <ResidentEditModal
+          close={handleCloseEditResidentModal}
+          open={appEditResidentModalOpen}
+          currentResident={appEditResident}
+          editResident={handleEditResidentDone}
+        />
+      ) : (
+        false
+      )}
 
       <div class={"flex flex-row w-full h-12 sticky top-0 z-10 px-10 py-2"}>
         <div class={"flex flex-row py-4 h-12 items-center justify-start gap-8"}>
           <div class={"flex items-center justify-center h-full w-[80px]"}>
-            <label for={"facilityLocationSelect"} class={"text-lg font-bold"} >Facility Location</label>
+            <label for={"facilityLocationSelect"} class={"text-lg font-bold"}>
+              Facility Location
+            </label>
           </div>
           <div class={"flex items-center justify-center"}>
-            <select name="facilityLocationSelect" value={selectedLocation()?.id} class={"flex justify-start items-center rounded border-gray-300 border-2  px-2 py-2 "}>
+            <select
+              name="facilityLocationSelect"
+              value={selectedLocation()?.id}
+              class={
+                "flex justify-start items-center rounded border-gray-300 border-2  px-2 py-2 "
+              }
+            >
               <For each={facilityLocations()}>
                 {(location) => {
                   let locationName = resolveLocationNameForMenu(location);
@@ -263,39 +309,77 @@ function App() {
                     count = getCountOfResidentsInLocation(location);
                   }
                   return (
-                    <option value={location.id} class={`text-lg ${location.id === 0 ? 'font-bold' : false}`} onClick={() => handleSelectLocation(location)}>{locationName} ({count})</option>
+                    <option
+                      value={location.id}
+                      class={`text-lg ${
+                        location.id === 0 ? "font-bold" : false
+                      }`}
+                      onClick={() => handleSelectLocation(location)}
+                    >
+                      {locationName} ({count})
+                    </option>
                   );
                 }}
               </For>
             </select>
           </div>
           <div class={"flex justify-center items-center text-center"}>
-            <label class={"text-md font-bold"}>Search Range <br /> [{utils().convertDateObjectToDate(dateRange().value.startDateObject!).toLocaleDateString()} -- {utils().convertDateObjectToDate(dateRange().value.endDateObject!).toLocaleDateString()}]</label>
+            <label class={"text-md font-bold"}>
+              Search Range <br /> [
+              {utils()
+                .convertDateObjectToDate(dateRange().value.startDateObject!)
+                .toLocaleDateString()}{" "}
+              --{" "}
+              {utils()
+                .convertDateObjectToDate(dateRange().value.endDateObject!)
+                .toLocaleDateString()}
+              ]
+            </label>
           </div>
           <div class={"flex flex-row justify-center items-center h-12"}>
-            <DatePicker type="range" value={dateRange} setValue={setDateRange} maxDate={utils().getToday()} minDate={utils().convertDateToDateObject(new Date(new Date().getDate() + 1))} inputClass={"text-sm h-10 border-[3px] border-neutral-400 rounded"} inputWrapperWidth={"8rem"} />
+            <DatePicker
+              type="range"
+              value={dateRange}
+              setValue={setDateRange}
+              maxDate={utils().getToday()}
+              minDate={utils().convertDateToDateObject(
+                new Date(new Date().getDate() + 1),
+              )}
+              inputClass={
+                "text-sm h-10 border-[3px] border-neutral-400 rounded"
+              }
+              inputWrapperWidth={"8rem"}
+            />
           </div>
         </div>
       </div>
       <div class={"flex flex-row justify-end gap-x-2 px-2 py-3"}>
-
-
-
         <div class={"flex w-[44rem] justify-center"}>
-          {outResidentsData.loading ? (<div class={"flex justify-center items-center"}><img src={loadingAnim} class={"w-10 h-10"} /></div>) : (
-            <STable type='TimestampResident' data={outResidentsData()} />
+          {outResidentsData.loading ? (
+            <div class={"flex justify-center items-center"}>
+              <img src={loadingAnim} class={"w-10 h-10"} />
+            </div>
+          ) : (
+            <STable type="TimestampResident" data={outResidentsData()} />
           )}
         </div>
 
         <div class={"flex w-[42rem] justify-center"}>
-          {inResidentsData.loading ? (<div class={"flex justify-center items-center"}><img src={loadingAnim} class={"w-10 h-10"} /></div>) : (
-            <STable type='Resident' data={inResidentsData()} actions={residentActions} />
+          {inResidentsData.loading ? (
+            <div class={"flex justify-center items-center"}>
+              <img src={loadingAnim} class={"w-10 h-10"} />
+            </div>
+          ) : (
+            <STable
+              type="Resident"
+              data={inResidentsData()}
+              actions={residentActions}
+            />
           )}
         </div>
-
       </div>
     </div>
   );
 }
 
-export default App
+export default App;

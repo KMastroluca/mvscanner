@@ -1,11 +1,9 @@
 use std::fmt::{Display, Formatter};
 
-use serde::{de::Error, Deserialize, Serialize};
-
 use chrono::NaiveDate;
+use entity::residents;
 use serde::Deserializer;
-
-use super::residents::Resident;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
 pub struct RangeParams {
@@ -15,10 +13,19 @@ pub struct RangeParams {
     pub end_date: NaiveDate,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
 pub struct ResidentTimestamp {
-    pub resident: Resident,
-    pub timestamp: TimeStamp,
+    pub resident: entity::residents::Model,
+    pub timestamp: entity::timestamps::Model,
+}
+
+impl ResidentTimestamp {
+    pub fn new(resident: residents::Model, timestamp: entity::timestamps::Model) -> Self {
+        Self {
+            resident,
+            timestamp,
+        }
+    }
 }
 
 // Deserialize date strings into NaiveDate
@@ -40,38 +47,4 @@ impl Display for PostTimestamp {
 pub struct PostTimestamp {
     pub rfid: String,
     pub location: usize,
-}
-
-impl From<PostTimestamp> for TimeStamp {
-    fn from(ts: PostTimestamp) -> Self {
-        Self {
-            rfid: ts.rfid,
-            location: ts.location,
-            time: None,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Clone, Deserialize, Eq, PartialEq)]
-pub struct TimeStamp {
-    pub rfid: String,
-    pub location: usize,
-    pub time: Option<String>,
-}
-
-impl TimeStamp {
-    pub fn new(rfid: String, location: usize, time: Option<String>) -> Self {
-        Self {
-            rfid,
-            location,
-            time,
-        }
-    }
-    pub fn get_test_timestamps_from_file() -> Result<Vec<TimeStamp>, serde_json::Error> {
-        if let Ok(ts_str) = std::fs::read_to_string("seed_data/timestamps.json") {
-            serde_json::from_str::<Vec<TimeStamp>>(&ts_str)
-        } else {
-            Err(serde_json::Error::custom("Unable to read file"))
-        }
-    }
 }

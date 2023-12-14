@@ -1,16 +1,11 @@
-use super::locations::Location;
-use super::residents::Resident;
-use super::timestamps::{PostTimestamp, ResidentTimestamp, TimeStamp};
+use super::timestamps::{PostTimestamp, ResidentTimestamp};
 use actix_web::ResponseError;
+use entity::locations;
+use entity::prelude::OrmSerializable as Serializable;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
-pub trait Serializable {}
-impl Serializable for TimeStamp {}
 impl Serializable for PostTimestamp {}
-impl Serializable for Resident {}
-impl Serializable for Location {}
-impl Serializable for String {}
 impl Serializable for ResidentTimestamp {}
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -18,6 +13,40 @@ pub struct Response<T> {
     pub success: bool,
     pub message: String,
     pub data: Option<Vec<T>>,
+}
+impl From<entity::timestamps::Model> for PostTimestamp {
+    fn from(value: entity::timestamps::Model) -> Self {
+        Self {
+            rfid: value.rfid,
+            location: value.location as usize,
+        }
+    }
+}
+impl From<entity::timestamps::ActiveModel> for PostTimestamp {
+    fn from(value: entity::timestamps::ActiveModel) -> Self {
+        Self {
+            rfid: value.rfid.into_value().unwrap().to_string(),
+            location: value
+                .location
+                .into_value()
+                .unwrap_or(0.into())
+                .to_string()
+                .parse::<usize>()
+                .unwrap_or(0),
+        }
+    }
+}
+impl<T> From<PostTimestamp> for Response<T>
+where
+    T: From<PostTimestamp> + Serializable,
+{
+    fn from(value: PostTimestamp) -> Self {
+        Self {
+            success: true,
+            message: "Successfully retrieved timestamp".to_string(),
+            data: Some(vec![T::from(value)]),
+        }
+    }
 }
 
 impl<T: Serializable> Display for Response<T> {
@@ -27,12 +56,6 @@ impl<T: Serializable> Display for Response<T> {
 }
 
 impl<T: Serializable + std::fmt::Debug> ResponseError for Response<T> {}
-
-impl<T: Serializable + std::fmt::Debug> From<rusqlite::Error> for Response<T> {
-    fn from(e: rusqlite::Error) -> Self {
-        Self::from_error(e.to_string().as_str())
-    }
-}
 
 impl<T: Serializable> From<ResidentTimestamp> for Response<T>
 where
@@ -46,79 +69,81 @@ where
         }
     }
 }
-
-impl<T: Serializable> From<TimeStamp> for Response<T>
+impl<T> From<locations::Model> for Response<T>
 where
-    T: From<TimeStamp>,
+    T: From<locations::Model> + Serializable,
 {
-    fn from(ts: TimeStamp) -> Self {
-        Self {
-            success: true,
-            message: "Timestamp successfully retrieved".to_string(),
-            data: Some(vec![T::from(ts)]),
-        }
-    }
-}
-
-impl From<TimeStamp> for Vec<TimeStamp> {
-    fn from(ts: TimeStamp) -> Self {
-        vec![ts]
-    }
-}
-
-impl<T> From<Vec<TimeStamp>> for Response<T>
-where
-    T: Serializable + From<TimeStamp>,
-{
-    fn from(ts: Vec<TimeStamp>) -> Self {
-        let data: Vec<T> = ts.into_iter().map(T::from).collect();
-        Self {
-            success: true,
-            message: "Timestamps successfully retrieved".to_string(),
-            data: Some(data),
-        }
-    }
-}
-impl<T: Serializable> From<Resident> for Response<T>
-where
-    T: From<Resident>,
-{
-    fn from(res: Resident) -> Self {
-        Self {
-            success: true,
-            message: "Resident successfully retrieved".to_string(),
-            data: Some(vec![T::from(res)]),
-        }
-    }
-}
-
-impl<T: Serializable> From<Vec<Resident>> for Response<T>
-where
-    T: From<Resident>,
-{
-    fn from(res: Vec<Resident>) -> Self {
-        Self {
-            success: true,
-            message: "Residents successfully retrieved".to_string(),
-            data: Some(res.into_iter().map(T::from).collect()),
-        }
-    }
-}
-impl From<Location> for Response<Location> {
-    fn from(loc: Location) -> Self {
+    fn from(value: locations::Model) -> Self {
         Self {
             success: true,
             message: "Location successfully retrieved".to_string(),
-            data: Some(vec![loc]),
+            data: Some(vec![T::from(value)]),
         }
     }
 }
-impl From<Vec<Location>> for Response<Location> {
-    fn from(loc: Vec<Location>) -> Self {
+
+impl<T> From<Vec<entity::residents::Model>> for Response<T>
+where
+    T: From<entity::residents::Model> + Serializable,
+    Vec<T>: From<Vec<entity::residents::Model>>,
+{
+    fn from(value: Vec<entity::residents::Model>) -> Self {
         Self {
             success: true,
-            message: "Locations successfully retrieved".to_string(),
-            data: Some(loc),
+            message: "Residents successfully retrieved".to_string(),
+            data: Some(value.into()),
+        }
+    }
+}
+impl<T> From<Vec<entity::timestamps::Model>> for Response<T>
+where
+    T: From<entity::timestamps::Model> + Serializable,
+    Vec<T>: From<Vec<entity::timestamps::Model>>,
+{
+    fn from(value: Vec<entity::timestamps::Model>) -> Self {
+        Self {
+            success: true,
+            message: "Timestamps successfully retrieved".to_string(),
+            data: Some(value.into()),
+        }
+    }
+}
+
+impl<T> From<Vec<entity::locations::Model>> for Response<T>
+where
+    T: From<entity::locations::Model> + Serializable,
+    Vec<T>: From<Vec<entity::locations::Model>>,
+{
+    fn from(value: Vec<entity::locations::Model>) -> Self {
+        Self {
+            success: true,
+            message: "Location successfully retrieved".to_string(),
+            data: Some(value.into()),
+        }
+    }
+}
+
+impl<T> From<entity::timestamps::Model> for Response<T>
+where
+    T: From<entity::timestamps::Model> + Serializable,
+{
+    fn from(value: entity::timestamps::Model) -> Self {
+        Self {
+            success: true,
+            message: "Timestamp successfully retrieved".to_string(),
+            data: Some(vec![T::from(value)]),
+        }
+    }
+}
+impl<T> From<entity::residents::Model> for Response<T>
+where
+    T: From<entity::residents::Model> + Serializable,
+{
+    fn from(value: entity::residents::Model) -> Self {
+        Self {
+            success: true,
+            message: "Residents successfully retrived".to_string(),
+            data: Some(vec![T::from(value)]),
         }
     }
 }

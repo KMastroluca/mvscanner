@@ -4,39 +4,42 @@
  * {ResidentInOut.ts}
  * {ResidentInOut.ts}
  *
- * This software is protected by copyright laws and international copyright treaties, as 
+ * This software is protected by copyright laws and international copyright treaties, as
  * well as other intellectual property laws and treaties. The software is licensed, not sold.
- *  
+ *
  * However, you are not permitted to use the software as is, or distribute it without
- * obtaining a license from the authors. Unauthorized use of the software may result in 
- * severe civil and criminal penalties, and will be prosecuted to the maximum extent 
+ * obtaining a license from the authors. Unauthorized use of the software may result in
+ * severe civil and criminal penalties, and will be prosecuted to the maximum extent
  * possible under law.
  *
- * THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+ * THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
  * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- *  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN 
- *  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
- *  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+ *  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ *  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ *  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *  SOFTWARE.
- *  
- * In no case shall the authors or copyright holders be liable for any claim, damages or 
- * other liability arising from, out of or in connection with the softwareor the use or 
+ *
+ * In no case shall the authors or copyright holders be liable for any claim, damages or
+ * other liability arising from, out of or in connection with the softwareor the use or
  * other dealings in the software.
  * ********************************************************************************
  */
 
+import { STableData } from "../components/STable";
+import {
+  SLocation,
+  SResident,
+  STimestamp,
+  STimestampResident,
+} from "../types/Models";
 
-import { STableData } from '../components/STable';
-import { SLocation, SResident, STimestamp, STimestampResident } from "../types/Models"
-
-import _ from 'lodash';
-import { API } from './API';
+import _ from "lodash";
+import { API } from "./API";
 
 export const getResidentsIn = async (): Promise<STableData> => {
-
-  let response = await API.GET('residents');
+  let response = await API.GET("residents");
 
   if (!response) {
     console.error("Error: No response from server");
@@ -54,14 +57,10 @@ export const getResidentsIn = async (): Promise<STableData> => {
   } as STableData;
 };
 
-
-
-
-
 export const getResidentsOut = async (): Promise<STableData> => {
   console.log("Executed GetResidentsOut");
 
-  let residentsResponse = await API.GET('residents');
+  let residentsResponse = await API.GET("residents");
 
   if (!residentsResponse) {
     console.error("Error: No response from server");
@@ -78,7 +77,7 @@ export const getResidentsOut = async (): Promise<STableData> => {
 
   console.log("Residents From DB:", residentsData);
 
-  let timestampsResponse = await API.GET('timestamps?unique=true');
+  let timestampsResponse = await API.GET("timestamps");
 
   if (!timestampsResponse) {
     console.error("Error: No response from server");
@@ -91,24 +90,24 @@ export const getResidentsOut = async (): Promise<STableData> => {
     return {} as STableData;
   }
 
-
   let timestampsData: STimestamp[] = timestampsResponse.data as STimestamp[];
 
   console.log("Timestamps From DB: ", timestampsData);
 
   let residentsOut: STimestampResident[] = [];
   for (let timestamp of timestampsData) {
-
     if (timestamp.date === null) {
       continue;
     }
-    let resident = residentsData.find((resident: SResident) => resident.rfid === timestamp.rfid);
+    let resident = residentsData.find(
+      (resident: SResident) => resident.rfid === timestamp.rfid,
+    );
 
     if (resident === undefined) {
       continue;
     }
 
-    let responseLocation = await API.GET('locations/' + timestamp.location);
+    let responseLocation = await API.GET("locations/" + timestamp.location);
 
     if (!responseLocation) {
       console.error("Error: No response from server");
@@ -125,7 +124,10 @@ export const getResidentsOut = async (): Promise<STableData> => {
 
     console.log("Location Data: ", locationData);
 
-    if (locationData.at(0) === undefined && locationData.at(0)!.name === undefined) {
+    if (
+      locationData.at(0) === undefined &&
+      locationData.at(0)!.name === undefined
+    ) {
       continue;
     }
 
@@ -137,11 +139,10 @@ export const getResidentsOut = async (): Promise<STableData> => {
       unit: resident.unit,
       timestampLeft: timestamp.time!,
       location: timestamp.location,
-      destinationLabel: locationData.at(0)!.name
-    }
+      destinationLabel: locationData.at(0)!.name,
+    };
     residentsOut.push(timestampResident);
   }
-
 
   console.log("Result Of Getting Residents Out: ", residentsOut);
 
@@ -149,31 +150,45 @@ export const getResidentsOut = async (): Promise<STableData> => {
   let onlyAway = getOnlyAway(latestTimestamps);
   console.log("Latest Timestamps: ", residentsOut);
 
-  // Im reversing the array because the table is displaying the data from newest to oldest and 
+  // Im reversing the array because the table is displaying the data from newest to oldest and
   // i guess latest to oldest is doing the opposite
-  let returnObj = { data: latestToOld(residentsOut).reverse(), priorityData: onlyAway };
+  let returnObj = {
+    data: latestToOld(residentsOut).reverse(),
+    priorityData: onlyAway,
+  };
   return returnObj;
-
-}
-
-
+};
 
 const latestToOld = (data: STimestampResident[]): STimestampResident[] => {
-  let sortedData = _.sortBy(data, (timestampResident: STimestampResident) => new Date(timestampResident.timestampLeft).getTime());
+  let sortedData = _.sortBy(data, (timestampResident: STimestampResident) =>
+    new Date(timestampResident.timestampLeft).getTime(),
+  );
   return sortedData;
-}
+};
 
-const getLatestTimestamp = (data: STimestampResident[], rfid: string): STimestampResident | undefined => {
-
-  let filteredData = data.filter((timestampResident: STimestampResident) => timestampResident.rfid === rfid);
-  let sortedData = _.sortBy(filteredData, (timestampResident: STimestampResident) => new Date(timestampResident.timestampLeft).getTime());
+const getLatestTimestamp = (
+  data: STimestampResident[],
+  rfid: string,
+): STimestampResident | undefined => {
+  let filteredData = data.filter(
+    (timestampResident: STimestampResident) => timestampResident.rfid === rfid,
+  );
+  let sortedData = _.sortBy(
+    filteredData,
+    (timestampResident: STimestampResident) =>
+      new Date(timestampResident.timestampLeft).getTime(),
+  );
   let latestTimestamp = sortedData.pop();
 
   return latestTimestamp;
-}
+};
 
-const getLatestTimestamps = (data: STimestampResident[]): STimestampResident[] => {
-  let rfidList = _.uniq(data.map((timestampResident: STimestampResident) => timestampResident.rfid));
+const getLatestTimestamps = (
+  data: STimestampResident[],
+): STimestampResident[] => {
+  let rfidList = _.uniq(
+    data.map((timestampResident: STimestampResident) => timestampResident.rfid),
+  );
   let latestTimestamps: STimestampResident[] = [];
   for (let rfid of rfidList) {
     let latestTimestamp = getLatestTimestamp(data, rfid);
@@ -182,9 +197,12 @@ const getLatestTimestamps = (data: STimestampResident[]): STimestampResident[] =
     }
   }
   return latestTimestamps;
-}
+};
 
 const getOnlyAway = (data: STimestampResident[]): STimestampResident[] => {
-  let filteredData = data.filter((timestampResident: STimestampResident) => timestampResident.unit !== timestampResident.location);
+  let filteredData = data.filter(
+    (timestampResident: STimestampResident) =>
+      timestampResident.unit !== timestampResident.location,
+  );
   return filteredData;
-}
+};

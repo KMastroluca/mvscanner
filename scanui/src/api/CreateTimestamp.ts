@@ -2,12 +2,11 @@ import { STimestamp } from "../types/Models";
 import { API } from "./API";
 
 export const createTimestamp = async (newTimestamp: STimestamp) => {
-
   const uri = "timestamps";
   // Format Timestamp to match backend
   let timestampPayload = {
     rfid: newTimestamp.rfid,
-    location: newTimestamp.destinationId
+    location: newTimestamp.destinationId,
   };
 
   let timestampResponse = await API.POST(uri, timestampPayload);
@@ -27,6 +26,4 @@ export const createTimestamp = async (newTimestamp: STimestamp) => {
       console.log(timestampResponse.data);
     }
   }
-
-
 };
