@@ -3,9 +3,9 @@ pub mod tests {
 
     use reqwest::blocking::Response;
     use serde_json::{json, Value};
-    use std::collections::HashMap;
+    use std::{collections::HashMap, time::Duration};
 
-    const BASE_URL: &str = "http://localhost:8080/api";
+    const BASE_URL: &str = "http://172.16.20.42:8080/api";
     fn make_request(
         endpoint: &str,
         method: reqwest::Method,
@@ -21,7 +21,10 @@ pub mod tests {
             _ => panic!("Unsupported HTTP method"),
         };
 
-        request_builder.send().expect("Failed to execute request")
+        request_builder
+            .timeout(Duration::from_millis(20))
+            .send()
+            .expect("Failed to execute request")
     }
 
     #[test]
@@ -42,14 +45,14 @@ pub mod tests {
     }
     #[test]
     fn test_residents_create() {
-        let fake_location = json!({"rfid": "338888222889999", "name": "Fake resident", "doc": "29752", "room": "C-8", "unit": 4, "current_location": 4});
+        let fake_location = json!({"rfid": "338888222889999", "name": "Fake resident", "doc": "29752", "room": "C-8", "unit": 4, "current_location": 4, "level": 4});
         let resp = reqwest::blocking::Client::new()
             .post(format!("{}/residents", BASE_URL))
             .json(&fake_location)
             .send()
             .expect("Failed to execute request");
 
-        assert_eq!(resp.status().as_u16(), 201);
+        assert_eq!(resp.status().as_u16(), 200);
     }
     #[test]
     fn test_residents_update() {
@@ -87,20 +90,20 @@ pub mod tests {
     }
     #[test]
     fn test_locations_create() {
-        let fake_location = json!({"id": 69, "name": "Fake Location"});
+        let fake_location = json!({"id": 69, "name": "Fake Location", "level": 2});
         let resp = reqwest::blocking::Client::new()
             .post(format!("{}/locations", BASE_URL))
             .json(&fake_location)
             .send()
             .expect("Failed to execute request");
-        assert_eq!(resp.status().as_u16(), 201);
+        assert_eq!(resp.status().as_u16(), 200);
     }
 
     #[test]
     fn test_locations_timestamps() {
         let response = make_request("locations/8/timestamps", reqwest::Method::GET, None);
         assert_eq!(response.status().as_u16(), 200);
-        assert!(response.json::<Vec<Value>>().is_ok());
+        assert!(response.json::<Value>().unwrap()["data"].is_array());
     }
 
     #[test]
@@ -128,7 +131,7 @@ pub mod tests {
     #[test]
     fn test_timestamps_index_unique() {
         // TestTimestampsController
-        let response = make_request("timestamps/unique", reqwest::Method::GET, None);
+        let response = make_request("timestamps?unique=true", reqwest::Method::GET, None);
         assert_eq!(response.status().as_u16(), 200);
     }
 
@@ -140,7 +143,11 @@ pub mod tests {
             .json(&data)
             .send()
             .expect("Failed to execute request");
-        assert_eq!(response.status().as_u16(), 201);
+        assert_eq!(response.status().as_u16(), 200);
+        assert_eq!(
+            response.json::<Value>().unwrap()["data"][0]["resident"]["rfid"],
+            "'111111111111111'"
+        );
     }
     #[test]
     fn test_timestamps_between() {

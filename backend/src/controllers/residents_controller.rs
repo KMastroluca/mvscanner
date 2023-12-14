@@ -1,9 +1,8 @@
-use crate::models::residents::{ErrorType, PathParams, Resident, ResidentsError, Rfid};
-use crate::models::response::Response;
-use crate::models::timestamps::TimeStamp;
-use crate::{
-    database::db::{db_query, Pool, Query, QueryResult},
-    models::residents::UpdateResident,
+use crate::app_config::DB;
+use crate::models::residents::UpdateResident;
+use crate::models::{
+    residents::{PathParams, Rfid},
+    response::Response,
 };
 use actix_web::Responder;
 use actix_web::{
@@ -11,148 +10,146 @@ use actix_web::{
     http::{header, StatusCode},
     patch, post, web, HttpResponse,
 };
+use chrono::Days;
+use entity::{
+    residents::{self, Entity as Resident},
+    timestamps,
+};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 
 #[get("/api/residents")]
-pub async fn index(db: web::Data<Pool>) -> impl Responder {
-    if let Ok(res) = db_query(&db, Query::IndexResidents).await {
-        match res {
-            QueryResult::Residents(residents) => {
-                let response: Response<Resident> = residents.into();
-                Ok(actix_web::HttpResponse::Ok()
-                    .insert_header(header::ContentType::json())
-                    .json(response))
-            }
-            _ => Ok(HttpResponse::Ok()
-                .insert_header(header::ContentType::json())
-                .json(Response::<String>::from_error("Error retrieving residents"))),
-        }
+pub async fn index(db: web::Data<DB>) -> Result<HttpResponse, Box<dyn std::error::Error>> {
+    let db = &db.0;
+    if let Ok(residents) = Resident::find().all(db).await {
+        let response = Response::from(residents);
+        Ok(HttpResponse::Ok()
+            .insert_header(header::ContentType::json())
+            .json(response))
     } else {
-        Err(ResidentsError::get(ErrorType::Database))
+        Ok(HttpResponse::Ok().body("Error retrieving residents"))
     }
 }
 
 #[rustfmt::skip]
 #[get("/api/residents/{rfid}")]
-pub async fn show(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>) -> impl Responder {
-    if let Ok(res) = db_query(&db, Query::ShowResident(&rfid.into_inner().rfid)).await {
-        match res {
-            QueryResult::Resident(resident) => {
-                let response: Response<Resident> = resident.into();
-                Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
-            }
-            _ => {
-                let error: Response<String> = Response::from_error("Error retrieving resident");
-                Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(error))
-            }
-        }
-        } else {
-            Err(ResidentsError::get(ErrorType::Database))
+pub async fn show(db: web::Data<DB>, rfid: actix_web::web::Path<Rfid>) -> Result<HttpResponse, Box<dyn std::error::Error>> {
+    let db = &db.0;
+    let rfid = rfid.into_inner().rfid;
+    if let Ok(resident) = Resident::find_by_id(rfid).one(db).await {
+    if resident.is_none() {
+        let error = Response::<String>::from_error("Error retrieving residents");
+        return Ok(HttpResponse::Ok()
+            .insert_header(header::ContentType::json())
+            .json(error));
+    }
+    let response: Response<residents::Model> = Response::from(resident.unwrap());
+    Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
+    } else {
+        let response = Response::<String>::from_error("Error retrieving residents");
+        Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
     }
 }
 
 #[rustfmt::skip]
 #[post("/api/residents")]
-pub async fn store(db: web::Data<Pool>, resident: web::Json<Resident>) -> impl Responder {
-    if let Ok(res) = db_query(&db, Query::StoreResident(&resident.into_inner())).await {
-        match res {
-            QueryResult::Success => {
-                let response: Response<Resident> = Response::from_success("Resident successfully added");
-                HttpResponse::Ok().status(StatusCode::CREATED).insert_header(header::ContentType::json()).json(response)
-            }
-            _ => {
-                let err: Response<String> = Response::from_error("Error creating resident");
-                HttpResponse::Ok().insert_header(header::ContentType::json()).json(err)
-                }
-        }
+pub async fn store(db: web::Data<DB>, resident: web::Json<residents::Model>) -> impl Responder {
+    let db = &db.0;
+    let resident = resident.into_inner();
+    let resident = residents::ActiveModel {
+        rfid: Set(resident.rfid),
+        name: Set(resident.name),
+        doc: Set(resident.doc),
+        room: Set(resident.room),
+        unit: Set(resident.unit),
+        current_location: Set(resident.current_location),
+        level: Set(resident.level),
+    };
+    if  Resident::insert(resident).exec(db).await.is_ok() {
+        HttpResponse::Ok().insert_header(header::ContentType::json()).json(Response::<String>::from_success("Resident successfully added"))
     } else {
-        let resp = Response::<String>::from_error("Error creating resident");
-         HttpResponse::from_error(resp)
+    HttpResponse::Ok().insert_header(header::ContentType::json()).json(Response::<String>::from_error("Error adding resident"))
     }
 }
 
 #[rustfmt::skip]
 #[delete("/api/residents/{rfid}")]
-pub async fn destroy(db: web::Data<Pool>, rfid: web::Path<String>,) -> impl Responder {
-    if let Ok(res) = db_query(&db, Query::DestroyResident(rfid.into_inner())).await {
-        match res {
-            QueryResult::Success => {
-                let response: Response<String> = Response::from_success("Resident successfully deleted");
-                HttpResponse::Ok().status(StatusCode::NO_CONTENT).insert_header(header::ContentType::json()).json(response)
-            }
-        _ => {
-            let error = Response::<String>::from_error("Error deleting resident");
-                HttpResponse::from_error(error)
-            }
-        }
+pub async fn destroy(db: web::Data<DB>, rfid: web::Path<String>,) -> impl Responder {
+    let db = &db.0;
+    let rfid = rfid.into_inner();
+    if let Ok(resident) = Resident::find_by_id(rfid.clone()).one(db).await {
+    let resident: residents::ActiveModel = resident.unwrap().into();
+    match resident.delete(db).await {
+        Ok(_) => 
+    HttpResponse::Ok().status(StatusCode::NO_CONTENT).body(format!("Deleted resident: {}", rfid)),
+    Err(e) => HttpResponse::Ok().body(format!("Error deleting resident: {}", e))
+    }
     } else {
-        let resp = Response::<String>::from_error("Error Deleting Resident");
-         HttpResponse::from_error(resp)
+        HttpResponse::Ok().insert_header(header::ContentType::json()).json(Response::<String>::from_error("Error deleting resident"))
     }
 }
 
 #[rustfmt::skip]
 #[patch("/api/residents/{rfid}")]
-pub async fn update(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>, resident: web::Json<UpdateResident>) -> impl Responder {
-    match db_query(&db, Query::ShowResident(&rfid.into_inner().rfid)).await {
-        Ok(QueryResult::Resident(res)) => {
-            log::info!("fetched resident for updating: {:?}", res);
-            let updated = resident.into_inner().apply_to(res.clone());
-            // We have to get the full resident from DB before we can update it
-            // so we can accept a JSON with only the fields they wish to update
-            match db_query(&db, Query::UpdateResident(&updated)).await {
-                Ok(QueryResult::Success) => {
-                    let updated_res: Response<Resident> = updated.into();
-                    Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(updated_res))
-                }
-                _ => {
-                    let error = Response::<String>::from_error("Error updating resident");
-                    Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(error))
-                },
-            }
-        }
-        _ => Err(ResidentsError::get(ErrorType::Database)),
+pub async fn update(db: web::Data<DB>, rfid: actix_web::web::Path<Rfid>, resident: web::Json<UpdateResident>) -> Result<HttpResponse, Box<dyn std::error::Error>> {
+     let db = &db.0;
+    let rfid = rfid.into_inner().rfid;
+    let resident = resident.into_inner();
+    if let Ok(to_update) = Resident::find_by_id(rfid.clone()).one(db).await {
+    if to_update.is_none() {
+        let error = Response::<String>::from_error("Error retrieving resident");
+        return Ok(HttpResponse::Ok()
+            .insert_header(header::ContentType::json())
+            .json(error));
+    } else {
+        let mut to_update: residents::ActiveModel = to_update.unwrap().into();
+        to_update.rfid = Set(resident.rfid.unwrap_or_else(|| to_update.rfid.unwrap()));
+        to_update.name = Set(resident.name.unwrap_or_else(|| to_update.name.unwrap()));
+        to_update.room = Set(resident.room.unwrap_or_else(|| to_update.room.unwrap()));
+        to_update.unit = Set(resident.unit.unwrap_or_else(|| to_update.unit.unwrap() as usize) as i32);
+        to_update.current_location = Set(resident.current_location.unwrap_or_else(|| to_update.current_location.unwrap() as usize) as i32);
+        to_update.level = Set(resident.level.unwrap_or_else(|| to_update.level.unwrap() as usize) as i32);
+        to_update.save(db).await?;
+        let response: Response<String> = Response::from_success("Resident Updated Successfully");
+        Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
+    }
+
+} else {
+        Ok(HttpResponse::Ok().body("Error updating resident"))
     }
 }
 
 #[rustfmt::skip]
 #[get("/api/residents/{rfid}/timestamps")]
-pub async fn show_resident_timestamps(db: web::Data<Pool>, rfid: actix_web::web::Path<Rfid>) -> impl Responder {
-    if let Ok(ts) = db_query(&db, Query::ShowResidentTimestamps(rfid.rfid.clone())).await {
-        match ts {
-            QueryResult::TimeStamps(ts) => {
-                let response: Response<TimeStamp> = ts.into();
-                Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
-        }
-        _ => {
-                let error = Response::<String>::from_error("Error retrieving resident timestamps");
-                Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(error))
-            }
-        }
-    } else {
-    Err(ResidentsError::get(ErrorType::Database))
+pub async fn show_resident_timestamps(db: web::Data<DB>, rfid: actix_web::web::Path<Rfid>) -> Result<HttpResponse, Box<dyn std::error::Error>> {
+    let db = &db.0;
+    let rfid = rfid.into_inner().rfid;
+    if let Ok(ts) = timestamps::Entity::find()
+        .filter(timestamps::Column::Rfid.contains(rfid))
+        .filter(timestamps::Column::Ts.between(chrono::Local::now().checked_sub_days(Days::new(1)), Some(chrono::Local::now())))
+        .all(db).await {
+    let response: Response<timestamps::Model> = Response::from(ts);
+    Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
+     } else {
+    let response = Response::<String>::from_error("Error retrieving timestamps");
+    Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
     }
 }
 
 #[rustfmt::skip]
 #[get("/api/residents/{rfid}/timestamps/{start_date}/{end_date}")]
-pub async fn show_resident_timestamps_range(db: web::Data<Pool>, rfid: actix_web::web::Path<PathParams>) -> impl Responder {
+pub async fn show_resident_timestamps_range(db: web::Data<DB>, rfid: actix_web::web::Path<PathParams>) -> Result<HttpResponse, Box<dyn std::error::Error>> {
+    let db = &db.0;
     let id = rfid.into_inner();
     let rfid = id.rfid;
     let start = id.start_date;
     let end = id.end_date;
-
-    if let Ok(ts) = db_query(&db, Query::ShowResidentTimestampsRange(&rfid, &start, &end)).await {
-        match ts {
-            QueryResult::TimeStamps(ts) => {
-                let response: Response<TimeStamp> = ts.into();
-                Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
-            }
-            _ => {
-                let error = Response::<String>::from_error("Error retrieving resident timestamps");
-                Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(error))
-            } 
-        }
+    if let Ok(ts) = timestamps::Entity::find()
+        .filter(timestamps::Column::Rfid.contains(rfid))
+        .filter(timestamps::Column::Ts.between(start, end))
+        .all(db).await {
+let response: Response<timestamps::Model> = Response::from(ts);
+    Ok(HttpResponse::Ok().insert_header(header::ContentType::json()).json(response))
     } else {
-        Err(ResidentsError::get(ErrorType::Database))
+        Ok(HttpResponse::Ok().body("Error retrieving timestamps"))
     }
 }

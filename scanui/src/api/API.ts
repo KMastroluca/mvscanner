@@ -1,7 +1,6 @@
 import { ServerResponse } from "../types/Models";
 
 export class API {
-
   public static url = import.meta.env.VITE_BACKEND_ADDR;
   public static port = import.meta.env.VITE_BACKEND_PORT;
   public static fullUrl = `http://${this.url}:${this.port}/api/`;
@@ -9,8 +8,7 @@ export class API {
   public static headers = {
     accept: "application/json",
     "Content-Type": "application/json",
-  }
-
+  };
 
   static async GET(uri: string): Promise<ServerResponse | undefined> {
     console.log("ADDR:", this.url, this.port, this.fullUrl);
@@ -30,7 +28,10 @@ export class API {
     }
   }
 
-  static async PATCH(uri: string, payload: any): Promise<ServerResponse | undefined> {
+  static async PATCH(
+    uri: string,
+    payload: any,
+  ): Promise<ServerResponse | undefined> {
     try {
       const response = await fetch(this.fullUrl + uri, {
         method: "PATCH",
@@ -47,7 +48,10 @@ export class API {
     }
   }
 
-  static async POST(uri: string, payload: any): Promise<ServerResponse | undefined> {
+  static async POST(
+    uri: string,
+    payload: any,
+  ): Promise<ServerResponse | undefined> {
     try {
       const response = await fetch(this.fullUrl + uri, {
         method: "POST",
