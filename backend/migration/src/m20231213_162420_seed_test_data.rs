@@ -24,6 +24,7 @@ impl MigrationTrait for Migration {
                 unit: Set(res.unit.to_owned()),
                 current_location: Set(res.current_location.to_owned()),
                 level: Set(res.level.to_owned()),
+                ..Default::default()
             })
             .collect();
         entity::residents::Entity::insert_many(residents)

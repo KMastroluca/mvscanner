@@ -35,7 +35,7 @@ pub async fn index(db: web::Data<DB>) -> Result<HttpResponse, Box<dyn std::error
 pub async fn show(db: web::Data<DB>, rfid: actix_web::web::Path<Rfid>) -> Result<HttpResponse, Box<dyn std::error::Error>> {
     let db = &db.0;
     let rfid = rfid.into_inner().rfid;
-    if let Ok(resident) = Resident::find_by_id(rfid).one(db).await {
+    if let Ok(resident) = Resident::find().filter(residents::Column::Rfid.eq(rfid.clone())).one(db).await {
     if resident.is_none() {
         let error = Response::<String>::from_error("Error retrieving residents");
         return Ok(HttpResponse::Ok()
@@ -63,6 +63,7 @@ pub async fn store(db: web::Data<DB>, resident: web::Json<residents::Model>) -> 
         unit: Set(resident.unit),
         current_location: Set(resident.current_location),
         level: Set(resident.level),
+        ..Default::default()
     };
     if  Resident::insert(resident).exec(db).await.is_ok() {
         HttpResponse::Ok().insert_header(header::ContentType::json()).json(Response::<String>::from_success("Resident successfully added"))
@@ -76,7 +77,7 @@ pub async fn store(db: web::Data<DB>, resident: web::Json<residents::Model>) -> 
 pub async fn destroy(db: web::Data<DB>, rfid: web::Path<String>,) -> impl Responder {
     let db = &db.0;
     let rfid = rfid.into_inner();
-    if let Ok(resident) = Resident::find_by_id(rfid.clone()).one(db).await {
+    if let Ok(resident) = Resident::find().filter(residents::Column::Rfid.eq(rfid.clone())).one(db).await {
     let resident: residents::ActiveModel = resident.unwrap().into();
     match resident.delete(db).await {
         Ok(_) => 
@@ -94,7 +95,7 @@ pub async fn update(db: web::Data<DB>, rfid: actix_web::web::Path<Rfid>, residen
      let db = &db.0;
     let rfid = rfid.into_inner().rfid;
     let resident = resident.into_inner();
-    if let Ok(to_update) = Resident::find_by_id(rfid.clone()).one(db).await {
+    if let Ok(to_update) = Resident::find().filter(residents::Column::Rfid.eq(rfid.clone())).one(db).await {
     if to_update.is_none() {
         let error = Response::<String>::from_error("Error retrieving resident");
         return Ok(HttpResponse::Ok()

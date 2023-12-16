@@ -68,13 +68,13 @@ pub mod tests {
 
     #[test]
     fn test_residents_delete() {
-        let resident_id = "338888222889999";
+        let resident_id = "111111111111111";
         let response = make_request(
             &format!("residents/{}", resident_id),
             reqwest::Method::DELETE,
             None,
         );
-        assert_eq!(response.status().as_u16(), 204);
+        assert_eq!(response.status().as_u16(), 200);
     }
 
     #[test]

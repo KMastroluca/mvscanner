@@ -2,7 +2,6 @@
 
 ## Data/Tables
 
----
 
 ### Resident:
 
@@ -42,6 +41,7 @@ Get all timestamps for X resident DEFAULT= TODAY
 
 - `id`: _int_ e.g. (6)
 - `name`: _string_ e.g. (DeltaPod)
+- `level`: __int__ e.g. (3)
 
 **GET: Index** (all locations)
 
@@ -58,6 +58,9 @@ Get all timestamps for X resident DEFAULT= TODAY
 ### `/api/locations/{id}/timestamps/{start_date}/{end_date}`
 
 **GET: Show** Get all timestamps for X location within date range
+
+### Show all residents that live at location X
+`GET: /api/locations/{id}/residents?current=true`
 
 ## Timestamps
 

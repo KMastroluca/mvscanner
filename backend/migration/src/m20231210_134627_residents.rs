@@ -14,10 +14,17 @@ impl MigrationTrait for Migration {
                     .table(Entity)
                     .if_not_exists()
                     .col(
+                        ColumnDef::new(Column::Id)
+                            .integer()
+                            .primary_key()
+                            .auto_increment()
+                            .not_null(),
+                    )
+                    .col(
                         ColumnDef::new(Column::Rfid)
                             .string()
-                            .not_null()
-                            .primary_key(),
+                            .unique_key()
+                            .not_null(),
                     )
                     .col(ColumnDef::new(Column::Name).string().not_null())
                     .col(ColumnDef::new(Column::Doc).string().not_null())
@@ -33,7 +40,7 @@ impl MigrationTrait for Migration {
                         ColumnDef::new(Column::Level)
                             .integer()
                             .not_null()
-                            .default("2"),
+                            .default(4),
                     )
                     .to_owned(),
             )
