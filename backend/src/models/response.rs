@@ -41,22 +41,7 @@ where
         }
     }
 }
-impl From<entity::timestamps::Model> for PostTimestamp {
-    fn from(value: entity::timestamps::Model) -> Self {
-        Self {
-            rfid: value.rfid,
-            location: value.location.to_owned(),
-        }
-    }
-}
-impl From<entity::timestamps::ActiveModel> for PostTimestamp {
-    fn from(value: entity::timestamps::ActiveModel) -> Self {
-        Self {
-            rfid: value.rfid.unwrap().to_string(),
-            location: value.location.to_owned().unwrap(),
-        }
-    }
-}
+
 impl<T> From<PostTimestamp> for Response<T>
 where
     T: From<PostTimestamp> + Serializable,

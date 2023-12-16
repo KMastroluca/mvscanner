@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use entity::{
     locations,
     prelude::{Locations, Residents, Timestamps},
@@ -23,7 +22,11 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(timestamps::Column::Rfid).string().not_null())
+                    .col(
+                        ColumnDef::new(timestamps::Column::Rfid)
+                            .integer()
+                            .not_null(),
+                    )
                     .col(
                         ColumnDef::new(timestamps::Column::Location)
                             .integer()
@@ -43,8 +46,8 @@ impl MigrationTrait for Migration {
                 ForeignKey::create()
                     .name("fk_timestamps_residents")
                     .from(Timestamps, timestamps::Column::Rfid)
-                    .to(Residents, residents::Column::Rfid)
-                    .on_delete(ForeignKeyAction::NoAction)
+                    .to(Residents, residents::Column::Id)
+                    .on_delete(ForeignKeyAction::SetDefault)
                     .to_owned(),
             )
             .await?;
@@ -54,6 +57,7 @@ impl MigrationTrait for Migration {
                     .name("fk_timestamps_locations")
                     .from(Timestamps, timestamps::Column::Location)
                     .to(Locations, locations::Column::Id)
+                    .on_delete(ForeignKeyAction::NoAction)
                     .to_owned(),
             )
             .await

@@ -1,18 +1,18 @@
-#[cfg(test)]
-pub mod tests {
+pub mod testapi {
 
     use reqwest::blocking::Response;
     use serde_json::{json, Value};
     use std::{collections::HashMap, time::Duration};
 
-    const BASE_URL: &str = "http://172.16.20.42:8080/api";
     fn make_request(
         endpoint: &str,
         method: reqwest::Method,
         body: Option<HashMap<&str, &str>>,
     ) -> Response {
+        let ip = std::env::var("LOCAL_IP").unwrap_or("http://localhost:8080/api".to_string());
+        let ip = format!("http://{}:8080/api", ip);
         let client = reqwest::blocking::Client::new();
-        let url = format!("{}/{}", BASE_URL, endpoint);
+        let url = format!("{}/{}", ip, endpoint);
         let request_builder = match method {
             reqwest::Method::GET => client.get(&url),
             reqwest::Method::POST => client.post(&url).json(&body.unwrap()),
@@ -45,10 +45,13 @@ pub mod tests {
     }
     #[test]
     fn test_residents_create() {
+        let ip = std::env::var("LOCAL_IP").unwrap_or("localhost".to_string());
+        let ip = format!("http://{}:8080/api", ip);
         let fake_location = json!({"rfid": "338888222889999", "name": "Fake resident", "doc": "29752", "room": "C-8", "unit": 4, "current_location": 4, "level": 4});
         let resp = reqwest::blocking::Client::new()
-            .post(format!("{}/residents", BASE_URL))
+            .post(format!("{}/residents", ip))
             .json(&fake_location)
+            .timeout(Duration::from_millis(20))
             .send()
             .expect("Failed to execute request");
 
@@ -63,7 +66,11 @@ pub mod tests {
             reqwest::Method::PATCH,
             Some(updated_data),
         );
-        assert_eq!(response.status().as_u16(), 200);
+        assert_eq!(response.status().as_u16(), 201);
+        assert_eq!(
+            response.json::<Value>().unwrap()["data"]["name"],
+            "Updated Name"
+        );
     }
 
     #[test]
@@ -90,10 +97,14 @@ pub mod tests {
     }
     #[test]
     fn test_locations_create() {
+        let ip: &str =
+            &std::env::var("LOCAL_IP").unwrap_or("http://localhost:8080/api".to_string());
+        let ip = format!("http://{}:8080/api", ip);
         let fake_location = json!({"id": 69, "name": "Fake Location", "level": 2});
         let resp = reqwest::blocking::Client::new()
-            .post(format!("{}/locations", BASE_URL))
+            .post(format!("{}/locations", ip))
             .json(&fake_location)
+            .timeout(Duration::from_millis(20))
             .send()
             .expect("Failed to execute request");
         assert_eq!(resp.status().as_u16(), 200);
@@ -137,16 +148,20 @@ pub mod tests {
 
     #[test]
     fn test_timestamps_post() {
+        let ip: &str =
+            &std::env::var("LOCAL_IP").unwrap_or("http://localhost:8080/api".to_string());
+        let ip = format!("http://{}:8080/api", ip);
         let data = json!({"rfid": "111111111111111", "location": 9});
         let response = reqwest::blocking::Client::new()
-            .post(format!("{}/timestamps", BASE_URL))
+            .post(format!("{}/timestamps", ip))
             .json(&data)
+            .timeout(Duration::from_millis(20))
             .send()
             .expect("Failed to execute request");
-        assert_eq!(response.status().as_u16(), 200);
+        assert_eq!(response.status().as_u16(), 201);
         assert_eq!(
             response.json::<Value>().unwrap()["data"][0]["resident"]["rfid"],
-            "'111111111111111'"
+            "111111111111111"
         );
     }
     #[test]
