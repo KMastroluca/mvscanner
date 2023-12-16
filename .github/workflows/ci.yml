@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_DB: mvcf_scanner
+          POSTGRES_USER: mvcf
+          POSTGRES_PASSWORD: dev
+        ports:
+          - 5432:5432
+        volumes:
+          - ./init-scripts:/docker-entrypoint-initdb.d
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build and Run Rust Backend
+        working-directory: backend
+        run: |
+          cp .env.testing .env
+          cargo build --release
+          cargo run
+
+      - name: Run Rust Tests
+        working-directory: backend/test
+        run: cargo test
