@@ -31,8 +31,3 @@ jobs:
         run: |
           cp .env.testing .env
           cargo build --release
-          cargo run
-
-      - name: Run Rust Tests
-        working-directory: backend/test
-        run: cargo test

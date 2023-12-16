@@ -10,9 +10,15 @@ impl OrmSerializable for Model {}
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub rfid: String,
+    pub rfid: i32,
     pub location: i32,
     pub ts: DateTime,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SeedTimestamp {
+    pub rfid: i32,
+    pub location: i32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -34,7 +40,7 @@ pub enum Relation {
     #[sea_orm(
         belongs_to = "super::residents::Entity",
         from = "Column::Rfid",
-        to = "super::residents::Column::Rfid",
+        to = "super::residents::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]

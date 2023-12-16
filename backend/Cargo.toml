@@ -6,7 +6,8 @@ license = "MIT"
 edition = "2021"
 
 [workspace]
-members = [".", "entity", "migration"]
+members = [".", "entity", "migration", "testapi"]
+
 
 [dependencies]
 serde_json = { version = "1.0.108", features = ["std"] }
@@ -31,5 +32,6 @@ sea-orm = { version = "0.12.9", features = [
   "with-chrono",
 ] }
 entity = { path = "entity" }
-migration = { path = "migration" } # depends on your needs
+migration = { path = "migration" }
+testapi = { path = "testapi" }
 dotenvy = "0.15.7"

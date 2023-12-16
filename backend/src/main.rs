@@ -15,6 +15,16 @@ async fn main() -> io::Result<()> {
     std::env::set_var("RUST_LOG", "debug");
     env_logger::init();
     dotenvy::dotenv().ok();
+    let args = std::env::args().collect::<Vec<String>>();
+    if args.len() > 1 {
+        let arg = &args[1];
+        if arg == "--test" {
+            let _ = std::process::Command::new("python")
+                .args(["test.py"])
+                .spawn()
+                .expect("failed to execute process");
+        }
+    }
     let ip = std::env::var("LOCAL_IP").unwrap_or("localhost".to_string());
     log::info!("starting Actix-Web HTTP server at http://{}", ip);
     let json_config = JsonConfig::default().limit(4096);

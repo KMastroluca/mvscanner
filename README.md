@@ -1,3 +1,11 @@
+
+## Testing: 
+
+Because testing is handled outside of the app, you will need to run `cargo run` in the backend directory, and then in another window, run `cargo test --package testapi`
+
+The CI currently will build the backend but does not run the tests.
+
+
 # MVCF Scanning system API design
 
 ## Data/Tables
