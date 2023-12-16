@@ -1,0 +1,39 @@
+name: Prettier action
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  oxlint:
+    name: Lint JS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          npm install
+          npx --yes oxlint@0.0.20
+        working-directory: scanui
+
+  prettier:
+    name: Prettier Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Prettier
+        id: prettier-run
+        uses: rutajdash/prettier-cli-action@v1.0.0
+        with:
+          config_path: ./.prettierrc.yml
+          ignore_path: ./.prettierignore
+
+      - name: Prettier Output
+        if: ${{ failure() }}
+        shell: bash
+        run: |
+          echo "The following files are not formatted:"
+          echo "${{steps.prettier-run.outputs.prettier_output}}"
