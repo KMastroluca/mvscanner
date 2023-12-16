@@ -70,11 +70,11 @@ pub async fn index_timestamps(db: web::Data<DB>, uni: web::Query<FilterOpts>) ->
 pub async fn store_timestamp(db: web::Data<DB>, timestamp_data: web::Json<PostTimestamp>) -> Result<HttpResponse, Box<dyn std::error::Error>>{
     let db = &db.0;
     let mut timestamp = timestamp_data.into_inner();
-    match Resident::find_by_id(timestamp.rfid.clone()).one(db).await? {
+    match Resident::find().filter(residents::Column::Rfid.eq(timestamp.rfid.clone())).one(db).await? {
         Some(resident) => {
              let mut resident = resident.into_active_model();
-                if timestamp.location != resident.current_location.unwrap() as usize {
-                    resident.current_location = Set(timestamp.location as i32);
+                if timestamp.location != resident.current_location.to_owned().unwrap() {
+                    resident.current_location = Set(timestamp.location);
                 } else {
                     resident.current_location = Set(0);
                     timestamp.location = 0;
@@ -83,25 +83,26 @@ pub async fn store_timestamp(db: web::Data<DB>, timestamp_data: web::Json<PostTi
                 let resident = resident.save(db).await;
                 let new_timestamp: timestamps::ActiveModel = timestamps::ActiveModel {
                         rfid: Set(timestamp.rfid.clone()),
-                        location: Set(timestamp.location as i32),
+                        location: Set(timestamp.location),
                     ..Default::default()
                 };
                 new_timestamp.save(db).await?;
                 let timestamp = timestamp.clone();
                 let resident = resident.unwrap();
                 let new_res = residents::Model {
-                rfid: resident.rfid.into_value().unwrap().to_string(),
-                name: resident.name.into_value().unwrap().to_string(),
-                doc: resident.doc.into_value().unwrap().to_string(),
+                id: resident.id.to_owned().unwrap(),
+                rfid: resident.rfid.to_owned().unwrap(),
+                name: resident.name.to_owned().unwrap(),
+                doc: resident.doc.to_owned().unwrap(),
                 unit: resident.unit.unwrap(),
-                room: resident.room.into_value().unwrap().to_string(),
+                room: resident.room.to_owned().unwrap(),
                 current_location: resident.current_location.unwrap(),
                 level: resident.level.unwrap(),
                 };
             let new_ts = timestamps::Model {
                 id: 0,
                 rfid: timestamp.rfid,
-                location: timestamp.location as i32,
+                location: timestamp.location,
                 ts: chrono::Local::now().naive_local(),
             };
                 let response = Response::<ResidentTimestamp>::from(ResidentTimestamp {

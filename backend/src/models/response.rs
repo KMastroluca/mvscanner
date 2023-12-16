@@ -14,25 +14,46 @@ pub struct Response<T> {
     pub message: String,
     pub data: Option<Vec<T>>,
 }
+
+impl<T> From<entity::residents::ActiveModel> for Response<T>
+where
+    T: From<entity::residents::ActiveModel> + Serializable,
+{
+    fn from(value: entity::residents::ActiveModel) -> Self {
+        Self {
+            success: true,
+            message: "Successfully retrieved resident".to_string(),
+            data: Some(vec![T::from(value)]),
+        }
+    }
+}
+
+impl<T> From<Vec<entity::timestamps::ActiveModel>> for Response<T>
+where
+    T: From<Vec<entity::timestamps::ActiveModel>> + Serializable,
+    Vec<T>: From<Vec<entity::timestamps::ActiveModel>>,
+{
+    fn from(value: Vec<entity::timestamps::ActiveModel>) -> Self {
+        Self {
+            success: true,
+            message: "Successfully retrieved resident".to_string(),
+            data: Some(value.into()),
+        }
+    }
+}
 impl From<entity::timestamps::Model> for PostTimestamp {
     fn from(value: entity::timestamps::Model) -> Self {
         Self {
             rfid: value.rfid,
-            location: value.location as usize,
+            location: value.location.to_owned(),
         }
     }
 }
 impl From<entity::timestamps::ActiveModel> for PostTimestamp {
     fn from(value: entity::timestamps::ActiveModel) -> Self {
         Self {
-            rfid: value.rfid.into_value().unwrap().to_string(),
-            location: value
-                .location
-                .into_value()
-                .unwrap_or(0.into())
-                .to_string()
-                .parse::<usize>()
-                .unwrap_or(0),
+            rfid: value.rfid.unwrap().to_string(),
+            location: value.location.to_owned().unwrap(),
         }
     }
 }
@@ -148,6 +169,28 @@ where
     }
 }
 
+impl<T> From<Box<dyn std::error::Error>> for Response<T>
+where
+    T: Serializable + std::fmt::Debug,
+{
+    fn from(e: Box<dyn std::error::Error>) -> Self {
+        Self {
+            success: false,
+            message: e.to_string(),
+            data: None,
+        }
+    }
+}
+
+impl<T> std::error::Error for Response<T>
+where
+    T: Serializable + std::fmt::Debug,
+{
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        None
+    }
+}
+
 impl<T> Response<T>
 where
     T: Serializable + std::fmt::Debug,
@@ -163,6 +206,13 @@ where
         Self {
             success: false,
             message: msg.to_string(),
+            data: None,
+        }
+    }
+    pub fn resident_not_found() -> Self {
+        Self {
+            success: false,
+            message: "Resident not found".to_string(),
             data: None,
         }
     }

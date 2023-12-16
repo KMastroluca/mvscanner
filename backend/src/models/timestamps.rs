@@ -46,5 +46,5 @@ impl Display for PostTimestamp {
 #[derive(Debug, Serialize, Clone, Deserialize, Eq, PartialEq)]
 pub struct PostTimestamp {
     pub rfid: String,
-    pub location: usize,
+    pub location: i32,
 }

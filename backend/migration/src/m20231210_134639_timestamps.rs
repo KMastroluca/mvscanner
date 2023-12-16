@@ -44,6 +44,7 @@ impl MigrationTrait for Migration {
                     .name("fk_timestamps_residents")
                     .from(Timestamps, timestamps::Column::Rfid)
                     .to(Residents, residents::Column::Rfid)
+                    .on_delete(ForeignKeyAction::NoAction)
                     .to_owned(),
             )
             .await?;
