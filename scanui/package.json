@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.16",
+    "daisyui": "^4.4.20",
     "husky": ">=6",
     "lint-staged": ">=10",
     "postcss": "^8.4.31",
